@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "792703121166",
+    "firebase_url": "https://moviles-isis3510-default-rtdb.firebaseio.com",
+    "project_id": "moviles-isis3510",
+    "storage_bucket": "moviles-isis3510.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:792703121166:android:b6b08faf6068d8bfdbc95f",
+        "android_client_info": {
+          "package_name": "com.example.isis3510_team32_flutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "792703121166-13jecuep44oqtahptbkpv3v4248qq8mr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBRSCgteRMVceQiYVtZ_wgDu-4QKOVv5M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "792703121166-13jecuep44oqtahptbkpv3v4248qq8mr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:792703121166:android:0382641e1d9422e2dbc95f",
+        "android_client_info": {
+          "package_name": "com.example.sporthub"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "792703121166-13jecuep44oqtahptbkpv3v4248qq8mr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBRSCgteRMVceQiYVtZ_wgDu-4QKOVv5M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "792703121166-13jecuep44oqtahptbkpv3v4248qq8mr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
