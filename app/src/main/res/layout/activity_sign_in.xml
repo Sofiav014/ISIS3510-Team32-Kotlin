@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    tools:context=".SignInActivity"
+    android:background="#60508C">
+
+    <!-- Container for the background image with proper centering -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_court_logo"
+            android:scaleType="center"
+            android:scaleX="1.3"
+            android:scaleY="1.3"
+            android:rotation="135"
+            android:alpha="0.4" />
+    </FrameLayout>
+
+    <!-- SportHub Title in the middle with Roboto font -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:text="SportHub"
+        android:textColor="#FFFFFF"
+        android:textSize="70sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif"
+        android:shadowColor="#88000000"
+        android:shadowDx="2"
+        android:shadowDy="2"
+        android:shadowRadius="4" />
+
+    <!-- Sign in button at bottom -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="100dp"
+        android:background="@drawable/border">
+
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="46dp"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_gravity="center"
+            android:layout_marginLeft="11dp"
+            android:layout_marginRight="11dp"
+            android:background="@color/white"
+            android:src="@drawable/ic_google" />
+
+        <Button
+            android:id="@+id/signInButton"
+            android:textAllCaps="false"
+            android:layout_width="200dp"
+            android:layout_height="50dp"
+            android:background="@color/blue"
+            android:text="Sign up with Google"
+            android:textColor="@color/white"
+            android:textSize="20sp" />
+
+    </LinearLayout>
+</RelativeLayout>

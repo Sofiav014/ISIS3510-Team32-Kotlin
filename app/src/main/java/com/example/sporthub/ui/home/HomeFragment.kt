@@ -8,6 +8,8 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.sporthub.databinding.FragmentHomeBinding
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
 
 class HomeFragment : Fragment() {
 
@@ -39,4 +41,8 @@ class HomeFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
+
+
+
+
 }
