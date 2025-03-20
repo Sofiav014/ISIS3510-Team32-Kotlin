@@ -16,6 +16,20 @@
             android:name=".MainActivity"
             android:exported="true" />
         <activity
+            android:name=".GenderSelectionActivity"
+            android:exported="false" />
+        <activity
+            android:name=".BirthDateSelectionActivity"
+            android:exported="false" />
+        <activity
+            android:name=".NameSelectionActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity
+            android:name=".FavoriteSportsSelectionActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity
             android:name=".SignInActivity"
             android:exported="true"
             android:label="@string/app_name">
