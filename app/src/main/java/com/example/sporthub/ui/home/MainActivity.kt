@@ -1,6 +1,5 @@
-package com.example.sporthub
+package com.example.sporthub.ui.home
 
-import com.example.sporthub.SignInActivity
 import android.os.Bundle
 import android.view.View
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -18,6 +17,8 @@ import android.content.Intent
 import android.widget.Button
 import android.widget.TextView
 import android.util.Log
+import com.example.sporthub.R
+import com.example.sporthub.ui.login.SignInActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 

@@ -1,38 +1,39 @@
-package com.example.sporthub
+package com.example.sporthub.ui.login
 
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import androidx.lifecycle.ViewModelProvider
+import com.example.sporthub.R
+import com.example.sporthub.viewmodel.BirthDateViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-import com.google.firebase.Timestamp
-import java.util.Date
 
 class BirthDateSelectionActivity : AppCompatActivity() {
 
-    private lateinit var mAuth: FirebaseAuth
-    private lateinit var db: FirebaseFirestore
+    private lateinit var viewModel: BirthDateViewModel
     private lateinit var datePickerEditText: EditText
     private lateinit var buttonContinue: Button
     private val calendar = Calendar.getInstance()
-    private val TAG = "BirthDateActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_birth_date_selection)
 
-        // Inicializar Firebase Auth y Firestore
-        mAuth = FirebaseAuth.getInstance()
-        db = FirebaseFirestore.getInstance()
+        // Inicializar el ViewModel
+        viewModel = ViewModelProvider(this).get(BirthDateViewModel::class.java)
+
+        // Verificar autenticación
+        if (!viewModel.checkAuthentication()) {
+            redirectToSignIn()
+            return
+        }
 
         // Manejar el botón de retroceso
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -49,6 +50,9 @@ class BirthDateSelectionActivity : AppCompatActivity() {
         datePickerEditText = findViewById(R.id.date_picker_edit_text)
         buttonContinue = findViewById(R.id.button_continue)
 
+        // Configurar observadores para eventos del ViewModel
+        setupObservers()
+
         // Configurar el selector de fecha
         datePickerEditText.setOnClickListener {
             showDatePicker()
@@ -58,9 +62,29 @@ class BirthDateSelectionActivity : AppCompatActivity() {
         buttonContinue.setOnClickListener {
             val birthDate = datePickerEditText.text.toString()
             if (birthDate.isNotEmpty() && birthDate != "01 / 01 / 2025") {
-                saveBirthDateAndProceed(birthDate)
+                saveBirthDate(birthDate)
             } else {
                 Toast.makeText(this, "Please select your birth date", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun setupObservers() {
+        viewModel.saveSuccessEvent.observe(this) { success ->
+            if (success) {
+                Toast.makeText(this, "Birth date updated successfully!", Toast.LENGTH_SHORT).show()
+                navigateToSportsSelection()
+            }
+        }
+
+        viewModel.errorEvent.observe(this) { errorMessage ->
+            Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
+        }
+
+        viewModel.userNotAuthenticatedEvent.observe(this) { notAuthenticated ->
+            if (notAuthenticated) {
+                Toast.makeText(this, "Error: User not authenticated", Toast.LENGTH_SHORT).show()
+                redirectToSignIn()
             }
         }
     }
@@ -96,47 +120,25 @@ class BirthDateSelectionActivity : AppCompatActivity() {
         datePickerEditText.setText(dateFormat.format(calendar.time))
     }
 
-    private fun saveBirthDateAndProceed(birthDateString: String) {
+    private fun saveBirthDate(birthDateString: String) {
         try {
-            val currentUser = mAuth.currentUser ?: run {
-                Toast.makeText(this, "Error: User not authenticated", Toast.LENGTH_SHORT).show()
-                redirectToSignIn()
-                return
-            }
-
-            val userId = currentUser.uid
-
-            // Convertir la fecha de texto a un objeto Date
             val dateFormat = SimpleDateFormat("dd / MM / yyyy", Locale.getDefault())
             val birthDate = dateFormat.parse(birthDateString)
 
-            // Convertir el Date a un Timestamp de Firestore
-            val timestamp = birthDate?.let { com.google.firebase.Timestamp(Date(it.time)) }
-
-            if (timestamp != null) {
-                // Actualizar solo el campo birth_date con el timestamp
-                db.collection("users").document(userId)
-                    .update("birth_date", timestamp)
-                    .addOnSuccessListener {
-                        Log.d(TAG, "Birth date saved successfully as timestamp")
-                        Toast.makeText(this, "Birth date updated successfully!", Toast.LENGTH_SHORT).show()
-
-                        // Proceder a la siguiente actividad
-                        val intent = Intent(this, FavoriteSportsSelectionActivity::class.java)
-                        startActivity(intent)
-                        finish()
-                    }
-                    .addOnFailureListener { e ->
-                        Log.e(TAG, "Error saving birth date: ${e.message}")
-                        Toast.makeText(this, "Error saving data. Please try again", Toast.LENGTH_SHORT).show()
-                    }
+            if (birthDate != null) {
+                viewModel.saveBirthDate(birthDate)
             } else {
                 Toast.makeText(this, "Invalid date format", Toast.LENGTH_SHORT).show()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error in saveBirthDateAndProceed: ${e.message}")
             Toast.makeText(this, "Unexpected error", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun navigateToSportsSelection() {
+        val intent = Intent(this, FavoriteSportsSelectionActivity::class.java)
+        startActivity(intent)
+        finish()
     }
 
     private fun redirectToSignIn() {

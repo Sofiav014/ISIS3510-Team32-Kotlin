@@ -7,7 +7,7 @@
     android:padding="16dp"
     android:clipChildren="false"
     android:clipToPadding="false"
-    tools:context=".SignInActivity"
+    tools:context=".ui.login.SignInActivity"
     android:background="#60508C">
 
     <!-- Container for the background image with proper centering -->
