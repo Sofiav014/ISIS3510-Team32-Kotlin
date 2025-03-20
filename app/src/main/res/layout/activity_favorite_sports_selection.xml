@@ -222,7 +222,7 @@
         android:textColor="@color/white"
         android:padding="12dp"
         android:backgroundTint="#673AB7"
-        app:cornerRadius="24dp"
+        style="@style/RoundedButtonStyle"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

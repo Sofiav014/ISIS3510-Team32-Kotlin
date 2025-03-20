@@ -40,6 +40,8 @@ android {
 }
 
 dependencies {
+
+
     // AndroidX Core
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -55,6 +57,8 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
 
+
+    implementation("com.google.android.material:material:1.10.0")
 
     // Glide para cargar imágenes
     implementation("com.github.bumptech.glide:glide:4.15.1")

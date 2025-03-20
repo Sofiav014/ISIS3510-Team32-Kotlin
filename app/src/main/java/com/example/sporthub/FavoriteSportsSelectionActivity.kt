@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import android.graphics.Color
 
 class FavoriteSportsSelectionActivity : AppCompatActivity() {
 
@@ -20,7 +21,7 @@ class FavoriteSportsSelectionActivity : AppCompatActivity() {
     // Map to track selected sports with their data
     private val sportsData = mapOf(
         "Basketball" to mapOf(
-            "id" to "0",
+            "id" to "basketball",
             "name" to "Basketball",
             "logo" to "https://firebasestorage.googleapis.com/v0/b/moviles-isis3510.firebasestorage.app/o/icons%2Fsports%2Fbasketball-logo.png?alt=media&token=fa52fa07-44ea-4465-b33b-cb07fa2fb228"
         ),
@@ -106,11 +107,16 @@ class FavoriteSportsSelectionActivity : AppCompatActivity() {
     }
 
     private fun updateCardAppearance(cardView: CardView, isSelected: Boolean) {
-        // Change card background color based on selection state
         if (isSelected) {
-            cardView.setCardBackgroundColor(resources.getColor(R.color.purple_200, theme))
+            // Usar un fondo lavanda muy claro para indicar selección
+            cardView.setCardBackgroundColor(Color.parseColor("#EDE7F6"))
+            // Aumentar elevación para dar efecto "levantado"
+            cardView.cardElevation = 8f
         } else {
-            cardView.setCardBackgroundColor(resources.getColor(R.color.white, theme))
+            // Restaurar a blanco cuando no está seleccionado
+            cardView.setCardBackgroundColor(Color.WHITE)
+            // Restaurar elevación original
+            cardView.cardElevation = 2f
         }
     }
 
