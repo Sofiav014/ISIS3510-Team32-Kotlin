@@ -17,8 +17,13 @@ import android.content.Intent
 import android.widget.Button
 import android.widget.TextView
 import android.util.Log
+import androidx.fragment.app.Fragment
 import com.example.sporthub.R
+import com.example.sporthub.ui.bookings.BookingsFragment
+import com.example.sporthub.ui.createBooking.CreateBookingFragment
+import com.example.sporthub.ui.findVenues.FindVenuesFragment
 import com.example.sporthub.ui.login.SignInActivity
+import com.example.sporthub.ui.profile.ProfileFragment
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 
@@ -27,6 +32,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var mGoogleSignInClient: GoogleSignInClient
     private lateinit var mAuth: FirebaseAuth
+    private lateinit var bottomNavigationView: BottomNavigationView
     private val TAG = "MainActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,15 +72,44 @@ class MainActivity : AppCompatActivity() {
                 Log.e(TAG, "Error setting text view: ${e.message}")
             }
 
-            // Navigation setup
-            val navView: BottomNavigationView = binding.navView
+            // Navigation setup ->
+            //val navView: BottomNavigationView = binding.navView
 
-            val navController = findNavController(R.id.nav_host_fragment_activity_main)
-            val appBarConfiguration = AppBarConfiguration(
-                setOf(
-                    R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications
-                )
-            )
+            //val navController = findNavController(R.id.nav_host_fragment_activity_main)
+            //val appBarConfiguration = AppBarConfiguration(
+            //    setOf(
+            //        R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications
+            //    )
+            //)
+
+            bottomNavigationView = findViewById(R.id.nav_view)
+
+            bottomNavigationView.setOnItemSelectedListener { menuItem ->
+                when (menuItem.itemId) {
+                    R.id.navigation_home -> {
+                        replaceFragment(HomeFragment())
+                        true
+                    }
+                    R.id.navigation_search -> {
+                        replaceFragment(FindVenuesFragment())
+                        true
+                    }
+                    R.id.navigation_booking -> {
+                        replaceFragment(BookingsFragment())
+                        true
+                    }
+                    R.id.navigation_create -> {
+                        replaceFragment(CreateBookingFragment())
+                        true
+                    }
+                    R.id.navigation_profile -> {
+                        replaceFragment(ProfileFragment())
+                        true
+                    }
+                    else -> false
+                }
+            }
+            replaceFragment(HomeFragment())
 
             // Try-catch for finding the button
             try {
@@ -86,8 +121,8 @@ class MainActivity : AppCompatActivity() {
                 Log.e(TAG, "Error setting button: ${e.message}")
             }
 
-            setupActionBarWithNavController(navController, appBarConfiguration)
-            navView.setupWithNavController(navController)
+            //setupActionBarWithNavController(navController, appBarConfiguration)
+            //navView.setupWithNavController(navController)
 
         } catch (e: Exception) {
             Log.e(TAG, "Critical error in onCreate: ${e.message}")
@@ -103,6 +138,10 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Log.e(TAG, "Error sending data: ${e.message}")
         }
+    }
+
+    private fun replaceFragment(fragment: Fragment){
+        supportFragmentManager.beginTransaction().replace(R.id.frame_container,fragment).commit()
     }
 
     private fun signOutAndStartSignInActivity() {

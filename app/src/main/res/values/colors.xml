@@ -9,6 +9,8 @@
     <color name="white">#FFFFFFFF</color>
     <color name="blue">#459DE4</color>
     <color name="red">#FF0000</color>
+    <color name="sb_purple">#ece6f0</color>
+    <color name="contrast_black">#070304</color>
 
 
 </resources>
