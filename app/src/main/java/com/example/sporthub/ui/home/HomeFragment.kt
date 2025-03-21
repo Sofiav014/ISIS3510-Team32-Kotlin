@@ -4,45 +4,87 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.sporthub.data.repository.HomeRepository
 import com.example.sporthub.databinding.FragmentHomeBinding
-import com.google.firebase.database.ktx.database
-import com.google.firebase.ktx.Firebase
+import com.example.sporthub.viewmodel.HomeViewModel
+import com.example.sporthub.viewmodel.SharedUserViewModel
 
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
-
-    // This property is only valid between onCreateView and
-    // onDestroyView.
     private val binding get() = _binding!!
+
+    private val userViewModel: SharedUserViewModel by activityViewModels()
+    private val homeViewModel by lazy { HomeViewModel(HomeRepository()) }
+
+    private lateinit var popularityAdapter: PopularityAdapter
+    private lateinit var upcomingBookingsAdapter: UpcomingBookingsAdapter
+    private lateinit var recommendedBookingsAdapter: RecommendedBookingsAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val homeViewModel =
-            ViewModelProvider(this).get(HomeViewModel::class.java)
-
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
-        val root: View = binding.root
 
-        val textView: TextView = binding.textHome
-        homeViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
+        setupRecyclerViews()
+        observeViewModels()
+
+        return binding.root
+    }
+
+    private fun setupRecyclerViews() {
+        popularityAdapter = PopularityAdapter()
+        binding.recyclerPopularity.apply {
+            layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+            adapter = popularityAdapter
         }
-        return root
+
+        upcomingBookingsAdapter = UpcomingBookingsAdapter()
+        binding.recyclerUpcomingBookings.apply {
+            layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+            adapter = upcomingBookingsAdapter
+        }
+
+        recommendedBookingsAdapter = RecommendedBookingsAdapter()
+        binding.recyclerRecommendedBookings.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = recommendedBookingsAdapter
+        }
+    }
+
+    private fun observeViewModels() {
+        userViewModel.currentUser.observe(viewLifecycleOwner) { user ->
+            if (user != null) {
+                homeViewModel.loadData(user)
+            }
+        }
+
+        homeViewModel.popularityReport.observe(viewLifecycleOwner) { report ->
+            val items = listOfNotNull(
+                report.first?.let { PopularityItem.VenueItem(it, "Best Rated Overall") },
+                report.second?.let { PopularityItem.SportItem(it, "Most Played by You") },
+                report.third?.let { PopularityItem.VenueItem(it, "Most Booked Overall")}
+            )
+            popularityAdapter.submitList(items)
+        }
+
+        homeViewModel.upcomingBookings.observe(viewLifecycleOwner) { bookings ->
+            upcomingBookingsAdapter.submitList(bookings)
+        }
+
+        homeViewModel.recommendedBookings.observe(viewLifecycleOwner) { bookings ->
+            recommendedBookingsAdapter.submitList(bookings)
+        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
-
-
-
-
 }

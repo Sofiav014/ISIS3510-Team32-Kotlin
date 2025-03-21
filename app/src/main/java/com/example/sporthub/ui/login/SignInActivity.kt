@@ -7,7 +7,7 @@ import android.util.Log
 import android.widget.Button
 import android.widget.Toast
 import com.example.sporthub.R
-import com.example.sporthub.ui.home.MainActivity
+import com.example.sporthub.ui.MainActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
@@ -41,11 +41,13 @@ class SignInActivity : AppCompatActivity() {
 
         val signInButton = findViewById<Button>(R.id.signInButton)
         signInButton.setOnClickListener {
+            Log.d(TAG, "Sign In button clicked")
             signIn()
         }
     }
 
     private fun signIn() {
+        Log.d(TAG, "Starting Google sign-in intent")
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()

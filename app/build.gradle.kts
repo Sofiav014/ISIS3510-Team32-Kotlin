@@ -65,6 +65,9 @@ dependencies {
 
     // Biblioteca para renderizar SVGs
     implementation("com.caverock:androidsvg:1.4")
+
+    implementation("androidx.cardview:cardview:1.0.0")
+
     // Firebase - using BoM for version control
     implementation(platform("com.google.firebase:firebase-bom:31.5.0"))
     implementation("com.google.firebase:firebase-auth-ktx")
@@ -84,4 +87,5 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
 }

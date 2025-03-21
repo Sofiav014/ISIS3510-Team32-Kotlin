@@ -24,7 +24,7 @@ class BirthDateSelectionActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_birth_date_selection)
+        setContentView(R.layout.activity_sign_in_birth_date_selection)
 
         // Inicializar el ViewModel
         viewModel = ViewModelProvider(this).get(BirthDateViewModel::class.java)

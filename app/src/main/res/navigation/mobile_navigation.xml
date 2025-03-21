@@ -3,23 +3,38 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/navigation_home">
-
+    app:startDestination="@id/nav_home">
+    <!--
     <fragment
-        android:id="@+id/navigation_home"
+        android:id="@+id/nav_search"
+        android:name="com.example.sporthub.ui.search.SearchFragment"
+        android:label="@string/title_search"
+        tools:layout="@layout/fragment_search" />
+    -->
+    <!--
+    <fragment
+        android:id="@+id/nav_calendar"
+        android:name="com.example.sporthub.ui.calendar.CalendarFragment"
+        android:label="@string/title_calendar"
+        tools:layout="@layout/fragment_calendar" />
+    -->
+    <fragment
+        android:id="@+id/nav_home"
         android:name="com.example.sporthub.ui.home.HomeFragment"
         android:label="@string/title_home"
         tools:layout="@layout/fragment_home" />
-
+    <!--
     <fragment
-        android:id="@+id/navigation_dashboard"
-        android:name="com.example.sporthub.ui.dashboard.DashboardFragment"
-        android:label="@string/title_dashboard"
-        tools:layout="@layout/fragment_dashboard" />
-
+        android:id="@+id/nav_add"
+        android:name="com.example.sporthub.ui.add.AddFragment"
+        android:label="@string/title_add"
+        tools:layout="@layout/fragment_add" />
+    -->
+    <!--
     <fragment
-        android:id="@+id/navigation_notifications"
-        android:name="com.example.sporthub.ui.notifications.NotificationsFragment"
-        android:label="@string/title_notifications"
-        tools:layout="@layout/fragment_notifications" />
+        android:id="@+id/nav_profile"
+        android:name="com.example.sporthub.ui.profile.ProfileFragment"
+        android:label="@string/title_profile"
+        tools:layout="@layout/fragment_profile" />
+    -->
 </navigation>

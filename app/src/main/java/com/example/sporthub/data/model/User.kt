@@ -2,14 +2,15 @@
 package com.example.sporthub.data.model
 
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.PropertyName
+
 
 data class User(
-    val id: String = "",
-    val name: String = "",
-    val email: String = "",
-    val gender: String = "",
-    val birthDate: Timestamp? = null,
-    val sportsLiked: List<Map<String, Any>> = emptyList(),
-    val bookings: List<String> = emptyList(),
-    val venuesLiked: List<String> = emptyList()
+    @PropertyName("id") val id: String = "",
+    @PropertyName("name") val name: String = "",
+    @PropertyName("gender") val gender: String = "",
+    @PropertyName("birth_date") val birthDate: Timestamp? = null,
+    @PropertyName("sports_liked") val sportsLiked: List<Sport> = emptyList(),
+    @PropertyName("bookings") val bookings: List<Booking> = emptyList(),
+    @PropertyName("venues_liked") val venuesLiked: List<Venue> = listOf()
 )
