@@ -111,6 +111,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onSupportNavigateUp(): Boolean {
+        val navController = findNavController(R.id.nav_host_fragment)
+        return navController.navigateUp() || super.onSupportNavigateUp()
+    }
+
+    override fun onBackPressed() {
+        val navController = findNavController(R.id.nav_host_fragment)
+
+        if (navController.currentDestination?.id == R.id.venueListFragment) {
+            navController.popBackStack(R.id.findVenuesFragment, false)
+        } else {
+            super.onBackPressed()
+        }
+    }
+
+
     private fun replaceFragment(fragment: Fragment){
         supportFragmentManager.beginTransaction().replace(R.id.frame_container,fragment).commit()
     }
