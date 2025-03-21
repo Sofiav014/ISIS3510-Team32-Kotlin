@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.findVenues.FindVenuesFragment">
+    android:orientation="vertical"
+    android:background="@android:color/white"
+    android:padding="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,19 +18,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="Find Venues"
+            android:text="Venue List"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@android:color/black"/>
     </LinearLayout>
 
-
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewSports"
+        android:id="@+id/recyclerViewVenues"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="80dp"
-        android:padding="16dp"
-        tools:listitem="@layout/item_sport_card"/>
+        android:paddingTop="8dp"/>
 
-</FrameLayout>
+</LinearLayout>
