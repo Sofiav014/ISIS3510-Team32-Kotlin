@@ -18,6 +18,7 @@ import android.widget.Button
 import android.widget.TextView
 import android.util.Log
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.NavHostFragment
 import com.example.sporthub.R
 import com.example.sporthub.ui.bookings.BookingsFragment
 import com.example.sporthub.ui.createBooking.CreateBookingFragment
@@ -72,44 +73,14 @@ class MainActivity : AppCompatActivity() {
                 Log.e(TAG, "Error setting text view: ${e.message}")
             }
 
-            // Navigation setup ->
-            //val navView: BottomNavigationView = binding.navView
+            // ✅ Get NavController from NavHostFragment
+            val navHostFragment =
+                supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+            val navController = navHostFragment.navController
 
-            //val navController = findNavController(R.id.nav_host_fragment_activity_main)
-            //val appBarConfiguration = AppBarConfiguration(
-            //    setOf(
-            //        R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications
-            //    )
-            //)
-
-            bottomNavigationView = findViewById(R.id.nav_view)
-
-            bottomNavigationView.setOnItemSelectedListener { menuItem ->
-                when (menuItem.itemId) {
-                    R.id.navigation_home -> {
-                        replaceFragment(HomeFragment())
-                        true
-                    }
-                    R.id.navigation_search -> {
-                        replaceFragment(FindVenuesFragment())
-                        true
-                    }
-                    R.id.navigation_booking -> {
-                        replaceFragment(BookingsFragment())
-                        true
-                    }
-                    R.id.navigation_create -> {
-                        replaceFragment(CreateBookingFragment())
-                        true
-                    }
-                    R.id.navigation_profile -> {
-                        replaceFragment(ProfileFragment())
-                        true
-                    }
-                    else -> false
-                }
-            }
-            replaceFragment(HomeFragment())
+            // ✅ Set up Bottom Navigation with NavController
+            val bottomNavigationView: BottomNavigationView = findViewById(R.id.nav_view)
+            bottomNavigationView.setupWithNavController(navController)
 
             // Try-catch for finding the button
             try {

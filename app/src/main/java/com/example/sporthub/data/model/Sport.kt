@@ -6,3 +6,8 @@ data class Sport(
     val name: String,
     val logo: String
 )
+
+{
+    // No-argument constructor required for Firestore
+    constructor() : this("", "", "")
+}
