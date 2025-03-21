@@ -5,51 +5,92 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    app:cardCornerRadius="12dp"
+    app:cardCornerRadius="16dp"
     app:cardElevation="4dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="12dp">
+    <RelativeLayout
+        android:layout_width="384dp"
+        android:layout_height="211dp">
 
-        <!-- Venue Image -->
-        <ImageView
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/venueImage"
             android:layout_width="match_parent"
-            android:layout_height="180dp"
-            android:scaleType="centerCrop"
-            android:background="@android:color/darker_gray"/>
+            android:layout_height="214dp"
+            android:scaleType="centerCrop" />
 
-        <!-- Venue Name -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="81dp"
+            android:layout_alignBottom="@id/venueImage"
+            android:layout_marginBottom="-1dp"
+            android:background="@drawable/gradient_overlay" />
+
         <TextView
             android:id="@+id/venueName"
-            android:layout_width="wrap_content"
+            android:layout_width="352dp"
             android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/black"
-            android:layout_marginTop="8dp"/>
+            android:layout_alignBottom="@id/venueImage"
+            android:layout_marginStart="16dp"
+            android:layout_marginBottom="57dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:text="Basketball Court - Cafam"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
-        <!-- Venue Location -->
         <TextView
             android:id="@+id/venueLocation"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:textColor="@android:color/darker_gray"
-            android:layout_marginTop="4dp"/>
+            android:layout_below="@id/venueName"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="-45dp"
+            android:drawableStart="@drawable/ic_location"
+            android:drawablePadding="4dp"
+            android:text="Club Campestre Cafam"
+            android:textColor="@android:color/white"
+            android:textSize="14sp" />
 
-        <!-- Venue Rating -->
-        <RatingBar
-            android:id="@+id/venueRating"
+        <TextView
+            android:id="@+id/venueSport"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:numStars="5"
-            android:stepSize="0.5"
-            android:isIndicator="true"
-            android:layout_marginTop="8dp"/>
-    </LinearLayout>
+            android:layout_below="@id/venueLocation"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:drawableStart="@drawable/ic_sport_venue_card"
+            android:drawablePadding="4dp"
+            android:text="Basketball"
+            android:textColor="@android:color/white"
+            android:textSize="14sp" />
 
+        <LinearLayout
+            android:id="@+id/ratingContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@id/venueImage"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/rating_background"
+            android:orientation="horizontal"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_star" />
+
+            <TextView
+                android:id="@+id/venueRating"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="4.2"
+                android:textColor="@android:color/black"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+    </RelativeLayout>
 </androidx.cardview.widget.CardView>

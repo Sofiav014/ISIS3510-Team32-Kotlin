@@ -31,7 +31,6 @@ class FindVenuesFragment : Fragment() {
         val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerViewSports)
         recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
 
-        // ✅ Update SportsAdapter to handle item clicks
         val adapter = SportsAdapter(viewModel.sportsList) { sport ->
             navigateToVenueList(sport)
         }
@@ -39,7 +38,6 @@ class FindVenuesFragment : Fragment() {
         recyclerView.adapter = adapter
     }
 
-    // ✅ Function to navigate to VenueListFragment with selected sportId
     private fun navigateToVenueList(sport: Sport) {
         val bundle = Bundle().apply {
             putString("sportId", sport.id)

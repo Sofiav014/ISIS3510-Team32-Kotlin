@@ -4,7 +4,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.RatingBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -19,7 +18,8 @@ class VenueAdapter : RecyclerView.Adapter<VenueAdapter.VenueViewHolder>() {
         val venueImage: ImageView = view.findViewById(R.id.venueImage)
         val venueName: TextView = view.findViewById(R.id.venueName)
         val venueLocation: TextView = view.findViewById(R.id.venueLocation)
-        val venueRating: RatingBar = view.findViewById(R.id.venueRating)
+        val venueSport: TextView = view.findViewById(R.id.venueSport)
+        val venueRating: TextView = view.findViewById(R.id.venueRating) // ✅ Changed from RatingBar to TextView
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VenueViewHolder {
@@ -31,12 +31,12 @@ class VenueAdapter : RecyclerView.Adapter<VenueAdapter.VenueViewHolder>() {
     override fun onBindViewHolder(holder: VenueViewHolder, position: Int) {
         val venue = venues[position]
         holder.venueName.text = venue.name
-        holder.venueLocation.text = venue.locationName
-        holder.venueRating.rating = venue.rating.toFloat()
-
+        holder.venueLocation.text = venue.name
+        holder.venueSport.text = venue.sport.name
+        holder.venueRating.text = String.format("%.1f", venue.rating.toFloat())
         Glide.with(holder.itemView.context)
             .load(venue.image)
-            .placeholder(R.drawable.ic_basketball_logo) // Optional placeholder
+            .placeholder(R.drawable.ic_basketball_logo)
             .into(holder.venueImage)
     }
 

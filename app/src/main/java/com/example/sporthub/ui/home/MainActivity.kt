@@ -73,12 +73,12 @@ class MainActivity : AppCompatActivity() {
                 Log.e(TAG, "Error setting text view: ${e.message}")
             }
 
-            // ✅ Get NavController from NavHostFragment
+            // Get NavController from NavHostFragment
             val navHostFragment =
                 supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
             val navController = navHostFragment.navController
 
-            // ✅ Set up Bottom Navigation with NavController
+            // Set up Bottom Navigation with NavController
             val bottomNavigationView: BottomNavigationView = findViewById(R.id.nav_view)
             bottomNavigationView.setupWithNavController(navController)
 
@@ -91,9 +91,6 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 Log.e(TAG, "Error setting button: ${e.message}")
             }
-
-            //setupActionBarWithNavController(navController, appBarConfiguration)
-            //navView.setupWithNavController(navController)
 
         } catch (e: Exception) {
             Log.e(TAG, "Critical error in onCreate: ${e.message}")

@@ -49,7 +49,7 @@ class VenueListFragment : Fragment() {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
-        // ✅ Get user location and then fetch venues
+        // Get user location and then fetch venues
         getUserLocation {
             viewModel.venues.observe(viewLifecycleOwner, Observer { venues ->
                 val sortedVenues = sortVenuesByDistance(venues)

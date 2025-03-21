@@ -12,7 +12,7 @@ import com.example.sporthub.data.model.Sport
 
 class SportsAdapter(
     private val sportsList: List<Sport>,
-    private val onItemClick: (Sport) -> Unit // ✅ Added click listener
+    private val onItemClick: (Sport) -> Unit
 ) : RecyclerView.Adapter<SportsAdapter.SportViewHolder>() {
 
     inner class SportViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -23,7 +23,6 @@ class SportsAdapter(
             sportName.text = sport.name
             Glide.with(itemView.context).load(sport.logo).into(sportImage)
 
-            // ✅ Handle item clicks
             itemView.setOnClickListener {
                 onItemClick(sport)
             }
@@ -38,7 +37,7 @@ class SportsAdapter(
 
     override fun onBindViewHolder(holder: SportViewHolder, position: Int) {
         val sport = sportsList[position]
-        holder.bind(sport) // ✅ Using bind function to maintain clean code
+        holder.bind(sport)
     }
 
     override fun getItemCount() = sportsList.size
