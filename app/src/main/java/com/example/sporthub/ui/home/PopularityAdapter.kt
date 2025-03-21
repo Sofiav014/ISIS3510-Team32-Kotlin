@@ -1,6 +1,7 @@
 package com.example.sporthub.ui.home
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.DiffUtil
@@ -20,7 +21,13 @@ class PopularityAdapter : ListAdapter<PopularityItem, PopularityViewHolder>(DIFF
     }
 
     override fun onBindViewHolder(holder: PopularityViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        val item = getItem(position)
+        if (item is PopularityItem.SportItem && item.sport.id == "unknown") {
+            holder.itemView.visibility = View.GONE
+        } else {
+            holder.itemView.visibility = View.VISIBLE
+            holder.bind(item)
+        }
     }
 
     companion object {

@@ -1,5 +1,6 @@
 package com.example.sporthub.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.*
 import com.example.sporthub.data.model.Booking
 import com.example.sporthub.data.model.Sport
@@ -26,14 +27,24 @@ class HomeViewModel(private val repository: HomeRepository) : ViewModel() {
                 _upcomingBookings.value = repository.getUpcomingBookings(user)
 
                 val report = repository.popularityReport(user)
-                val highestRatedVenue = report["highestRatedVenue"] as Venue
-                val mostBookedVenue = report["mostBookedVenue"] as Venue
-                val mostPlayedSport = report["mostPlayedSport"] as Sport
 
-                _popularityReport.value = Triple(highestRatedVenue, mostPlayedSport, mostBookedVenue)
+                val highestRatedVenue = report["highestRatedVenue"] as? Venue
+                val mostBookedVenue = report["mostBookedVenue"] as? Venue
+                val mostPlayedSport = report["mostPlayedSport"] as? Sport
+
+
+                Log.d("PopularityReport", "Fetched: $highestRatedVenue, $mostPlayedSport, $mostBookedVenue")
+
+
+                _popularityReport.value = Triple(
+                    highestRatedVenue,
+                    mostPlayedSport ?: Sport(id = "unknown", name = "No sport found", logo = ""),
+                    mostBookedVenue
+                )
 
             } catch (e: Exception) {
                 e.printStackTrace()
+                Log.e("PopularityReport", "Error fetching data", e)
             }
         }
     }

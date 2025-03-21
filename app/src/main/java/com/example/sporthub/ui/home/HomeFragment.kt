@@ -1,6 +1,7 @@
 package com.example.sporthub.ui.home
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -66,16 +67,28 @@ class HomeFragment : Fragment() {
         }
 
         homeViewModel.popularityReport.observe(viewLifecycleOwner) { report ->
+
+            Log.d("PopularityReport", "First: ${report.first}, Second: ${report.second}, Third: ${report.third}")
+
+
             val items = listOfNotNull(
                 report.first?.let { PopularityItem.VenueItem(it, "Best Rated Overall") },
-                report.second?.let { PopularityItem.SportItem(it, "Most Played by You") },
+                report.second?.takeIf { it.id != "unknown" }?.let { PopularityItem.SportItem(it, "Most Played by You") },
                 report.third?.let { PopularityItem.VenueItem(it, "Most Booked Overall")}
             )
+
+            Log.d("PopularityReport", "Items size: ${items.size}")
+
             popularityAdapter.submitList(items)
         }
 
         homeViewModel.upcomingBookings.observe(viewLifecycleOwner) { bookings ->
             upcomingBookingsAdapter.submitList(bookings)
+
+            Log.d("UpcomingBookings", "Upcoming bookings list: $bookings")
+
+            // Show message if there are no bookings
+            binding.textNoUpcomingBookings.visibility = if (bookings.isEmpty()) View.VISIBLE else View.GONE
         }
 
         homeViewModel.recommendedBookings.observe(viewLifecycleOwner) { bookings ->

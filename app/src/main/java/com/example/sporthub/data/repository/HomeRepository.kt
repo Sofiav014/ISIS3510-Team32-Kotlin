@@ -141,12 +141,14 @@ class HomeRepository {
 
         val mostPlayedSport = if (user.bookings.isNotEmpty()) {
             user.bookings
-                .groupBy { it.venue?.sport?.id }
+                .mapNotNull { it.venue?.sport } // 🔹 Ensure only non-null sports are used
+                .groupBy { it.id }
                 .maxByOrNull { it.value.size }
-                ?.value?.firstOrNull()?.venue?.sport
+                ?.value?.firstOrNull()
         } else {
             null
         }
+
 
         return mapOf(
             "highestRatedVenue" to highestRatedVenue,

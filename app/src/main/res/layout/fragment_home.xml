@@ -50,13 +50,13 @@
                 android:id="@+id/textPopularity"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="12dp"
                 android:gravity="center"
                 android:text="Popularity Report"
                 android:textColor="@color/primary"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="12dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -78,16 +78,33 @@
                 android:id="@+id/textUpcoming"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="12dp"
                 android:gravity="center"
                 android:text="Your upcoming bookings"
                 android:textColor="@color/primaryLight"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="12dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/recyclerPopularity" />
+
+
+            <TextView
+                android:id="@+id/textNoUpcomingBookings"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:text="No upcoming bookings"
+                android:textSize="16sp"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/textUpcoming" />
+
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerUpcomingBookings"
@@ -99,7 +116,7 @@
                 android:scrollbars="horizontal"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/textUpcoming" />
+                app:layout_constraintTop_toBottomOf="@id/textNoUpcomingBookings" />
 
             <!-- Bookings You May Want to Join -->
             <TextView
