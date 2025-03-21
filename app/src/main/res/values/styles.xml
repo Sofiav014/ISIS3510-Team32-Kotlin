@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Estilo base para botones redondeados -->
+    <style name="RoundedButtonStyle" parent="Widget.AppCompat.Button">
+        <item name="android:background">@drawable/button_rounded_shape</item>
+    </style>
+</resources>

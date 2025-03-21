@@ -40,6 +40,8 @@ android {
 }
 
 dependencies {
+
+
     // AndroidX Core
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -55,10 +57,20 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
 
+
+    implementation("com.google.android.material:material:1.10.0")
+
+    // Glide para cargar imágenes
+    implementation("com.github.bumptech.glide:glide:4.15.1")
+
+    // Biblioteca para renderizar SVGs
+    implementation("com.caverock:androidsvg:1.4")
     // Firebase - using BoM for version control
     implementation(platform("com.google.firebase:firebase-bom:31.5.0"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-database-ktx")
+
+    implementation("com.google.firebase:firebase-firestore-ktx")
 
     // Google Play Services
     implementation("com.google.android.gms:play-services-auth:20.5.0")
