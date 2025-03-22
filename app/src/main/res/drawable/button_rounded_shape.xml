@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="80dp" />
+    <!-- Usa el color primario del tema por defecto -->
+    <solid android:color="?attr/colorPrimary" />
+</shape>
