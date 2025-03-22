@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.sporthub.R
 import com.example.sporthub.data.model.Sport
 import com.example.sporthub.ui.findVenues.SportsAdapter
+import android.widget.Button
 
 class FindVenuesFragment : Fragment() {
 
@@ -36,6 +37,8 @@ class FindVenuesFragment : Fragment() {
         }
 
         recyclerView.adapter = adapter
+
+
     }
 
     private fun navigateToVenueList(sport: Sport) {
