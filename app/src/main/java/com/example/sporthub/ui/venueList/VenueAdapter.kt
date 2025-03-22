@@ -35,7 +35,7 @@ class VenueAdapter : RecyclerView.Adapter<VenueAdapter.VenueViewHolder>() {
         holder.venueSport.text = venue.sport?.name
         holder.venueRating.text = String.format("%.1f", venue.rating.toFloat())
         Glide.with(holder.itemView.context)
-            .load(venue.imageUrl)
+            .load(venue.image)
             .into(holder.venueImage)
     }
 
