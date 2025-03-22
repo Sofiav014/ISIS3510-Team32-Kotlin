@@ -2,24 +2,28 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/nav_search"
-        android:icon="@drawable/ic_search_selector"
-        android:title="" />
+        android:id="@+id/findVenuesFragment"
+        android:icon="@drawable/ic_search_outline"
+        android:title="Search" />
+
     <item
-        android:id="@+id/nav_calendar"
-        android:icon="@drawable/ic_calendar_selector"
-        android:title="" />
+        android:id="@+id/navigation_booking"
+        android:icon="@drawable/ic_calendar_outline"
+        android:title="Bookings" />
+
     <item
-        android:id="@+id/nav_home"
-        android:icon="@drawable/ic_home_selector"
-        android:title="" />
+        android:id="@+id/navigation_home"
+        android:icon="@drawable/ic_home_outline"
+        android:title="Home" />
+
     <item
-        android:id="@+id/nav_add"
-        android:icon="@drawable/ic_add_selector"
-        android:title="" />
+        android:id="@+id/navigation_create"
+        android:icon="@drawable/ic_create_outline"
+        android:title="Create" />
+
     <item
-        android:id="@+id/nav_profile"
-        android:icon="@drawable/ic_profile_selector"
-        android:title="" />
+        android:id="@+id/navigation_profile"
+        android:icon="@drawable/ic_profile_outline"
+        android:title="Profile" />
 
 </menu>

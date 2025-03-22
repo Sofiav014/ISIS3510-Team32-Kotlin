@@ -45,34 +45,42 @@
         android:shadowRadius="4" />
 
     <!-- Sign in button at bottom -->
-    <LinearLayout
+    <!-- Reemplaza el LinearLayout y su contenido con este botón moderno -->
+    <androidx.cardview.widget.CardView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="100dp"
-        android:background="@drawable/border">
+        app:cardCornerRadius="24dp"
+        app:cardElevation="2dp">
 
-        <ImageView
-            android:layout_width="50dp"
-            android:layout_height="46dp"
-            android:layout_alignParentLeft="true"
-            android:layout_centerVertical="true"
-            android:layout_gravity="center"
-            android:layout_marginLeft="11dp"
-            android:layout_marginRight="11dp"
-            android:background="@color/white"
-            android:src="@drawable/ic_google" />
-
-        <Button
+        <LinearLayout
             android:id="@+id/signInButton"
-            android:textAllCaps="false"
-            android:layout_width="200dp"
-            android:layout_height="50dp"
-            android:background="@color/blue"
-            android:text="Sign up with Google"
-            android:textColor="@color/white"
-            android:textSize="20sp" />
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:background="@color/white"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="24dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
 
-    </LinearLayout>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_google" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="Login/Sign in with Google"
+                android:textColor="#5F6368"
+                android:textSize="14sp"
+                android:textStyle="bold"/>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
 </RelativeLayout>

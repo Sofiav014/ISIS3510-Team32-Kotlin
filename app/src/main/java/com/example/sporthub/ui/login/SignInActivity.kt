@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.Toast
 import com.example.sporthub.R
 import com.example.sporthub.ui.MainActivity
@@ -39,7 +40,7 @@ class SignInActivity : AppCompatActivity() {
             checkUserExistsInFirestore(currentUser.uid)
         }
 
-        val signInButton = findViewById<Button>(R.id.signInButton)
+        val signInButton = findViewById<LinearLayout>(R.id.signInButton)
         signInButton.setOnClickListener {
             Log.d(TAG, "Sign In button clicked")
             signIn()
