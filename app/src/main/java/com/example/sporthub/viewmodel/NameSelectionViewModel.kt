@@ -55,12 +55,10 @@ class NameSelectionViewModel : ViewModel() {
                                 }
                         } else {
                             // Si el documento no existe, crear un nuevo perfil de usuario
-                            // Modificación en la función saveName del NameSelectionViewModel
-
-
+                            // Eliminamos la línea que guarda el email
                             val userData = hashMapOf<String, Any>(
                                 "name" to name,
-                                "email" to (currentUser.email ?: ""),
+                                // Ya no guardamos el email aquí
                                 "bookings" to ArrayList<String>(),
                                 "sports_liked" to ArrayList<String>(),
                                 "venues_liked" to ArrayList<String>(),
