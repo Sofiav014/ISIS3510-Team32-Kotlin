@@ -38,7 +38,7 @@ class HomeRepository {
             val venue = Venue(
                 id = venueMap["id"] as? String ?: "",
                 coords = venueMap["coords"] as? GeoPoint,
-                imageUrl = venueMap["image"] as? String ?: "",
+                image = venueMap["image"] as? String ?: "",
                 locationName = venueMap["location_name"] as? String ?: "",
                 name = venueMap["name"] as? String ?: "",
                 rating = (venueMap["rating"] as? Number)?.toDouble() ?: 0.0,
@@ -101,7 +101,7 @@ class HomeRepository {
             Venue(
                 id = doc.id,
                 coords = doc.getGeoPoint("coords"),
-                imageUrl = doc.getString("image") ?: "",
+                image = doc.getString("image") ?: "",
                 locationName = doc.getString("location_name") ?: "",
                 name = doc.getString("name") ?: "",
                 rating = (doc.get("rating") as? Number)?.toDouble() ?: 0.0,
@@ -130,7 +130,7 @@ class HomeRepository {
             Venue(
                 id = doc.id,
                 coords = doc.getGeoPoint("coords"),
-                imageUrl = doc.getString("image") ?: "",
+                image = doc.getString("image") ?: "",
                 locationName = doc.getString("location_name") ?: "",
                 name = doc.getString("name") ?: "",
                 rating = (doc.get("rating") as? Number)?.toDouble() ?: 0.0,

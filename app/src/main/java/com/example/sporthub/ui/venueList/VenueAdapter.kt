@@ -19,7 +19,7 @@ class VenueAdapter : RecyclerView.Adapter<VenueAdapter.VenueViewHolder>() {
         val venueName: TextView = view.findViewById(R.id.venueName)
         val venueLocation: TextView = view.findViewById(R.id.venueLocation)
         val venueSport: TextView = view.findViewById(R.id.venueSport)
-        val venueRating: TextView = view.findViewById(R.id.venueRating) // ✅ Changed from RatingBar to TextView
+        val venueRating: TextView = view.findViewById(R.id.venueRating)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VenueViewHolder {
@@ -35,7 +35,7 @@ class VenueAdapter : RecyclerView.Adapter<VenueAdapter.VenueViewHolder>() {
         holder.venueSport.text = venue.sport?.name
         holder.venueRating.text = String.format("%.1f", venue.rating.toFloat())
         Glide.with(holder.itemView.context)
-            .load(venue.imageUrl)
+            .load(venue.image)
             .into(holder.venueImage)
     }
 

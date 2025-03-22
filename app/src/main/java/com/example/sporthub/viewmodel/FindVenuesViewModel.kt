@@ -1,4 +1,4 @@
-package com.example.sporthub.ui.findVenues
+package com.example.sporthub.viewmodel
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

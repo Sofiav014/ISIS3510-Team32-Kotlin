@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.sporthub.R
 import com.example.sporthub.data.model.Venue
-import com.example.sporthub.ui.findVenues.FindVenuesViewModel
+import com.example.sporthub.viewmodel.FindVenuesViewModel
 import com.example.sporthub.ui.venueList.adapter.VenueAdapter
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices

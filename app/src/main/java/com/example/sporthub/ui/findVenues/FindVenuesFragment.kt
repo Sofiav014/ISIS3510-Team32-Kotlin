@@ -6,13 +6,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.sporthub.R
 import com.example.sporthub.data.model.Sport
-import com.example.sporthub.ui.findVenues.SportsAdapter
+import com.example.sporthub.viewmodel.FindVenuesViewModel
 
 class FindVenuesFragment : Fragment() {
 

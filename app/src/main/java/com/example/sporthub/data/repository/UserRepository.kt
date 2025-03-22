@@ -88,7 +88,7 @@ class UserRepository {
                             Venue(
                                 id = venueItem["id"] as? String ?: "",
                                 coords = venueItem["coords"] as? GeoPoint,
-                                imageUrl = venueItem["image"] as? String ?: "",
+                                image = venueItem["image"] as? String ?: "",
                                 locationName = venueItem["location_name"] as? String ?: "",
                                 name = venueItem["name"] as? String ?: "",
                                 rating = (venueItem["rating"] as? Number)?.toDouble() ?: 0.0,
@@ -116,7 +116,7 @@ class UserRepository {
                                     Venue(
                                         id = venueMap["id"] as? String ?: "",
                                         coords = venueMap["coords"] as? GeoPoint,
-                                        imageUrl = venueMap["image"] as? String ?: "",
+                                        image = venueMap["image"] as? String ?: "",
                                         locationName = venueMap["location_name"] as? String ?: "",
                                         name = venueMap["name"] as? String ?: "",
                                         rating = (venueMap["rating"] as? Number)?.toDouble() ?: 0.0,

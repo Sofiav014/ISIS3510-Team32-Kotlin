@@ -16,7 +16,7 @@ class UpcomingBookingViewHolder(private val binding: ItemUpcomingBookingBinding)
         binding.textVenueName.text = booking.venue?.name ?: "Unknown Venue"
         binding.textSport.text = booking.venue?.sport?.name ?: "Unknown Sport"
         binding.textRating.text = booking.venue?.rating.toString()
-        val imageUrl = booking.venue?.imageUrl ?: ""
+        val imageUrl = booking.venue?.image ?: ""
         Glide.with(binding.root.context)
             .load(imageUrl)
             .into(binding.imageBackground) // Set to ImageView

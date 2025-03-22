@@ -34,7 +34,7 @@ class RecommendedBookingViewHolder(private val binding: ItemRecommendedBookingBi
         binding.textTime.text = "$formattedStartTime h ($durationMinutes min)"
 
         binding.textUsers.text = "${booking.users.size} / ${booking.maxUsers}"
-        val imageUrl = booking.venue?.imageUrl ?: ""  // Replace with actual property
+        val imageUrl = booking.venue?.image ?: ""  // Replace with actual property
         Glide.with(binding.root.context)
             .load(imageUrl)
             .into(binding.imageBackground) // Set to ImageView
