@@ -1,10 +1,23 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/navigation_home">
-
+    app:startDestination="@id/nav_home">
+    <!--
     <fragment
-        android:id="@+id/navigation_home"
+        android:id="@+id/nav_search"
+        android:name="com.example.sporthub.ui.search.SearchFragment"
+        android:label="@string/title_search"
+        tools:layout="@layout/fragment_search" />
+    -->
+    <!--
+    <fragment
+        android:id="@+id/nav_calendar"
+        android:name="com.example.sporthub.ui.calendar.CalendarFragment"
+        android:label="@string/title_calendar"
+        tools:layout="@layout/fragment_calendar" />
+    -->
+    <fragment
+        android:id="@+id/nav_home"
         android:name="com.example.sporthub.ui.home.HomeFragment"
         android:label="Home"/>
 

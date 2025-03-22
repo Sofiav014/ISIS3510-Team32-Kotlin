@@ -12,5 +12,13 @@
     <color name="sb_purple">#ece6f0</color>
     <color name="contrast_black">#070304</color>
 
+    <color name="primaryNeutral">#FFFFFFFF</color>
+    <color name="primary">#FF60508C</color>
+    <color name="primaryLight">#FF6750A4</color>
+    <color name="lightPurple">#C860508C</color>
+    <color name="primaryDark">#FF070304</color>
+    <color name="contrast900">#FFFBD1A2</color>
+
+
 
 </resources>

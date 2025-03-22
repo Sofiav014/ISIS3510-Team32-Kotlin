@@ -20,7 +20,7 @@ class NameSelectionActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_name_selection)
+        setContentView(R.layout.activity_sign_in_name_selection)
 
         // Inicializar el ViewModel
         viewModel = ViewModelProvider(this).get(NameSelectionViewModel::class.java)

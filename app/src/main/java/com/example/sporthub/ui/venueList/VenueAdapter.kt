@@ -32,11 +32,10 @@ class VenueAdapter : RecyclerView.Adapter<VenueAdapter.VenueViewHolder>() {
         val venue = venues[position]
         holder.venueName.text = venue.name
         holder.venueLocation.text = venue.name
-        holder.venueSport.text = venue.sport.name
+        holder.venueSport.text = venue.sport?.name
         holder.venueRating.text = String.format("%.1f", venue.rating.toFloat())
         Glide.with(holder.itemView.context)
-            .load(venue.image)
-            .placeholder(R.drawable.ic_basketball_logo)
+            .load(venue.imageUrl)
             .into(holder.venueImage)
     }
 

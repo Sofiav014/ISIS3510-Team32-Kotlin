@@ -1,15 +1,17 @@
 package com.example.sporthub.data.model
 
-import com.google.firebase.firestore.GeoPoint
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.PropertyName
+import com.google.firebase.firestore.GeoPoint
+
 
 data class Venue(
-    val id: String = "",
-    val coords: GeoPoint? = null,
-    val image: String = "",
-    @get:PropertyName("location_name") val locationName: String = "",
-    val name: String = "",
-    val rating: Double = 0.0,
-    val sport: Sport = Sport("", "", ""),
-    val bookings: List<Booking> = emptyList()
+    @PropertyName("id") val id: String = "",
+    @PropertyName("coords") val coords: GeoPoint? = null,
+    @PropertyName("image") val imageUrl: String = "",
+    @PropertyName("location_name") val locationName: String = "",
+    @PropertyName("name") val name: String = "",
+    @PropertyName("rating") val rating: Double = 0.0,
+    @PropertyName("sport") val sport: Sport? = null,
+    @PropertyName("bookings") val bookings: List<Booking> = listOf()
 )

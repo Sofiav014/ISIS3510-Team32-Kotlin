@@ -11,7 +11,7 @@ import androidx.cardview.widget.CardView
 import androidx.lifecycle.ViewModelProvider
 import android.graphics.Color
 import com.example.sporthub.R
-import com.example.sporthub.ui.home.MainActivity
+import com.example.sporthub.ui.MainActivity
 import com.example.sporthub.viewmodel.SportSelectionViewModel
 
 class FavoriteSportsSelectionActivity : AppCompatActivity() {
@@ -35,7 +35,7 @@ class FavoriteSportsSelectionActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_favorite_sports_selection)
+        setContentView(R.layout.activity_sign_in_favorite_sports_selection)
 
         // Inicializar el ViewModel
         viewModel = ViewModelProvider(this).get(SportSelectionViewModel::class.java)

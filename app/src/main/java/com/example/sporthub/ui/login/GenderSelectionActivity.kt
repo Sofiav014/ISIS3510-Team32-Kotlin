@@ -18,7 +18,7 @@ class GenderSelectionActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_gender_selection)
+        setContentView(R.layout.activity_sign_in_gender_selection)
 
         // Inicializar el ViewModel
         viewModel = ViewModelProvider(this).get(GenderSelectionViewModel::class.java)
