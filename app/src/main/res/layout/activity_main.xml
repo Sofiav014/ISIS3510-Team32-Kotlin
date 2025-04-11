@@ -40,4 +40,28 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"/>
 
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/topAppBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:elevation="4dp"
+        app:layout_constraintTop_toTopOf="parent">
+        <TextView
+            android:id="@+id/toolbarTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="SportHub"
+            android:layout_marginEnd="?android:attr/actionBarSize"
+            android:textColor="#070304"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:paddingVertical="16dp"
+            android:paddingHorizontal="32dp" />
+    </com.google.android.material.appbar.MaterialToolbar>
+
+
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>
