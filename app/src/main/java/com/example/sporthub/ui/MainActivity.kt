@@ -35,6 +35,7 @@ import com.example.sporthub.ui.bookings.BookingsFragment
 import com.example.sporthub.ui.createBooking.CreateBookingFragment
 import com.example.sporthub.ui.findVenues.FindVenuesFragment
 import com.example.sporthub.ui.profile.ProfileFragment
+import com.google.android.material.appbar.MaterialToolbar
 
 
 class MainActivity : AppCompatActivity() {
@@ -100,6 +101,36 @@ class MainActivity : AppCompatActivity() {
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
+
+        // Set up ActionBar with NavController
+
+        val toolbar: MaterialToolbar = findViewById(R.id.topAppBar)
+        setSupportActionBar(toolbar)
+
+        val appBarConfiguration = AppBarConfiguration(
+            setOf(
+                R.id.navigation_home,
+                R.id.findVenuesFragment,
+                R.id.navigation_profile,
+                R.id.navigation_booking,
+                R.id.navigation_create
+            )
+        )
+        setupActionBarWithNavController(navController, appBarConfiguration)
+
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            val titleView: TextView? = findViewById(R.id.toolbarTitle)
+            titleView?.text = when (destination.id) {
+                R.id.findVenuesFragment -> "Find Venues"
+                R.id.venueListFragment -> "Venue List"
+                R.id.navigation_home -> "SportHub"
+                R.id.navigation_profile -> "Profile"
+                R.id.navigation_booking -> "Bookings"
+                R.id.navigation_create -> "Create Booking"
+                else -> "SportHub"
+            }
+        }
+
 
         // Set up Bottom Navigation with NavController
         val bottomNavigationView: BottomNavigationView = findViewById(R.id.nav_view)

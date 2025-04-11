@@ -7,12 +7,19 @@
     android:background="@color/white"
     tools:context=".ui.login.NameSelectionActivity">
 
+    <!-- Guía horizontal al 20% desde la parte superior para posicionamiento vertical -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_top"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.2" />
+
     <TextView
         android:id="@+id/textview_title"
-        android:layout_width="305dp"
-        android:layout_height="64dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
-        android:layout_marginTop="160dp"
         android:layout_marginEnd="32dp"
         android:text="Let us begin with a couple of questions"
         android:textAlignment="center"
@@ -21,13 +28,13 @@
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@id/guideline_top" />
 
     <TextView
         android:id="@+id/textview_question"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="60dp"
+        android:layout_marginTop="24dp"
         android:text="What is your name?"
         android:textColor="#673AB7"
         android:textSize="18sp"
@@ -37,8 +44,8 @@
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/name_input_layout"
-        android:layout_width="325dp"
-        android:layout_height="69dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="32dp"
@@ -50,8 +57,11 @@
             android:id="@+id/edit_text_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint=""
+            android:hint="Enter your name"
             android:inputType="textPersonName"
+            android:digits="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZáéíóúÁÉÍÓÚüÜñÑ '-"
+            android:maxLines="1"
+            android:maxLength="35"
             android:textSize="16sp" />
 
     </com.google.android.material.textfield.TextInputLayout>

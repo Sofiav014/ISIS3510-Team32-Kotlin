@@ -1,8 +1,8 @@
-// com.example.sporthub.ui.login.NameSelectionActivity.kt
 package com.example.sporthub.ui.login
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.InputFilter
 import android.widget.Button
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -35,6 +35,9 @@ class NameSelectionActivity : AppCompatActivity() {
         nameEditText = findViewById(R.id.edit_text_name)
         continueButton = findViewById(R.id.button_continue)
 
+        // Configurar filtro para solo permitir letras
+        setupLettersOnlyFilter()
+
         // Configurar observadores para eventos del ViewModel
         setupObservers()
 
@@ -59,6 +62,46 @@ class NameSelectionActivity : AppCompatActivity() {
 
             viewModel.saveName(name)
         }
+    }
+
+    private fun setupLettersOnlyFilter() {
+        // Filtro para permitir solo letras, espacios y algunos caracteres especiales para nombres compuestos
+        val lettersFilter = InputFilter { source, start, end, dest, dstart, dend ->
+            val regex = Regex("^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ '-]+$")
+            for (i in start until end) {
+                if (!regex.matches(source[i].toString())) {
+                    // Si no coincide con el patrón, no permitir la entrada
+                    return@InputFilter ""
+                }
+            }
+            null // Permitir la entrada
+        }
+
+        // Filtro de longitud - limita a 30 caracteres
+        val lengthFilter = InputFilter.LengthFilter(35)
+
+        // Aplicar ambos filtros
+        nameEditText.filters = arrayOf(lettersFilter, lengthFilter)
+
+        // Opcional: Mostrar contador de caracteres
+        // Primero obtener la referencia al TextInputLayout
+        val nameInputLayout = findViewById<com.google.android.material.textfield.TextInputLayout>(R.id.name_input_layout)
+
+        nameEditText.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: android.text.Editable?) {
+                val length = s?.length ?: 0
+                if (length >= 25) { // Aviso cuando se acerca al límite
+                    val remaining = 30 - length
+                    nameInputLayout.helperText = "$remaining characters left"
+                } else {
+                    nameInputLayout.helperText = null
+                }
+            }
+        })
     }
 
     private fun setupObservers() {
