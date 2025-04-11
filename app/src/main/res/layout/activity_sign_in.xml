@@ -77,7 +77,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
-                android:text="Login/Sign in with Google"
+                android:text="Sign in with Google"
                 android:textColor="#5F6368"
                 android:textSize="14sp"
                 android:textStyle="bold"/>
