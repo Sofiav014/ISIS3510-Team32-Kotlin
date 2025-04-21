@@ -30,6 +30,7 @@ import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import android.widget.Button
 import android.widget.TextView
+import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import com.example.sporthub.ui.bookings.BookingsFragment
 import com.example.sporthub.ui.createBooking.CreateBookingFragment
@@ -104,7 +105,7 @@ class MainActivity : AppCompatActivity() {
 
         // Set up ActionBar with NavController
 
-        val toolbar: MaterialToolbar = findViewById(R.id.topAppBar)
+        val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
 
         val appBarConfiguration = AppBarConfiguration(

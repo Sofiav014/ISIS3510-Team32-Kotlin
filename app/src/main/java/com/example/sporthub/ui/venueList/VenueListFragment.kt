@@ -10,6 +10,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -35,8 +36,10 @@ class VenueListFragment : Fragment() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var userLocation: Location? = null
     private var sportId: String? = null
+    private var sportName: String? = "Unknown"
     private var venuesLoaded = false
     private val cancellationTokenSource = CancellationTokenSource()
+
 
     // Launcher para solicitar permisos de ubicación
     private val requestPermissionLauncher = registerForActivityResult(
@@ -47,7 +50,11 @@ class VenueListFragment : Fragment() {
             getCurrentLocation()
         } else {
             // Permiso denegado, cargar venues sin ordenar por distancia
-            Toast.makeText(requireContext(), "Location permission denied. Venues will not be sorted by distance.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                requireContext(),
+                "Location permission denied. Venues will not be sorted by distance.",
+                Toast.LENGTH_SHORT
+            ).show()
             loadVenues()
         }
     }
@@ -75,6 +82,11 @@ class VenueListFragment : Fragment() {
             findNavController().navigateUp()
             return
         }
+
+        val sportName = arguments?.getString("sport") ?: "Unknown"
+
+        val titleTextView = view.findViewById<TextView>(R.id.textViewVenueTitle)
+        titleTextView.text = "$sportName Venues List"
 
         setupRecyclerView(view)
         setupObservers()
@@ -112,6 +124,7 @@ class VenueListFragment : Fragment() {
                 // Ya tenemos permiso, obtener ubicación
                 getCurrentLocation()
             }
+
             shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) -> {
                 // Explicar al usuario por qué necesitamos el permiso
                 Toast.makeText(
@@ -121,6 +134,7 @@ class VenueListFragment : Fragment() {
                 ).show()
                 requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             }
+
             else -> {
                 // Solicitar permiso directamente
                 requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -170,13 +184,15 @@ class VenueListFragment : Fragment() {
     private fun sortVenuesByDistance(venues: List<Venue>): List<Venue> {
         val currentLocation = userLocation ?: return venues
 
-        return venues.sortedBy { venue ->
+        return venues.map { venue ->
             val venueLocation = Location("").apply {
                 latitude = venue.coords?.latitude ?: 0.0
                 longitude = venue.coords?.longitude ?: 0.0
             }
-            currentLocation.distanceTo(venueLocation)
-        }
+            venue.distanceInKm = currentLocation.distanceTo(venueLocation) / 1000.0
+            venue
+        }.sortedBy { it.distanceInKm }
+
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -185,6 +201,7 @@ class VenueListFragment : Fragment() {
                 findNavController().navigateUp()
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }

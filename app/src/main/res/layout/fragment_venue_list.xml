@@ -14,6 +14,7 @@
         android:orientation="vertical">
 
         <TextView
+            android:id="@+id/textViewVenueTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
@@ -21,6 +22,7 @@
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@android:color/black"/>
+
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
