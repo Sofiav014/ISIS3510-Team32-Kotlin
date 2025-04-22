@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -46,6 +47,12 @@ class BirthDateSelectionActivity : AppCompatActivity() {
                 finish()
             }
         })
+
+        // Manejar botón de retroceso nuevo
+        val backButton = findViewById<ImageButton>(R.id.button_back_birth)
+        backButton.setOnClickListener {
+            finish()
+        }
 
         // Inicializar vistas
         datePickerEditText = findViewById(R.id.date_picker_edit_text)

@@ -3,6 +3,7 @@ package com.example.sporthub.ui.login
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -32,7 +33,7 @@ class GenderSelectionActivity : AppCompatActivity() {
         // Configurar observadores para eventos del ViewModel
         setupObservers()
 
-        // Manejar botón de retroceso
+        // Manejar botón de retroceso del dispositivo
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 Toast.makeText(
@@ -43,6 +44,12 @@ class GenderSelectionActivity : AppCompatActivity() {
                 finish()
             }
         })
+
+        // Manejar botón de retroceso nuevo
+        val backButton = findViewById<ImageButton>(R.id.button_back_gender)
+        backButton.setOnClickListener {
+            finish()
+        }
 
         try {
             // Configurar listeners para los botones
