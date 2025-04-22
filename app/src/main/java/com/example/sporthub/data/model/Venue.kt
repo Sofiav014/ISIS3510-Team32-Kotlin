@@ -1,7 +1,6 @@
 package com.example.sporthub.data.model
 
 import com.google.firebase.Timestamp
-import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.PropertyName
 import com.google.firebase.firestore.GeoPoint
 
@@ -15,7 +14,4 @@ data class Venue(
     @PropertyName("rating") val rating: Double = 0.0,
     @PropertyName("sport") val sport: Sport? = null,
     @PropertyName("bookings") val bookings: List<Booking> = listOf()
-){
-    @get:Exclude
-    var distanceInKm: Double? = null
-}
+)
