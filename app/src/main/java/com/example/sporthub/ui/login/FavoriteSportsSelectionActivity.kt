@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.lifecycle.ViewModelProvider
 import android.graphics.Color
+import android.widget.ImageButton
 import com.example.sporthub.R
 import com.example.sporthub.ui.MainActivity
 import com.example.sporthub.viewmodel.SportSelectionViewModel
@@ -61,11 +62,18 @@ class FavoriteSportsSelectionActivity : AppCompatActivity() {
             override fun handleOnBackPressed() {
                 Toast.makeText(
                     this@FavoriteSportsSelectionActivity,
-                    "Please select at least one sport to continue",
+                    "Going back to birthdate selector!",
                     Toast.LENGTH_SHORT
                 ).show()
+                finish()
             }
         })
+
+        // Manejar botón de retroceso nuevo
+        val backButton = findViewById<ImageButton>(R.id.button_back_sport)
+        backButton.setOnClickListener {
+            finish()
+        }
 
         try {
             // Configurar listeners para las tarjetas de deportes

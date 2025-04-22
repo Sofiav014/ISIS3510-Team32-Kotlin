@@ -15,6 +15,18 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.15" />
 
+    <ImageButton
+        android:id="@+id/button_back_sport"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@null"
+        android:src="@drawable/ic_arrow_back"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="#673AB7"/>
+
     <TextView
         android:id="@+id/textview_title"
         android:layout_width="0dp"

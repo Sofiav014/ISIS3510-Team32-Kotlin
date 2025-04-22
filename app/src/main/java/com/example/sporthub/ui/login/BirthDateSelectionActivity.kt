@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -40,11 +41,18 @@ class BirthDateSelectionActivity : AppCompatActivity() {
             override fun handleOnBackPressed() {
                 Toast.makeText(
                     this@BirthDateSelectionActivity,
-                    "Please select your birth date to continue",
+                    "Going back to gender selection!",
                     Toast.LENGTH_SHORT
                 ).show()
+                finish()
             }
         })
+
+        // Manejar botón de retroceso nuevo
+        val backButton = findViewById<ImageButton>(R.id.button_back_birth)
+        backButton.setOnClickListener {
+            finish()
+        }
 
         // Inicializar vistas
         datePickerEditText = findViewById(R.id.date_picker_edit_text)
@@ -104,8 +112,10 @@ class BirthDateSelectionActivity : AppCompatActivity() {
             calendar.get(Calendar.DAY_OF_MONTH)
         )
 
-        // Limitar la fecha máxima a la fecha actual
-        datePickerDialog.datePicker.maxDate = System.currentTimeMillis()
+        // Establecer fecha máxima (Requerimiento de edad - Los usuarios deben tener, por lo menos, 14)
+        val maxDate = Calendar.getInstance()
+        maxDate.add(Calendar.YEAR, -14)
+        datePickerDialog.datePicker.maxDate = maxDate.timeInMillis
 
         // Establecer fecha mínima (por ejemplo, 100 años atrás)
         val minDate = Calendar.getInstance()
@@ -138,7 +148,6 @@ class BirthDateSelectionActivity : AppCompatActivity() {
     private fun navigateToSportsSelection() {
         val intent = Intent(this, FavoriteSportsSelectionActivity::class.java)
         startActivity(intent)
-        finish()
     }
 
     private fun redirectToSignIn() {
