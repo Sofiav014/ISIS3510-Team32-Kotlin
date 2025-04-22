@@ -40,9 +40,10 @@ class BirthDateSelectionActivity : AppCompatActivity() {
             override fun handleOnBackPressed() {
                 Toast.makeText(
                     this@BirthDateSelectionActivity,
-                    "Please select your birth date to continue",
+                    "Going back to gender selection!",
                     Toast.LENGTH_SHORT
                 ).show()
+                finish()
             }
         })
 
@@ -140,7 +141,6 @@ class BirthDateSelectionActivity : AppCompatActivity() {
     private fun navigateToSportsSelection() {
         val intent = Intent(this, FavoriteSportsSelectionActivity::class.java)
         startActivity(intent)
-        finish()
     }
 
     private fun redirectToSignIn() {

@@ -37,9 +37,10 @@ class GenderSelectionActivity : AppCompatActivity() {
             override fun handleOnBackPressed() {
                 Toast.makeText(
                     this@GenderSelectionActivity,
-                    "Please select your gender to continue",
+                    "Going back to name selection!",
                     Toast.LENGTH_SHORT
                 ).show()
+                finish()
             }
         })
 
@@ -88,7 +89,6 @@ class GenderSelectionActivity : AppCompatActivity() {
     private fun navigateToBirthDateSelection() {
         val intent = Intent(this, BirthDateSelectionActivity::class.java)
         startActivity(intent)
-        finish()
     }
 
     private fun redirectToSignIn() {
@@ -96,4 +96,5 @@ class GenderSelectionActivity : AppCompatActivity() {
         startActivity(intent)
         finish()
     }
+
 }

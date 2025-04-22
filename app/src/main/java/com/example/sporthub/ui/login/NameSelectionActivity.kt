@@ -127,7 +127,6 @@ class NameSelectionActivity : AppCompatActivity() {
     private fun navigateToGenderSelection() {
         val intent = Intent(this, GenderSelectionActivity::class.java)
         startActivity(intent)
-        finish()
     }
 
     private fun redirectToSignIn() {

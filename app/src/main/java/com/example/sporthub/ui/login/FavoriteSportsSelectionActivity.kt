@@ -61,9 +61,10 @@ class FavoriteSportsSelectionActivity : AppCompatActivity() {
             override fun handleOnBackPressed() {
                 Toast.makeText(
                     this@FavoriteSportsSelectionActivity,
-                    "Please select at least one sport to continue",
+                    "Going back to birthdate selector!",
                     Toast.LENGTH_SHORT
                 ).show()
+                finish()
             }
         })
 
