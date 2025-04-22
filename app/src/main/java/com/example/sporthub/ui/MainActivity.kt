@@ -56,9 +56,14 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+
         mAuth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
         userRepository = UserRepository()
+
+
+
+
 
 
         val authUser = mAuth.currentUser

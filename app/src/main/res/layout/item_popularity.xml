@@ -3,7 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="150dp"
-    android:layout_height="170dp"
+    android:layout_height="190dp"
     app:cardCornerRadius="15dp"
     android:layout_margin="4dp">
 
@@ -30,7 +30,7 @@
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
+            android:layout_marginBottom="4dp"
             app:tint="@android:color/white" />
 
         <TextView
@@ -41,6 +41,18 @@
             android:text="Basketball"
             android:textColor="@android:color/white"
             android:textSize="14sp" />
+
+        <!-- Text for ratings and bookings count -->
+        <TextView
+            android:id="@+id/textInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="★ 5.0"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

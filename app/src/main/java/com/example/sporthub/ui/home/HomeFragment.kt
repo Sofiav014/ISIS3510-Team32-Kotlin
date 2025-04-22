@@ -66,19 +66,39 @@ class HomeFragment : Fragment() {
             }
         }
 
+        // Replace this in your HomeFragment.kt file to ensure the data is passed correctly
+
         homeViewModel.popularityReport.observe(viewLifecycleOwner) { report ->
-
-            Log.d("PopularityReport", "First: ${report.first}, Second: ${report.second}, Third: ${report.third}")
-
+            Log.d("PopularityReport", "Received report: $report")
 
             val items = listOfNotNull(
-                report.first?.let { PopularityItem.VenueItem(it, "Best Rated Overall") },
-                report.second?.takeIf { it.id != "unknown" }?.let { PopularityItem.SportItem(it, "Most Played by You") },
-                report.third?.let { PopularityItem.VenueItem(it, "Most Booked Overall")}
+                // For the Best Rated venue, include the rating as additional info
+                report.highestRatedVenue?.let {
+                    PopularityItem.VenueItem(
+                        it,
+                        "Best Rated Overall",
+                        "★ ${String.format("%.1f", it.rating)}"
+                    )
+                },
+                // Include most played sport if it's not "unknown"
+                report.mostPlayedSport.takeIf { it.id != "unknown" }?.let {
+                    PopularityItem.SportItem(
+                        it,
+                        "Most Played by You",
+                        "Played ${report.mostPlayedSportCount} times"
+                    )
+                },
+                // For the Most Booked venue, include the booking count as additional info
+                report.mostBookedVenue?.let {
+                    PopularityItem.VenueItem(
+                        it,
+                        "Most Booked Overall",
+                        "${report.mostBookedCount} bookings"
+                    )
+                }
             )
 
-            Log.d("PopularityReport", "Items size: ${items.size}")
-
+            Log.d("PopularityReport", "Items being submitted: $items")
             popularityAdapter.submitList(items)
         }
 

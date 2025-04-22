@@ -17,8 +17,17 @@ class HomeViewModel(private val repository: HomeRepository) : ViewModel() {
     private val _upcomingBookings = MutableLiveData<List<Booking>>()
     val upcomingBookings: LiveData<List<Booking>> = _upcomingBookings
 
-    private val _popularityReport = MutableLiveData<Triple<Venue?, Sport, Venue?>>()
-    val popularityReport: LiveData<Triple<Venue?, Sport, Venue?>> = _popularityReport
+    // Update the data structure to include sport play count
+    data class PopularityReportData(
+        val highestRatedVenue: Venue?,
+        val mostPlayedSport: Sport,
+        val mostPlayedSportCount: Int = 0,
+        val mostBookedVenue: Venue?,
+        val mostBookedCount: Long = 0
+    )
+
+    private val _popularityReport = MutableLiveData<PopularityReportData>()
+    val popularityReport: LiveData<PopularityReportData> = _popularityReport
 
     fun loadData(user: User) {
         viewModelScope.launch {
@@ -32,14 +41,26 @@ class HomeViewModel(private val repository: HomeRepository) : ViewModel() {
                 val mostBookedVenue = report["mostBookedVenue"] as? Venue
                 val mostPlayedSport = report["mostPlayedSport"] as? Sport
 
+                // Get the most booked venue with count
+                val mostBookedVenueWithCount = report["mostBookedVenueWithCount"] as? HomeRepository.VenueWithBookingCount
+                val mostBookedCount = mostBookedVenueWithCount?.bookingCount ?: 0
 
-                Log.d("PopularityReport", "Fetched: $highestRatedVenue, $mostPlayedSport, $mostBookedVenue")
+                // Calculate number of times user played the most played sport
+                var mostPlayedSportCount = 0
+                if (mostPlayedSport != null && mostPlayedSport.id != "unknown") {
+                    mostPlayedSportCount = user.bookings
+                        .mapNotNull { it.venue?.sport }
+                        .count { it.id == mostPlayedSport.id }
+                }
 
+                Log.d("PopularityReport", "Fetched: $highestRatedVenue, $mostPlayedSport (played $mostPlayedSportCount times), $mostBookedVenue")
 
-                _popularityReport.value = Triple(
+                _popularityReport.value = PopularityReportData(
                     highestRatedVenue,
                     mostPlayedSport ?: Sport(id = "unknown", name = "No sport found", logo = ""),
-                    mostBookedVenue
+                    mostPlayedSportCount,
+                    mostBookedVenue,
+                    mostBookedCount
                 )
 
             } catch (e: Exception) {
