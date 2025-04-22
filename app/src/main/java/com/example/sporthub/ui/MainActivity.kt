@@ -30,6 +30,7 @@ import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import android.widget.Button
 import android.widget.TextView
+import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import com.example.sporthub.ui.bookings.BookingsFragment
 import com.example.sporthub.ui.createBooking.CreateBookingFragment
@@ -104,7 +105,7 @@ class MainActivity : AppCompatActivity() {
 
         // Set up ActionBar with NavController
 
-        val toolbar: MaterialToolbar = findViewById(R.id.topAppBar)
+        val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
 
         val appBarConfiguration = AppBarConfiguration(
@@ -120,16 +121,18 @@ class MainActivity : AppCompatActivity() {
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
             val titleView: TextView? = findViewById(R.id.toolbarTitle)
-            titleView?.text = when (destination.id) {
-                R.id.findVenuesFragment -> "Find Venues"
-                R.id.venueListFragment -> "Venue List"
-                R.id.navigation_home -> "SportHub"
-                R.id.navigation_profile -> "Profile"
-                R.id.navigation_booking -> "Bookings"
-                R.id.navigation_create -> "Create Booking"
-                else -> "SportHub"
+            if (destination.id != R.id.venueListFragment) {
+                titleView?.text = when (destination.id) {
+                    R.id.findVenuesFragment -> "Find Venues"
+                    R.id.navigation_home -> "SportHub"
+                    R.id.navigation_profile -> "Profile"
+                    R.id.navigation_booking -> "Bookings"
+                    R.id.navigation_create -> "Create Booking"
+                    else -> "SportHub"
+                }
             }
         }
+
 
 
         // Set up Bottom Navigation with NavController
