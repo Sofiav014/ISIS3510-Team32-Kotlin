@@ -104,8 +104,10 @@ class BirthDateSelectionActivity : AppCompatActivity() {
             calendar.get(Calendar.DAY_OF_MONTH)
         )
 
-        // Limitar la fecha máxima a la fecha actual
-        datePickerDialog.datePicker.maxDate = System.currentTimeMillis()
+        // Establecer fecha máxima (Requerimiento de edad - Los usuarios deben tener, por lo menos, 14)
+        val maxDate = Calendar.getInstance()
+        maxDate.add(Calendar.YEAR, -14)
+        datePickerDialog.datePicker.maxDate = maxDate.timeInMillis
 
         // Establecer fecha mínima (por ejemplo, 100 años atrás)
         val minDate = Calendar.getInstance()
