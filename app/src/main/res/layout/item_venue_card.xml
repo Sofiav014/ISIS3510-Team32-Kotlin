@@ -90,7 +90,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
                     android:layout_gravity="center_vertical"
-                    android:text="7.25 km away"
+                    android:text="Distance is not available right now :c"
                     android:textColor="@android:color/white"
                     android:textSize="14sp" />
             </LinearLayout>
@@ -101,7 +101,6 @@
             android:id="@+id/venueSport"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/venueDistanceContainer"
             android:layout_marginStart="16dp"
             android:text="Sport name here"
             android:textColor="@android:color/white"

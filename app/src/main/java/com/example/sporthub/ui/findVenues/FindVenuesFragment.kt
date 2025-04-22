@@ -14,6 +14,7 @@ import com.example.sporthub.R
 import com.example.sporthub.data.model.Sport
 import com.example.sporthub.ui.findVenues.SportsAdapter
 import android.widget.Button
+import android.util.Log
 
 class FindVenuesFragment : Fragment() {
 
@@ -39,14 +40,18 @@ class FindVenuesFragment : Fragment() {
         recyclerView.adapter = adapter
 
 
+
+
     }
 
     private fun navigateToVenueList(sport: Sport) {
         val bundle = Bundle().apply {
             putString("sportId", sport.id)
+            putString("sport", sport.name)
         }
-        findNavController().navigate(R.id.action_findVenuesFragment_to_venueListFragment, bundle)
+        Log.d("FindVenues", "Navigating with sport: ${sport.name}")
 
+        findNavController().navigate(R.id.action_findVenuesFragment_to_venueListFragment, bundle)
 
 
     }

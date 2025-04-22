@@ -28,6 +28,8 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import java.util.Locale
+import android.util.Log
 
 class VenueListFragment : Fragment() {
 
@@ -39,6 +41,7 @@ class VenueListFragment : Fragment() {
     private var sportName: String? = "Unknown"
     private var venuesLoaded = false
     private val cancellationTokenSource = CancellationTokenSource()
+
 
 
     // Launcher para solicitar permisos de ubicación
@@ -72,6 +75,7 @@ class VenueListFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_venue_list, container, false)
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -83,10 +87,15 @@ class VenueListFragment : Fragment() {
             return
         }
 
-        val sportName = arguments?.getString("sport") ?: "Unknown"
+        sportName = arguments?.getString("sport") ?: "Unknown"
+
+        Log.d("VenueList", "Received sportName: $sportName")
 
         val titleTextView = view.findViewById<TextView>(R.id.textViewVenueTitle)
-        titleTextView.text = "$sportName Venues List"
+        titleTextView.text = String.format(Locale.getDefault(), "%s Venues List", sportName)
+
+        (requireActivity() as AppCompatActivity)
+            .findViewById<TextView>(R.id.toolbarTitle)?.text = "$sportName Venues List"
 
         setupRecyclerView(view)
         setupObservers()

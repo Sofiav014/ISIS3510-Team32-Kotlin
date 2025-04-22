@@ -47,7 +47,7 @@ class VenueAdapter : RecyclerView.Adapter<VenueAdapter.VenueViewHolder>() {
             holder.venueDistance.visibility = View.VISIBLE
             holder.venueDistance.text = String.format(Locale.getDefault(), "%.2f km away", distanceKm)
         } else {
-            holder.venueDistance.visibility = View.GONE
+            holder.venueDistance.visibility = View.VISIBLE
         }
 
     }
