@@ -35,15 +35,11 @@
     <fragment
         android:id="@+id/venueListFragment"
         android:name="com.example.sporthub.ui.venueList.VenueListFragment"
-        >
+        android:label="Venue List">
         <argument
             android:name="sportId"
             app:argType="string"
             app:nullable="false"/>
-        <argument
-            android:name="sport"
-            app:argType="string"
-            app:nullable="true"/>
     </fragment>
 
     <fragment

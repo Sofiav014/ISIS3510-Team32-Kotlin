@@ -9,7 +9,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.sporthub.R
 import com.example.sporthub.data.model.Venue
-import java.util.Locale
 
 class VenueAdapter : RecyclerView.Adapter<VenueAdapter.VenueViewHolder>() {
 
@@ -21,8 +20,6 @@ class VenueAdapter : RecyclerView.Adapter<VenueAdapter.VenueViewHolder>() {
         val venueLocation: TextView = view.findViewById(R.id.venueLocation)
         val venueSport: TextView = view.findViewById(R.id.venueSport)
         val venueRating: TextView = view.findViewById(R.id.venueRating) // ✅ Changed from RatingBar to TextView
-
-        val venueDistance: TextView = view.findViewById(R.id.venueDistance)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VenueViewHolder {
@@ -40,16 +37,6 @@ class VenueAdapter : RecyclerView.Adapter<VenueAdapter.VenueViewHolder>() {
         Glide.with(holder.itemView.context)
             .load(venue.image)
             .into(holder.venueImage)
-
-        // Display the distance in the venue cards on the Venue List
-        val distanceKm = venue.distanceInKm
-        if (distanceKm != null) {
-            holder.venueDistance.visibility = View.VISIBLE
-            holder.venueDistance.text = String.format(Locale.getDefault(), "%.2f km away", distanceKm)
-        } else {
-            holder.venueDistance.visibility = View.VISIBLE
-        }
-
     }
 
     override fun getItemCount() = venues.size
