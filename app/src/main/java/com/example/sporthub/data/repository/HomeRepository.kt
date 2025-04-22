@@ -74,6 +74,12 @@ class HomeRepository {
         return upcommingBookings
     }
 
+    // Custom class to return venue with booking count
+    data class VenueWithBookingCount(
+        val venue: Venue,
+        val bookingCount: Long
+    )
+
     suspend fun popularityReport(user: User): Map<String, Any?> {
         val metadataSnapshot = firestore.collection("metadata")
             .document("metadata")
@@ -84,6 +90,9 @@ class HomeRepository {
         val venuesBookings = data["venues_bookings"] as? Map<String, Long> ?: emptyMap()
 
         val mostBookedVenueEntry = venuesBookings.maxByOrNull { it.value }
+
+        // Get the booking count for the most booked venue
+        val mostBookedCount = mostBookedVenueEntry?.value ?: 0L
 
         val mostBookedVenue = mostBookedVenueEntry?.key?.let { venueId ->
             val doc = firestore.collection("venues").document(venueId).get().await()
@@ -149,12 +158,16 @@ class HomeRepository {
             null
         }
 
+        // Create VenueWithBookingCount object for the most booked venue
+        val mostBookedVenueWithCount = mostBookedVenue?.let {
+            VenueWithBookingCount(it, mostBookedCount)
+        }
 
         return mapOf(
             "highestRatedVenue" to highestRatedVenue,
             "mostBookedVenue" to mostBookedVenue,
+            "mostBookedVenueWithCount" to mostBookedVenueWithCount,
             "mostPlayedSport" to mostPlayedSport
         )
     }
-
 }

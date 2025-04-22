@@ -100,6 +100,9 @@ class VenueListFragment : Fragment() {
                 venues
             }
             venueAdapter.submitList(sortedVenues)
+
+            // Pass user location to adapter to display distances
+            venueAdapter.setUserLocation(userLocation)
         })
     }
 
@@ -136,6 +139,9 @@ class VenueListFragment : Fragment() {
             cancellationTokenSource.token
         ).addOnSuccessListener { location ->
             userLocation = location
+
+            // Pass the location to the adapter
+            venueAdapter.setUserLocation(location)
 
             // Si ya teníamos los venues cargados, los reordenamos
             if (venuesLoaded) {
