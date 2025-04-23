@@ -49,10 +49,10 @@ class VenueAdapter : RecyclerView.Adapter<VenueAdapter.VenueViewHolder>() {
             val distanceText = String.format("%.1f km", distanceInMeters / 1000)
 
             // Display distance in sport field
-            holder.venueSport.text = "Distance: $distanceText"
+            holder.venueSport.text = "$distanceText away" 
         } else {
             // If no location is available, show sport name as fallback
-            holder.venueSport.text = venue.sport?.name ?: "Unknown Sport"
+            holder.venueSport.text = "Distance not available"
         }
 
         // Set rating
