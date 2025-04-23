@@ -4,4 +4,9 @@
     <style name="RoundedButtonStyle" parent="Widget.AppCompat.Button">
         <item name="android:background">@drawable/button_rounded_shape</item>
     </style>
+
+    <style name="CircleImageView">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
 </resources>

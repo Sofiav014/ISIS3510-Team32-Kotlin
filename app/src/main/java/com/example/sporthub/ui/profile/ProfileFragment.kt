@@ -1,35 +1,224 @@
 package com.example.sporthub.ui.profile
 
 import android.content.Intent
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.sporthub.R
+import com.example.sporthub.data.model.Sport
+import com.example.sporthub.data.model.User
+import com.example.sporthub.ui.login.BirthDateSelectionActivity
+import com.example.sporthub.ui.login.FavoriteSportsSelectionActivity
+import com.example.sporthub.ui.login.GenderSelectionActivity
+import com.example.sporthub.ui.login.NameSelectionActivity
 import com.example.sporthub.ui.login.SignInActivity
+import com.example.sporthub.viewmodel.SharedUserViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 
 class ProfileFragment : Fragment() {
 
+    private val viewModel: ProfileViewModel by viewModels()
+    private val sharedUserViewModel: SharedUserViewModel by activityViewModels()
+
+    private lateinit var profileName: TextView
+    private lateinit var genderValue: TextView
+    private lateinit var birthDateValue: TextView
+    private lateinit var favoriteSportsContainer: LinearLayout
+    private lateinit var favoriteVenuesRecyclerView: RecyclerView
+    private lateinit var noFavoriteVenuesText: TextView
+    private lateinit var settingsButton: Button
+    private lateinit var logoutButton: Button
+
+    private lateinit var favoriteVenueAdapter: FavoriteVenueAdapter
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // Inflate the layout for this fragment
+        // Use the updated layout
         return inflater.inflate(R.layout.fragment_profile, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val logoutButton = view.findViewById<Button>(R.id.button_logout)
+        // Initialize views
+        initViews(view)
+
+        // Setup RecyclerView
+        setupRecyclerView()
+
+        // Setup observers
+        setupObservers()
+
+        // Setup button listeners
+        setupButtons()
+
+        // Load data
+        viewModel.loadUserData()
+    }
+
+    private fun initViews(view: View) {
+        profileName = view.findViewById(R.id.profileName)
+        genderValue = view.findViewById(R.id.genderValue)
+        birthDateValue = view.findViewById(R.id.birthDateValue)
+        favoriteSportsContainer = view.findViewById(R.id.favoriteSportsContainer)
+        favoriteVenuesRecyclerView = view.findViewById(R.id.favoriteVenuesRecyclerView)
+        noFavoriteVenuesText = view.findViewById(R.id.noFavoriteVenuesText)
+        settingsButton = view.findViewById(R.id.buttonSettings)
+        logoutButton = view.findViewById(R.id.button_logout)
+    }
+
+    private fun setupRecyclerView() {
+        favoriteVenueAdapter = FavoriteVenueAdapter()
+        favoriteVenuesRecyclerView.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = favoriteVenueAdapter
+        }
+    }
+
+    private fun setupObservers() {
+        // Get user data from shared view model if available
+        sharedUserViewModel.currentUser.observe(viewLifecycleOwner) { user ->
+            if (user != null) {
+                updateUI(user)
+            }
+        }
+
+        // Otherwise use the profile view model
+        viewModel.userData.observe(viewLifecycleOwner) { user ->
+            updateUI(user)
+        }
+
+        viewModel.favoriteVenues.observe(viewLifecycleOwner) { venues ->
+            favoriteVenueAdapter.submitList(venues)
+
+            // Show or hide the no venues message
+            if (venues.isNullOrEmpty()) {
+                noFavoriteVenuesText.visibility = View.VISIBLE
+                favoriteVenuesRecyclerView.visibility = View.GONE
+            } else {
+                noFavoriteVenuesText.visibility = View.GONE
+                favoriteVenuesRecyclerView.visibility = View.VISIBLE
+            }
+        }
+
+        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun setupButtons() {
+        settingsButton.setOnClickListener {
+            // Open settings dialog
+            showSettingsDialog()
+        }
+
         logoutButton.setOnClickListener {
             signOutAndStartSignInActivity()
         }
+    }
+
+    private fun updateUI(user: User) {
+        // Update profile name
+        profileName.text = user.name.ifEmpty { "Current User" }
+
+        // Update gender
+        genderValue.text = user.gender.ifEmpty { "Not specified" }
+
+        // Update birth date
+        birthDateValue.text = viewModel.formatBirthDate(user.birthDate)
+
+        // Update favorite sports
+        updateFavoriteSports(user.sportsLiked)
+
+        // Display favorite venues
+        favoriteVenueAdapter.submitList(user.venuesLiked)
+
+        // Show or hide the no venues message
+        if (user.venuesLiked.isNullOrEmpty()) {
+            noFavoriteVenuesText.visibility = View.VISIBLE
+            favoriteVenuesRecyclerView.visibility = View.GONE
+        } else {
+            noFavoriteVenuesText.visibility = View.GONE
+            favoriteVenuesRecyclerView.visibility = View.VISIBLE
+        }
+    }
+
+    private fun updateFavoriteSports(sports: List<Sport>) {
+        favoriteSportsContainer.removeAllViews()
+
+        if (sports.isEmpty()) {
+            val textView = TextView(context)
+            textView.text = "No favorite sports yet"
+            textView.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.darker_gray))
+            favoriteSportsContainer.addView(textView)
+            return
+        }
+
+        for (sport in sports) {
+            val sportIcon = ImageView(context)
+            sportIcon.layoutParams = LinearLayout.LayoutParams(
+                resources.getDimensionPixelSize(android.R.dimen.app_icon_size),
+                resources.getDimensionPixelSize(android.R.dimen.app_icon_size)
+            ).apply {
+                marginEnd = resources.getDimensionPixelSize(R.dimen.activity_horizontal_margin) / 2
+            }
+
+            sportIcon.background = ContextCompat.getDrawable(requireContext(), R.drawable.circle_purple_background)
+            sportIcon.setPadding(8, 8, 8, 8)
+
+            // Set the appropriate icon based on sport type
+            val sportDrawable: Drawable? = when (sport.name.toLowerCase()) {
+                "basketball" -> ContextCompat.getDrawable(requireContext(), R.drawable.ic_basketball_logo)
+                "football" -> ContextCompat.getDrawable(requireContext(), R.drawable.ic_football_logo)
+                "volleyball" -> ContextCompat.getDrawable(requireContext(), R.drawable.ic_volleyball_logo)
+                "tennis" -> ContextCompat.getDrawable(requireContext(), R.drawable.ic_tennis_logo)
+                else -> ContextCompat.getDrawable(requireContext(), R.drawable.ic_sport_venue_card)
+            }
+
+            sportIcon.setImageDrawable(sportDrawable)
+            favoriteSportsContainer.addView(sportIcon)
+        }
+    }
+
+    private fun showSettingsDialog() {
+        // Create the options
+        val options = arrayOf(
+            "Edit Profile Name",
+            "Change Gender",
+            "Update Birth Date",
+            "Update Favorite Sports"
+        )
+
+        // Create and show the dialog
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle("Settings")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> startActivity(Intent(requireContext(), NameSelectionActivity::class.java))
+                    1 -> startActivity(Intent(requireContext(), GenderSelectionActivity::class.java))
+                    2 -> startActivity(Intent(requireContext(), BirthDateSelectionActivity::class.java))
+                    3 -> startActivity(Intent(requireContext(), FavoriteSportsSelectionActivity::class.java))
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun signOutAndStartSignInActivity() {
@@ -49,5 +238,10 @@ class ProfileFragment : Fragment() {
             android.util.Log.e("ProfileFragment", "Error signing out: ${e.message}")
         }
     }
-}
 
+    override fun onResume() {
+        super.onResume()
+        // Reload data when returning to this fragment
+        viewModel.loadUserData()
+    }
+}
