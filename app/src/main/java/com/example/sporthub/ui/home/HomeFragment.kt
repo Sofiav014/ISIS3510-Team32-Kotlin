@@ -44,18 +44,25 @@ class HomeFragment : Fragment() {
         binding.recyclerPopularity.apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
             adapter = popularityAdapter
+            binding.recyclerPopularity.isNestedScrollingEnabled = false
         }
 
         upcomingBookingsAdapter = UpcomingBookingsAdapter()
         binding.recyclerUpcomingBookings.apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
             adapter = upcomingBookingsAdapter
+            binding.recyclerUpcomingBookings.isNestedScrollingEnabled = false
+
         }
 
         recommendedBookingsAdapter = RecommendedBookingsAdapter()
         binding.recyclerRecommendedBookings.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = recommendedBookingsAdapter
+            binding.recyclerRecommendedBookings.isNestedScrollingEnabled = false
+            binding.root.post {
+                binding.recyclerRecommendedBookings.requestLayout()
+            }
         }
     }
 
@@ -85,7 +92,7 @@ class HomeFragment : Fragment() {
                     PopularityItem.SportItem(
                         it,
                         "Most Played by You",
-                        "Played ${report.mostPlayedSportCount} times"
+                        "Played ${report.mostPlayedSportCount} time(s)"
                     )
                 },
                 // For the Most Booked venue, include the booking count as additional info
