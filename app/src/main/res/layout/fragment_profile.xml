@@ -150,29 +150,15 @@
                         android:src="@drawable/ic_volleyball_logo" />
                 </LinearLayout>
 
-                <!-- Settings Button -->
-                <Button
-                    android:id="@+id/buttonSettings"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:backgroundTint="#60508C"
-                    android:text="Settings"
-                    android:textColor="@android:color/white"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/favoriteSportsContainer" />
-
-                <!-- Theme Switch -->
                 <!-- Theme Mode Section -->
                 <LinearLayout
                     android:id="@+id/themeModeSection"
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/buttonSettings"
                     app:layout_constraintTop_toBottomOf="@id/favoriteSportsContainer">
 
                     <ImageView
@@ -189,7 +175,12 @@
                         android:layout_marginStart="8dp"
                         android:text="Dark Mode"
                         android:textColor="#333333"
-                        android:textSize="16sp" />
+                        android:textSize="14sp" />
+
+                    <Space
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1" />
 
                     <androidx.appcompat.widget.SwitchCompat
                         android:id="@+id/themeSwitch"
@@ -198,8 +189,20 @@
                         android:layout_marginStart="8dp"
                         app:thumbTint="#60508C"
                         app:trackTint="#EDE7F6" />
-
                 </LinearLayout>
+
+                <!-- Settings Button -->
+                <Button
+                    android:id="@+id/buttonSettings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:backgroundTint="#60508C"
+                    android:text="Settings"
+                    android:textColor="@android:color/white"
+                    app:layout_constraintTop_toBottomOf="@id/themeModeSection"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
