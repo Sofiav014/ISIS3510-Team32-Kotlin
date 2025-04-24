@@ -69,7 +69,7 @@ class HomeFragment : Fragment() {
     private fun observeViewModels() {
         userViewModel.currentUser.observe(viewLifecycleOwner) { user ->
             if (user != null) {
-                homeViewModel.loadData(user)
+                homeViewModel.loadHomeData(requireContext(), user)
             }
         }
 
@@ -121,6 +121,12 @@ class HomeFragment : Fragment() {
         homeViewModel.recommendedBookings.observe(viewLifecycleOwner) { bookings ->
             recommendedBookingsAdapter.submitList(bookings)
         }
+
+        homeViewModel.isOffline.observe(viewLifecycleOwner) { offline ->
+            binding.textRecommendedOfflineWarning.visibility =
+                if (offline) View.VISIBLE else View.GONE
+        }
+
     }
 
     override fun onDestroyView() {
