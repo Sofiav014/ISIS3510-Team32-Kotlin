@@ -119,7 +119,12 @@ class HomeFragment : Fragment() {
         }
 
         homeViewModel.recommendedBookings.observe(viewLifecycleOwner) { bookings ->
-            recommendedBookingsAdapter.submitList(bookings)
+            // Si estamos offline, no mostramos bookings recomendados
+            if (homeViewModel.isOffline.value == true) {
+                recommendedBookingsAdapter.submitList(emptyList())
+            } else {
+                recommendedBookingsAdapter.submitList(bookings)
+            }
         }
 
         homeViewModel.isOffline.observe(viewLifecycleOwner) { offline ->
