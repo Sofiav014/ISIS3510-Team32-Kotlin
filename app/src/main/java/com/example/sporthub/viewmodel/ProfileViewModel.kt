@@ -59,6 +59,10 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun getCurrentUserId(): String? {
+        return userRepository.getCurrentUser()?.uid
+    }
+
     // Format birth date for display
     fun formatBirthDate(timestamp: Timestamp?): String {
         return if (timestamp != null) {

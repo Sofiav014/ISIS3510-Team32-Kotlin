@@ -22,16 +22,16 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.sporthub.R
 import com.example.sporthub.data.model.Sport
 import com.example.sporthub.data.model.User
-import com.example.sporthub.ui.login.BirthDateSelectionActivity
-import com.example.sporthub.ui.login.FavoriteSportsSelectionActivity
-import com.example.sporthub.ui.login.GenderSelectionActivity
-import com.example.sporthub.ui.login.NameSelectionActivity
 import com.example.sporthub.ui.login.SignInActivity
 import com.example.sporthub.viewmodel.SharedUserViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.play.core.integrity.e
 import com.google.firebase.auth.FirebaseAuth
+import com.example.sporthub.ui.profile.edit.EditNameActivity
+import com.example.sporthub.ui.profile.edit.EditGenderActivity
+import com.example.sporthub.ui.profile.edit.EditBirthDateActivity
+import com.example.sporthub.ui.profile.edit.EditSportsActivity
 
 class ProfileFragment : Fragment() {
 
@@ -272,14 +272,23 @@ class ProfileFragment : Fragment() {
             .setTitle("Settings")
             .setItems(options) { _, which ->
                 when (which) {
-                    0 -> startActivity(Intent(requireContext(), NameSelectionActivity::class.java))
-                    1 -> startActivity(Intent(requireContext(), GenderSelectionActivity::class.java))
-                    2 -> startActivity(Intent(requireContext(), BirthDateSelectionActivity::class.java))
-                    3 -> startActivity(Intent(requireContext(), FavoriteSportsSelectionActivity::class.java))
+                    0 -> startEditActivity(EditNameActivity::class.java)
+                    1 -> startEditActivity(EditGenderActivity::class.java)
+                    2 -> startEditActivity(EditBirthDateActivity::class.java)
+                    3 -> startEditActivity(EditSportsActivity::class.java)
                 }
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    private fun <T> startEditActivity(activityClass: Class<T>) {
+        val intent = Intent(requireContext(), activityClass)
+        intent.putExtra("EDIT_MODE", true) // Flag to indicate edit mode vs new user registration
+        viewModel.getCurrentUserId()?.let { userId ->
+            intent.putExtra("USER_ID", userId)
+        }
+        startActivity(intent)
     }
 
     private fun signOutAndStartSignInActivity() {

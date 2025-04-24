@@ -11,7 +11,7 @@
         <item name="colorSecondaryVariant">@color/teal_200</item>
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
-        <item name="android:statusBarColor">@color/black</item>
+        <item name="android:statusBarColor">@color/primary</item>
         <!-- Customize your theme here. -->
         <item name="android:windowBackground">@color/primaryNeutral</item>
         <item name="android:textColorPrimary">@color/text_color_primary</item>
@@ -19,6 +19,9 @@
 
         <!-- Button style -->
         <item name="buttonStyle">@style/RoundedButtonStyle.Dark</item>
+
+        <!-- Bottom nav bar color -->
+        <item name="android:navigationBarColor">@color/primaryNeutral</item>
     </style>
 
     <style name="RoundedButtonStyle.Dark" parent="Widget.AppCompat.Button">
