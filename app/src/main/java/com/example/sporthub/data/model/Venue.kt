@@ -13,5 +13,5 @@ data class Venue(
     @PropertyName("name") val name: String = "",
     @PropertyName("rating") val rating: Double = 0.0,
     @PropertyName("sport") val sport: Sport? = null,
-    @PropertyName("bookings") val bookings: List<Booking> = listOf()
+    @PropertyName("bookings") var bookings: List<Booking> = listOf()
 )

@@ -132,6 +132,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.navigation_profile -> "Profile"
                 R.id.navigation_booking -> "Bookings"
                 R.id.navigation_create -> "Create Booking"
+                R.id.venueDetailFragment -> "Venue Detail"
                 else -> "SportHub"
             }
         }

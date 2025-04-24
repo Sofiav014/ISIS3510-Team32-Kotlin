@@ -83,13 +83,19 @@ class VenueListFragment : Fragment() {
 
     private fun setupRecyclerView(view: View) {
         val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerViewVenues)
-        venueAdapter = VenueAdapter()
+        venueAdapter = VenueAdapter { selectedVenue ->
+            val action = VenueListFragmentDirections
+                .actionVenueListFragmentToVenueDetailFragment(selectedVenue.id)
+            println("Selected Venue ID: ${selectedVenue.id}")
+            findNavController().navigate(action)
+        }
 
         recyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = venueAdapter
         }
     }
+
 
     private fun setupObservers() {
         viewModel.venues.observe(viewLifecycleOwner, Observer { venues ->
