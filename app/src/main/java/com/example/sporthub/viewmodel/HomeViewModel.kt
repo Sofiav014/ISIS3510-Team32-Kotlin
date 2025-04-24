@@ -51,7 +51,7 @@ class HomeViewModel(private val repository: HomeRepository) : ViewModel() {
                     _upcomingBookings.value = upcoming
                     _popularityReport.value = mapReport(report, user)
 
-                    // Guardar en caché
+                    // Save in caché
                     with(prefs.edit()) {
                         putString("recommended", Gson().toJson(recommended))
                         putString("upcoming", Gson().toJson(upcoming))
