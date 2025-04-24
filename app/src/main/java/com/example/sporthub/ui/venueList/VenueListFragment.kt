@@ -36,7 +36,7 @@ class VenueListFragment : Fragment() {
     private var userLocation: Location? = null
     private var sportId: String? = null
     private var venuesLoaded = false
-    private val cancellationTokenSource = CancellationTokenSource()
+    private var cancellationTokenSource = CancellationTokenSource()
 
     // Launcher para solicitar permisos de ubicación
     private val requestPermissionLauncher = registerForActivityResult(
@@ -139,6 +139,8 @@ class VenueListFragment : Fragment() {
 
     @SuppressLint("MissingPermission")
     private fun getCurrentLocation() {
+
+        cancellationTokenSource = CancellationTokenSource()
         // Usamos getCurrentLocation en lugar de lastLocation para mayor precisión
         fusedLocationClient.getCurrentLocation(
             Priority.PRIORITY_HIGH_ACCURACY,

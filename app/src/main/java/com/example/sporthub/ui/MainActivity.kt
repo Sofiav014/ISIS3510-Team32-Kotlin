@@ -30,6 +30,7 @@ import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import android.widget.Button
 import android.widget.TextView
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.fragment.app.Fragment
 import com.example.sporthub.ui.bookings.BookingsFragment
 import com.example.sporthub.ui.createBooking.CreateBookingFragment
@@ -107,24 +108,11 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
 
-        // Set up ActionBar with NavController
-
         val toolbar: MaterialToolbar = findViewById(R.id.topAppBar)
-        setSupportActionBar(toolbar)
-
-        val appBarConfiguration = AppBarConfiguration(
-            setOf(
-                R.id.navigation_home,
-                R.id.findVenuesFragment,
-                R.id.navigation_profile,
-                R.id.navigation_booking,
-                R.id.navigation_create
-            )
-        )
-        setupActionBarWithNavController(navController, appBarConfiguration)
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
             val titleView: TextView? = findViewById(R.id.toolbarTitle)
+
             titleView?.text = when (destination.id) {
                 R.id.findVenuesFragment -> "Find Venues"
                 R.id.venueListFragment -> "Venue List"
@@ -134,6 +122,19 @@ class MainActivity : AppCompatActivity() {
                 R.id.navigation_create -> "Create Booking"
                 R.id.venueDetailFragment -> "Venue Detail"
                 else -> "SportHub"
+            }
+
+            // 🔁 Show or hide the back button manually
+            val showBackButton = destination.id == R.id.venueDetailFragment || destination.id == R.id.venueListFragment
+            toolbar.navigationIcon = if (showBackButton) {
+                AppCompatResources.getDrawable(this, R.drawable.ic_arrow_back)
+            } else {
+                null
+            }
+
+            // 🔁 Set what the back button does
+            toolbar.setNavigationOnClickListener {
+                if (showBackButton) onBackPressedDispatcher.onBackPressed()
             }
         }
 
