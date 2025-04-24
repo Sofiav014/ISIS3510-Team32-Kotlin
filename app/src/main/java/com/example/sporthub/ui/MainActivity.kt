@@ -113,15 +113,16 @@ class MainActivity : AppCompatActivity() {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             val titleView: TextView? = findViewById(R.id.toolbarTitle)
 
-            titleView?.text = when (destination.id) {
-                R.id.findVenuesFragment -> "Find Venues"
-                R.id.venueListFragment -> "Venue List"
-                R.id.navigation_home -> "SportHub"
-                R.id.navigation_profile -> "Profile"
-                R.id.navigation_booking -> "Bookings"
-                R.id.navigation_create -> "Create Booking"
-                R.id.venueDetailFragment -> "Venue Detail"
-                else -> "SportHub"
+            if (destination.id != R.id.venueListFragment) {
+                titleView?.text = when (destination.id) {
+                    R.id.findVenuesFragment -> "Find Venues"
+                    R.id.navigation_home -> "SportHub"
+                    R.id.navigation_profile -> "Profile"
+                    R.id.navigation_booking -> "Bookings"
+                    R.id.navigation_create -> "Create Booking"
+                    R.id.venueDetailFragment -> "Venue Detail"
+                    else -> "SportHub"
+                }
             }
 
             // 🔁 Show or hide the back button manually
