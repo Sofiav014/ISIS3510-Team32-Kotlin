@@ -1,12 +1,14 @@
 package com.example.sporthub.ui.home
 
+import android.content.BroadcastReceiver
+import android.content.IntentFilter
+import android.net.ConnectivityManager
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.sporthub.data.repository.HomeRepository
@@ -25,6 +27,8 @@ class HomeFragment : Fragment() {
     private lateinit var popularityAdapter: PopularityAdapter
     private lateinit var upcomingBookingsAdapter: UpcomingBookingsAdapter
     private lateinit var recommendedBookingsAdapter: RecommendedBookingsAdapter
+
+    private var networkReceiver: BroadcastReceiver? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -69,7 +73,7 @@ class HomeFragment : Fragment() {
     private fun observeViewModels() {
         userViewModel.currentUser.observe(viewLifecycleOwner) { user ->
             if (user != null) {
-                homeViewModel.loadData(user)
+                homeViewModel.loadHomeData(requireContext(), user)
             }
         }
 
@@ -119,12 +123,43 @@ class HomeFragment : Fragment() {
         }
 
         homeViewModel.recommendedBookings.observe(viewLifecycleOwner) { bookings ->
-            recommendedBookingsAdapter.submitList(bookings)
+            // Si estamos offline, no mostramos bookings recomendados
+            if (homeViewModel.isOffline.value == true) {
+                recommendedBookingsAdapter.submitList(emptyList())
+            } else {
+                recommendedBookingsAdapter.submitList(bookings)
+            }
         }
+
+        homeViewModel.isOffline.observe(viewLifecycleOwner) { offline ->
+            binding.textRecommendedOfflineWarning.visibility =
+                if (offline) View.VISIBLE else View.GONE
+        }
+
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun onStart() {
+        super.onStart()
+        networkReceiver = NetworkReceiver {
+            val user = userViewModel.currentUser.value
+            user?.let {
+                homeViewModel.loadHomeData(requireContext(), it)
+            }
+        }
+        val filter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
+        requireContext().registerReceiver(networkReceiver, filter)
+    }
+
+
+    override fun onStop() {
+        super.onStop()
+        networkReceiver?.let {
+            requireContext().unregisterReceiver(it)
+        }
     }
 }
