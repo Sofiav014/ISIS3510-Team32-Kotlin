@@ -3,6 +3,7 @@ package com.example.sporthub.ui.profile
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,10 +12,11 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.sporthub.R
@@ -28,11 +30,12 @@ import com.example.sporthub.ui.login.SignInActivity
 import com.example.sporthub.viewmodel.SharedUserViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.play.core.integrity.e
 import com.google.firebase.auth.FirebaseAuth
 
 class ProfileFragment : Fragment() {
 
-    private val viewModel: ProfileViewModel by viewModels()
+    private lateinit var viewModel: ProfileViewModel
     private val sharedUserViewModel: SharedUserViewModel by activityViewModels()
 
     private lateinit var profileName: TextView
@@ -43,6 +46,11 @@ class ProfileFragment : Fragment() {
     private lateinit var noFavoriteVenuesText: TextView
     private lateinit var settingsButton: Button
     private lateinit var logoutButton: Button
+
+    // Theme mode UI elements
+    private lateinit var themeIcon: ImageView
+    private lateinit var themeLabel: TextView
+    private lateinit var themeSwitch: SwitchCompat
 
     private lateinit var favoriteVenueAdapter: FavoriteVenueAdapter
 
@@ -57,6 +65,10 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Initialize ViewModel
+        viewModel = ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().application))
+            .get(ProfileViewModel::class.java)
+
         // Initialize views
         initViews(view)
 
@@ -68,6 +80,9 @@ class ProfileFragment : Fragment() {
 
         // Setup button listeners
         setupButtons()
+
+        // Initialize theme switch
+        initThemeSwitch()
 
         // Load data
         viewModel.loadUserData()
@@ -82,12 +97,17 @@ class ProfileFragment : Fragment() {
         noFavoriteVenuesText = view.findViewById(R.id.noFavoriteVenuesText)
         settingsButton = view.findViewById(R.id.buttonSettings)
         logoutButton = view.findViewById(R.id.button_logout)
+
+        // Theme mode UI elements - make sure these IDs match what's in your layout
+        themeIcon = view.findViewById(R.id.themeIcon)
+        themeLabel = view.findViewById(R.id.themeLabel)
+        themeSwitch = view.findViewById(R.id.themeSwitch)
     }
 
     private fun setupRecyclerView() {
         favoriteVenueAdapter = FavoriteVenueAdapter()
         favoriteVenuesRecyclerView.apply {
-            layoutManager = LinearLayoutManager(context)
+            layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
             adapter = favoriteVenueAdapter
         }
     }
@@ -121,6 +141,11 @@ class ProfileFragment : Fragment() {
         viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
+
+        // Observe dark mode changes
+        viewModel.isDarkMode.observe(viewLifecycleOwner) { isDarkMode ->
+            updateThemeUI(isDarkMode)
+        }
     }
 
     private fun setupButtons() {
@@ -131,6 +156,42 @@ class ProfileFragment : Fragment() {
 
         logoutButton.setOnClickListener {
             signOutAndStartSignInActivity()
+        }
+    }
+
+    private fun initThemeSwitch() {
+        // Set initial state
+        val isDarkMode = viewModel.isDarkModeActive()
+        themeSwitch.isChecked = isDarkMode
+        updateThemeUI(isDarkMode)
+
+        // Set change listener
+        themeSwitch.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked != viewModel.isDarkModeActive()) {
+                // Only toggle if the state actually changed to avoid recursive calls
+                viewModel.toggleDarkMode()
+            }
+        }
+    }
+
+    private fun updateThemeUI(isDarkMode: Boolean) {
+        // Update switch state
+        themeSwitch.isChecked = isDarkMode
+
+        // Update theme label
+        themeLabel.text = if (isDarkMode) "Dark Mode" else "Light Mode"
+
+        // Ensure we set the correct icon
+        try {
+            val iconResource = if (isDarkMode) {
+                R.drawable.ic_dark_mode
+            } else {
+                R.drawable.ic_light_mode
+            }
+            themeIcon.setImageResource(iconResource)
+        } catch (e: Exception) {
+            // Log error but don't crash
+            Log.e("ProfileFragment", "Error setting theme icon: ${e.message}")
         }
     }
 
