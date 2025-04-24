@@ -6,6 +6,7 @@
     android:clipChildren="false"
     android:clipToPadding="false"
     android:layout_margin="8dp"
+    app:cardBackgroundColor="?attr/colorSurface"
     app:cardCornerRadius="15dp">
 
     <RelativeLayout
@@ -32,7 +33,7 @@
                 android:layout_width="16dp"
                 android:layout_height="19dp"
                 android:src="@android:drawable/btn_star"
-                android:tint="@android:color/black" />
+                app:tint="@android:color/black" />
 
             <TextView
                 android:id="@+id/textRating"
@@ -71,7 +72,7 @@
                     android:layout_width="20dp"
                     android:layout_height="match_parent"
                     android:src="@drawable/location"
-                    android:tint="@color/contrast900" />
+                    app:tint="@color/contrast900" />
 
                 <TextView
                     android:id="@+id/textLocation"
@@ -93,7 +94,7 @@
                     android:layout_width="20dp"
                     android:layout_height="match_parent"
                     android:src="@drawable/sport_logo"
-                    android:tint="@color/contrast900" />
+                    app:tint="@color/contrast900" />
 
                 <TextView
                     android:id="@+id/textSport"

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="?attr/colorBackgroundFloating"
     tools:context=".ui.login.NameSelectionActivity">
 
     <!-- Guía horizontal al 20% desde la parte superior para posicionamiento vertical -->
@@ -23,7 +23,7 @@
         android:layout_marginEnd="32dp"
         android:text="Let us begin with a couple of questions"
         android:textAlignment="center"
-        android:textColor="#673AB7"
+        android:textColor="@color/primary"
         android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
@@ -36,7 +36,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:text="What is your name?"
-        android:textColor="#673AB7"
+        android:textColor="@color/primary"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -49,6 +49,7 @@
         android:layout_marginStart="32dp"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="32dp"
+        android:backgroundTint="@android:color/transparent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textview_question">
@@ -62,6 +63,8 @@
             android:digits="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZáéíóúÁÉÍÓÚüÜñÑ '-"
             android:maxLines="1"
             android:maxLength="35"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textColorHint="?android:attr/textColorSecondary"
             android:textSize="16sp" />
 
     </com.google.android.material.textfield.TextInputLayout>
@@ -74,8 +77,8 @@
         android:layout_marginEnd="32dp"
         android:layout_marginBottom="32dp"
         android:text="Continue"
-        android:textColor="@color/white"
-        android:backgroundTint="#673AB7"
+        android:textColor="?android:attr/textColorPrimaryInverse"
+        android:backgroundTint="@color/primary"
         style="@style/RoundedButtonStyle"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

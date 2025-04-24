@@ -34,4 +34,12 @@
     <style name="DatePickerButtonStyle" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
         <item name="android:textColor">@color/primary</item>
     </style>
+
+
+    <style name="Theme.SportHUB.SignIn" parent="Theme.SportHUB">
+        <!-- Custom colors for sign-in screen in dark mode -->
+        <item name="android:windowBackground">@color/primaryDark</item>
+        <item name="android:statusBarColor">@color/black</item>
+        <item name="android:textColorPrimary">@color/white</item>
+    </style>
 </resources>
