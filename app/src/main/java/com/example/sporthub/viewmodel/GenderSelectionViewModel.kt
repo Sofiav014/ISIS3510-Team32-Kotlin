@@ -29,52 +29,57 @@ class GenderSelectionViewModel : ViewModel() {
         }
 
         val userId = currentUser.uid
-        val isEditMode = repository.getUserData(userId).isComplete
 
-        if (isEditMode) {
-            // Edit mode - only update the gender field
-            repository.updateUserField(userId, "gender", gender)
-                .addOnSuccessListener {
-                    Log.d(TAG, "Gender updated successfully")
-                    _saveSuccessEvent.value = true
-                }
-                .addOnFailureListener { e ->
-                    Log.e(TAG, "Error updating gender: ${e.message}")
-                    _errorEvent.value = "Error updating gender. Please try again"
-                }
-        } else {
-            // New user registration - create complete profile
-            // Create an object with the user data
-            val userData = hashMapOf(
-                "gender" to gender,
-                "bookings" to ArrayList<String>(),  // Empty list for bookings
-                "sports_liked" to ArrayList<String>(),  // Empty list for favorite sports
-                "venues_liked" to ArrayList<String>(),  // Empty list for favorite venues
-                "birth_date" to null  // Empty birth date for now
-            )
+        // Check if user document exists first
+        repository.getUserData(userId).addOnSuccessListener { document ->
+            if (document.exists()) {
+                // Edit mode - only update the gender field
+                repository.updateUserField(userId, "gender", gender)
+                    .addOnSuccessListener {
+                        Log.d(TAG, "Gender updated successfully")
+                        _saveSuccessEvent.value = true
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e(TAG, "Error updating gender: ${e.message}")
+                        _errorEvent.value = "Error updating gender. Please try again"
+                    }
+            } else {
+                // New user - create initial profile with minimal data
+                // for first-time user setup
+                val userData = HashMap<String, Any>()
+                userData["gender"] = gender
+                userData["bookings"] = ArrayList<Any>()
+                userData["sports_liked"] = ArrayList<Any>()
+                userData["venues_liked"] = ArrayList<Any>()
+                // Use empty string instead of null for Firestore compatibility
+                userData["birth_date"] = ""
 
-            // Add name if available
-            currentUser.displayName?.let {
-                userData["name"] = it
-            } ?: run {
-                userData["name"] = ""  // If no name, save an empty string
+                // Add name if available
+                currentUser.displayName?.let {
+                    userData["name"] = it
+                } ?: run {
+                    userData["name"] = ""  // If no name, save an empty string
+                }
+
+                // Add email as additional data if available
+                currentUser.email?.let {
+                    userData["email"] = it
+                }
+
+                // Save to Firestore - only for new users
+                repository.createUserProfile(userId, userData)
+                    .addOnSuccessListener {
+                        Log.d(TAG, "User data saved successfully to Firestore")
+                        _saveSuccessEvent.value = true
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e(TAG, "Error saving user data to Firestore: ${e.message}")
+                        _errorEvent.value = "Error saving data. Please try again"
+                    }
             }
-
-            // Add email as additional data if available
-            currentUser.email?.let {
-                userData["email"] = it
-            }
-
-            // Save to Firestore
-            repository.createUserProfile(userId, userData)
-                .addOnSuccessListener {
-                    Log.d(TAG, "User data saved successfully to Firestore")
-                    _saveSuccessEvent.value = true
-                }
-                .addOnFailureListener { e ->
-                    Log.e(TAG, "Error saving user data to Firestore: ${e.message}")
-                    _errorEvent.value = "Error saving data. Please try again"
-                }
+        }.addOnFailureListener { e ->
+            Log.e(TAG, "Error checking if user exists: ${e.message}")
+            _errorEvent.value = "Error checking user data. Please try again"
         }
     }
 

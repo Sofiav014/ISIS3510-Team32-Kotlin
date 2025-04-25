@@ -54,14 +54,15 @@ class NameSelectionViewModel : ViewModel() {
                                 }
                         } else {
                             // If the document doesn't exist, create a new user profile
-                            val userData = hashMapOf<String, Any>(
-                                "name" to name,
-                                "bookings" to ArrayList<String>(),
-                                "sports_liked" to ArrayList<String>(),
-                                "venues_liked" to ArrayList<String>(),
-                                "birth_date" to "",
-                                "gender" to ""
-                            )
+                            // with minimal initial data
+                            val userData = HashMap<String, Any>().apply {
+                                put("name", name)
+                                put("bookings", ArrayList<Any>())
+                                put("sports_liked", ArrayList<Any>())
+                                put("venues_liked", ArrayList<Any>())
+                                put("birth_date", "")
+                                put("gender", "")
+                            }
 
                             repository.createUserProfile(currentUser.uid, userData)
                                 .addOnSuccessListener {

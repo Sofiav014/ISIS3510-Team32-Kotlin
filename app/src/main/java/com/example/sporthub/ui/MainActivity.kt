@@ -31,6 +31,7 @@ import com.google.firebase.ktx.Firebase
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.sporthub.ui.bookings.BookingsFragment
 import com.example.sporthub.ui.createBooking.CreateBookingFragment
@@ -95,6 +96,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    // Snippet from MainActivity.kt showing toolbar setup
     private fun setupNavigation() {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
@@ -109,6 +111,9 @@ class MainActivity : AppCompatActivity() {
         val navController = navHostFragment.navController
 
         val toolbar: MaterialToolbar = findViewById(R.id.topAppBar)
+        setSupportActionBar(toolbar)
+        // Remove default title to use our custom title TextView
+        supportActionBar?.setDisplayShowTitleEnabled(false)
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
             val titleView: TextView? = findViewById(R.id.toolbarTitle)
@@ -125,20 +130,22 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            // 🔁 Show or hide the back button manually
+            // Show or hide the back button manually
             val showBackButton = destination.id == R.id.venueDetailFragment || destination.id == R.id.venueListFragment
             toolbar.navigationIcon = if (showBackButton) {
-                AppCompatResources.getDrawable(this, R.drawable.ic_arrow_back)
+                AppCompatResources.getDrawable(this, R.drawable.ic_arrow_back)?.apply {
+                    // Tint the back arrow to match the primary color in light mode
+                    setTint(ContextCompat.getColor(this@MainActivity, R.color.primary))
+                }
             } else {
                 null
             }
 
-            // 🔁 Set what the back button does
+            // Set what the back button does
             toolbar.setNavigationOnClickListener {
                 if (showBackButton) onBackPressedDispatcher.onBackPressed()
             }
         }
-
 
         // Set up Bottom Navigation with NavController
         val bottomNavigationView: BottomNavigationView = findViewById(R.id.nav_view)
