@@ -1,8 +1,10 @@
 package com.example.sporthub.data.model
 
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.IgnoreExtraProperties
 import com.google.firebase.firestore.PropertyName
 
+@IgnoreExtraProperties
 data class Booking(
     @PropertyName("id") val id: String = "",
     @PropertyName("end_time") val endTime: Timestamp? = null,

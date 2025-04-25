@@ -5,6 +5,7 @@ plugins {
     id("com.google.firebase.crashlytics")
     // Reemplaza kapt con ksp para versiones más recientes de Kotlin
     id("com.google.devtools.ksp") version "1.8.0-1.0.9"
+    id("androidx.navigation.safeargs.kotlin")
 }
 
 android {

@@ -38,7 +38,7 @@ class VenueListFragment : Fragment() {
     private var userLocation: Location? = null
     private var sportId: String? = null
     private var venuesLoaded = false
-    private val cancellationTokenSource = CancellationTokenSource()
+    private var cancellationTokenSource = CancellationTokenSource()
     private var sportName: String? = "Unknown"
 
     // Launcher para solicitar permisos de ubicación
@@ -93,13 +93,19 @@ class VenueListFragment : Fragment() {
 
     private fun setupRecyclerView(view: View) {
         val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerViewVenues)
-        venueAdapter = VenueAdapter()
+        venueAdapter = VenueAdapter { selectedVenue ->
+            val action = VenueListFragmentDirections
+                .actionVenueListFragmentToVenueDetailFragment(selectedVenue.id)
+            println("Selected Venue ID: ${selectedVenue.id}")
+            findNavController().navigate(action)
+        }
 
         recyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = venueAdapter
         }
     }
+
 
     private fun setupObservers() {
         viewModel.venues.observe(viewLifecycleOwner, Observer { venues ->
@@ -143,6 +149,8 @@ class VenueListFragment : Fragment() {
 
     @SuppressLint("MissingPermission")
     private fun getCurrentLocation() {
+
+        cancellationTokenSource = CancellationTokenSource()
         // Usamos getCurrentLocation en lugar de lastLocation para mayor precisión
         fusedLocationClient.getCurrentLocation(
             Priority.PRIORITY_HIGH_ACCURACY,
