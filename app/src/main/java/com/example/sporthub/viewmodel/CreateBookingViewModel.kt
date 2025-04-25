@@ -16,6 +16,8 @@ class CreateBookingViewModel : ViewModel() {
 
     private val _reservationResult = MutableLiveData<Boolean>()
     val reservationResult: LiveData<Boolean> get() = _reservationResult
+    private val _bookingCreated = MutableLiveData<Boolean>()
+    val bookingCreated: LiveData<Boolean> get() = _bookingCreated
 
     fun createReservation(date: String, timeSlot: String, players: Int, userId: String, venueId: String) {
         val (startStr, endStr) = timeSlot.split(" - ").map { it.trim() }
@@ -36,7 +38,8 @@ class CreateBookingViewModel : ViewModel() {
         )
 
         repository.createBooking(booking,
-            onSuccess = { _reservationResult.postValue(true) },
+            onSuccess = { _reservationResult.postValue(true)
+                _bookingCreated.postValue(true) },
             onFailure = { _reservationResult.postValue(false) }
         )
     }

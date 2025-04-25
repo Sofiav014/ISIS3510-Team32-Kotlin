@@ -153,6 +153,9 @@ class HomeFragment : Fragment() {
         }
         val filter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
         requireContext().registerReceiver(networkReceiver, filter)
+        userViewModel.currentUser.value?.let { user ->
+            homeViewModel.loadHomeData(requireContext(), user)
+        }
     }
 
 

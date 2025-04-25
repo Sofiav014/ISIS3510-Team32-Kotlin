@@ -1,54 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
-    android:background="@android:color/white">
+    android:padding="20dp"
+    android:layout_marginTop="?attr/actionBarSize"
+    android:background="@android:color/white"
+    android:fitsSystemWindows="true"
+    android:paddingBottom="100dp"
+    >
 
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
         android:gravity="center_horizontal">
 
-        <!-- Sección de fecha -->
-        <com.google.android.material.card.MaterialCardView
+        <!-- Calendario embebido -->
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp"
-            android:layout_marginBottom="24dp">
+            card_view:cardCornerRadius="16dp"
+            card_view:cardElevation="4dp"
+            android:layout_marginBottom="24dp"
+            android:background="#F5F0FF">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:orientation="vertical"
                 android:padding="16dp"
-                android:orientation="vertical">
+                android:background="#F5F0FF">
 
                 <TextView
-                    android:id="@+id/selectedDateText"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Select date"
-                    android:textSize="18sp"
+                    android:textSize="16sp"
                     android:textStyle="bold"
-                    android:drawableEnd="@drawable/ic_calendar"
-                    android:drawablePadding="8dp"
-                    android:padding="8dp"
-                    android:background="@drawable/bg_date_selector"
-                    android:textColor="#60508C" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+                    android:textColor="#60508C"
+                    android:layout_marginBottom="8dp"
+                    android:background="#F5F0FF"/>
 
-        <!-- Time slot card -->
-        <com.google.android.material.card.MaterialCardView
+                <CalendarView
+                    android:id="@+id/calendarView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:focusedMonthDateColor="#60508C"
+                    android:selectedWeekBackgroundColor="#A293DC"
+                    android:weekSeparatorLineColor="#FFFFFF"
+                    android:background="#F5F0FF"
+                    android:dateTextAppearance="@style/TextAppearance.AppCompat.Medium"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Tarjeta combinada de horarios + jugadores -->
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp"
-            android:layout_marginBottom="24dp">
+            card_view:cardCornerRadius="16dp"
+            card_view:cardElevation="4dp"
+            android:layout_marginBottom="24dp"
+            android:backgroundTint="#60508C">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -59,75 +73,72 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
                     android:text="Select time slot"
+                    android:textColor="@android:color/white"
                     android:textSize="16sp"
-                    android:textColor="#60508C"
-                    android:layout_marginBottom="8dp"/>
+                    android:textStyle="bold"/>
 
                 <GridLayout
                     android:id="@+id/timeSlotGrid"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:columnCount="3"
-                    android:rowCount="2"
+                    android:layout_marginBottom="16dp"
                     android:alignmentMode="alignMargins"
-                    android:rowOrderPreserved="false"
-                    android:padding="4dp"
-                    android:layout_marginTop="4dp"/>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+                    android:columnCount="3"
+                    android:padding="5dp"
+                    android:rowCount="2"
+                    android:rowOrderPreserved="false"/>
 
-        <!-- Número de jugadores -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp"
-            android:layout_marginBottom="24dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="16dp"
-                android:gravity="center_vertical">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_players"
-                    app:tint="#60508C"
-                    android:layout_marginEnd="12dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Number of Players"
-                    android:textSize="16sp"
-                    android:textColor="#60508C"
-                    android:layout_marginEnd="12dp"/>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
-                <Spinner
-                    android:id="@+id/playerCountSpinner"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_players"
+                        android:layout_marginEnd="12dp"
+                        card_view:tint="#F5CBA7" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Number of Players"
+                        android:textSize="16sp"
+                        android:textColor="#F5CBA7"
+                        android:layout_marginEnd="12dp"/>
+
+                    <Spinner
+                        android:id="@+id/playerCountSpinner"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:minHeight="48dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_weight="1"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:background="@drawable/bg_spinner_touch_area" />
+                </LinearLayout>
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+        </androidx.cardview.widget.CardView>
 
         <!-- Botón de reserva -->
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/btnCreateReservation"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginHorizontal="32dp"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="#77E996"
             android:text="Create Reservation"
             android:textAllCaps="false"
-            android:textColor="@android:color/white"
+            android:textColor="#60508C"
             android:textSize="16sp"
-            android:backgroundTint="#77E996"
-            android:layout_marginBottom="24dp"
-            app:cornerRadius="24dp"
-            android:icon="@drawable/ic_add"
-            android:iconTint="@android:color/white"
-            android:iconPadding="8dp" />
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp"/>
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>
