@@ -18,8 +18,6 @@ import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import androidx.lifecycle.MutableLiveData
-import kotlin.collections.filterIsInstance
-
 
 
 class UserRepository {
@@ -32,26 +30,29 @@ class UserRepository {
         return db.collection("users").document(userId).get()
     }
 
+    // Method to update a single field in the user document
+    fun updateUserField(userId: String, fieldName: String, value: Any?): Task<Void> {
+        return db.collection("users").document(userId).update(fieldName, value)
+    }
+
     fun updateUserBirthDate(userId: String, birthDate: Timestamp): Task<Void> {
-        return db.collection("users").document(userId).update("birth_date", birthDate)
+        return updateUserField(userId, "birth_date", birthDate)
     }
 
     fun signOut() {
         auth.signOut()
     }
-    // Añadir a UserRepository.kt
+
     fun updateUserSports(userId: String, sports: List<Map<String, Any>?>): Task<Void> {
-        return db.collection("users").document(userId).update("sports_liked", sports)
+        return updateUserField(userId, "sports_liked", sports)
     }
 
-    // Añadir a UserRepository.kt en data/repository/
-    fun createUserProfile(userId: String, userData: Map<String, Any>): Task<Void> {
+    fun createUserProfile(userId: String, userData: HashMap<String, Any>): Task<Void> {
         return db.collection("users").document(userId).set(userData)
     }
 
-    // Añadir a UserRepository.kt en data/repository/
     fun updateUserName(userId: String, name: String): Task<Void> {
-        return db.collection("users").document(userId).update("name", name)
+        return updateUserField(userId, "name", name)
     }
 
     fun updateUserProfileName(user: FirebaseUser, name: String): Task<Void> {
