@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="@color/primaryNeutral"
     tools:context=".ui.login.GenderSelectionActivity">
 
     <!-- Guía horizontal para posicionamiento vertical consistente -->
@@ -19,13 +19,13 @@
         android:id="@+id/button_back_gender"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:background="@null"
+        android:background="?attr/selectableItemBackgroundBorderless"
         android:src="@drawable/ic_arrow_back"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:tint="#673AB7"/>
+        app:tint="@color/primary"/>
 
     <TextView
         android:id="@+id/textview_title"
@@ -35,7 +35,7 @@
         android:layout_marginEnd="32dp"
         android:text="Let us begin with a couple of questions"
         android:textAlignment="center"
-        android:textColor="#673AB7"
+        android:textColor="@color/primary"
         android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
@@ -49,7 +49,7 @@
         android:layout_marginTop="16dp"
         android:text="What gender do you identify with?"
         android:textAlignment="center"
-        android:textColor="#673AB7"
+        android:textColor="@color/primary"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -71,7 +71,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintVertical_bias="0.2">
 
-        <!-- Male Button -->
+        <!-- Male Button - Simplified -->
         <androidx.cardview.widget.CardView
             android:id="@+id/button_male"
             android:layout_width="0dp"
@@ -81,7 +81,7 @@
             android:clickable="true"
             android:focusable="true"
             android:foreground="?attr/selectableItemBackground"
-            app:cardBackgroundColor="#FFFFFF"
+            app:cardBackgroundColor="@color/white"
             app:cardCornerRadius="8dp"
             app:cardElevation="2dp"
             app:cardUseCompatPadding="true"
@@ -99,19 +99,19 @@
                     android:layout_gravity="center"
                     android:contentDescription="Male gender icon"
                     android:src="@drawable/ic_gender_male"
-                    app:tint="#673AB7" />
+                    app:tint="@color/primary" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="Male"
-                    android:textColor="#673AB7"
+                    android:textColor="@color/primary"
                     android:textSize="16sp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Female Button -->
+        <!-- Female Button - Simplified -->
         <androidx.cardview.widget.CardView
             android:id="@+id/button_female"
             android:layout_width="0dp"
@@ -121,7 +121,7 @@
             android:clickable="true"
             android:focusable="true"
             android:foreground="?attr/selectableItemBackground"
-            app:cardBackgroundColor="#FFFFFF"
+            app:cardBackgroundColor="@color/white"
             app:cardCornerRadius="8dp"
             app:cardElevation="2dp"
             app:cardUseCompatPadding="true"
@@ -139,19 +139,19 @@
                     android:layout_gravity="center"
                     android:contentDescription="Female gender icon"
                     android:src="@drawable/ic_gender_female"
-                    app:tint="#673AB7" />
+                    app:tint="@color/primary" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="Female"
-                    android:textColor="#673AB7"
+                    android:textColor="@color/primary"
                     android:textSize="16sp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Other Button -->
+        <!-- Other Button - Simplified -->
         <androidx.cardview.widget.CardView
             android:id="@+id/button_other"
             android:layout_width="0dp"
@@ -161,7 +161,7 @@
             android:clickable="true"
             android:focusable="true"
             android:foreground="?attr/selectableItemBackground"
-            app:cardBackgroundColor="#FFFFFF"
+            app:cardBackgroundColor="@color/white"
             app:cardCornerRadius="8dp"
             app:cardElevation="2dp"
             app:cardUseCompatPadding="true"
@@ -179,14 +179,14 @@
                     android:layout_gravity="center"
                     android:contentDescription="Other gender icon"
                     android:src="@drawable/ic_gender_other"
-                    app:tint="#673AB7" />
+                    app:tint="@color/primary" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="Other"
-                    android:textColor="#673AB7"
+                    android:textColor="@color/primary"
                     android:textSize="16sp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>

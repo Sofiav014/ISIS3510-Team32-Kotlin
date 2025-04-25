@@ -1,30 +1,261 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true"
     tools:context=".ui.profile.ProfileFragment">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:padding="24dp">
+        android:padding="16dp"
+        android:paddingTop="24dp">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <!-- Profile Header Card -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/profileHeaderCard"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="This is the Profile Fragment"
+            android:layout_marginTop="?attr/actionBarSize"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="#EDE7F6"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp">
+
+                <ImageView
+                    android:id="@+id/profileImage"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:background="@drawable/circle_background"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_profile_outline"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="#60508C" />
+
+                <TextView
+                    android:id="@+id/profileName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:text="Current User"
+                    android:textColor="#333333"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/profileImage"
+                    app:layout_constraintTop_toTopOf="@id/profileImage" />
+
+                <!-- Gender information -->
+                <TextView
+                    android:id="@+id/genderLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Gender"
+                    android:textColor="#666666"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toEndOf="@id/profileImage"
+                    app:layout_constraintTop_toBottomOf="@id/profileName" />
+
+                <TextView
+                    android:id="@+id/genderValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Other"
+                    android:textColor="#333333"
+                    android:textSize="14sp"
+                    app:layout_constraintBottom_toBottomOf="@id/genderLabel"
+                    app:layout_constraintStart_toEndOf="@id/genderLabel"
+                    app:layout_constraintTop_toTopOf="@id/genderLabel" />
+
+                <!-- Birth date information -->
+                <TextView
+                    android:id="@+id/birthDateLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Born Date"
+                    android:textColor="#666666"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toEndOf="@id/profileImage"
+                    app:layout_constraintTop_toBottomOf="@id/genderLabel" />
+
+                <TextView
+                    android:id="@+id/birthDateValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="10/10/2002"
+                    android:textColor="#333333"
+                    android:textSize="14sp"
+                    app:layout_constraintBottom_toBottomOf="@id/birthDateLabel"
+                    app:layout_constraintStart_toEndOf="@id/birthDateLabel"
+                    app:layout_constraintTop_toTopOf="@id/birthDateLabel" />
+
+                <!-- Favorite Sports Label -->
+                <TextView
+                    android:id="@+id/favoriteSportsLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Favorite Sports"
+                    android:textColor="#666666"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/profileImage" />
+
+                <!-- Favorite Sports Icons -->
+                <LinearLayout
+                    android:id="@+id/favoriteSportsContainer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/favoriteSportsLabel">
+
+                    <!-- These will be populated dynamically with user's favorite sports -->
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/circle_purple_background"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_basketball_logo" />
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/circle_purple_background"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_football_logo" />
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/circle_purple_background"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_volleyball_logo" />
+                </LinearLayout>
+
+                <!-- Theme Mode Section -->
+                <LinearLayout
+                    android:id="@+id/themeModeSection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/favoriteSportsContainer">
+
+                    <ImageView
+                        android:id="@+id/themeIcon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_light_mode"
+                        app:tint="#60508C" />
+
+                    <TextView
+                        android:id="@+id/themeLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="Dark Mode"
+                        android:textColor="#333333"
+                        android:textSize="14sp" />
+
+                    <Space
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/themeSwitch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        app:thumbTint="#60508C"
+                        app:trackTint="#EDE7F6" />
+                </LinearLayout>
+
+                <!-- Settings Button -->
+                <Button
+                    android:id="@+id/buttonSettings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:backgroundTint="#60508C"
+                    android:text="Settings"
+                    android:textColor="@android:color/white"
+                    app:layout_constraintTop_toBottomOf="@id/themeModeSection"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Favorite Venues Section -->
+        <TextView
+            android:id="@+id/favoriteVenuesTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="My Favorite Venues"
+            android:textColor="#60508C"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:paddingBottom="16dp" />
+            app:layout_constraintTop_toBottomOf="@id/profileHeaderCard" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/favoriteVenuesRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            android:clipToPadding="false"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            app:layout_constraintTop_toBottomOf="@id/favoriteVenuesTitle" />
+
+        <TextView
+            android:id="@+id/noFavoriteVenuesText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:text="No favorite venues yet"
+            android:textColor="#666666"
+            android:textSize="16sp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/favoriteVenuesTitle" />
 
         <Button
             android:id="@+id/button_logout"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="64dp"
+            android:backgroundTint="#F44336"
             android:text="Logout"
-            android:backgroundTint="@color/purple_500"
-            android:textColor="@android:color/white" />
-    </LinearLayout>
-</FrameLayout>
+            android:textColor="@android:color/white"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/favoriteVenuesRecyclerView"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintWidth_percent="0.7" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.core.widget.NestedScrollView>

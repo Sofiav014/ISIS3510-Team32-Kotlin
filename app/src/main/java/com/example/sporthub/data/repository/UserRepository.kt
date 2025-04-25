@@ -1,4 +1,3 @@
-// com.example.sporthub.data.repository.UserRepository.kt
 package com.example.sporthub.data.repository
 
 import android.util.Log
@@ -60,6 +59,17 @@ class UserRepository {
             .setDisplayName(name)
             .build()
         return user.updateProfile(profileUpdates)
+    }
+
+    // Add this helper method to safely get timestamps
+    private fun safeGetTimestamp(snapshot: DocumentSnapshot, field: String): Timestamp? {
+        return try {
+            snapshot.getTimestamp(field)
+        } catch (e: Exception) {
+            // If the field is not a Timestamp, return null
+            Log.d("UserRepository", "Field $field is not a Timestamp: ${e.message}")
+            null
+        }
     }
 
     fun getUserModel(userId:String): LiveData<User>{
@@ -138,7 +148,7 @@ class UserRepository {
                         id = snapshot.id,
                         name = snapshot.getString("name") ?: "",
                         gender = snapshot.getString("gender") ?: "",
-                        birthDate = snapshot.getTimestamp("birth_date"),
+                        birthDate = safeGetTimestamp(snapshot, "birth_date"),
                         sportsLiked = sportsLiked,
                         bookings = bookings,
                         venuesLiked = venuesLiked,
@@ -171,5 +181,4 @@ class UserRepository {
             }
         return liveData
     }
-
 }
