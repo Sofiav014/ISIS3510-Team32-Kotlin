@@ -3,6 +3,7 @@ package com.example.sporthub.ui.profile
 import android.app.Application
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -10,6 +11,8 @@ import androidx.lifecycle.ViewModel
 import com.example.sporthub.data.model.User
 import com.example.sporthub.data.model.Venue
 import com.example.sporthub.data.repository.UserRepository
+import com.example.sporthub.ui.login.SignInActivity
+import com.example.sporthub.utils.LocalThemeManager
 import com.example.sporthub.utils.ThemeManager
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
@@ -98,10 +101,23 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     fun toggleDarkMode() {
         themeManager.toggleDarkMode()
         _isDarkMode.value = themeManager.isDarkModeActive()
+        val userId = userRepository.getCurrentUser()?.uid
+        if (userId != null) {
+            LocalThemeManager.saveUserTheme(getApplication(), userId, themeManager.isDarkModeActive())
+        }
+
+
     }
 
     // Sign out method
     fun signOut() {
         userRepository.signOut()
+        SignInActivity.preferencesAlreadyChecked = false
+
+        // Reset theme
+        val themeManager = ThemeManager.getInstance(getApplication())
+        themeManager.clearThemePreference()
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
     }
+
 }

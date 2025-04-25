@@ -15,17 +15,22 @@ import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
+import com.example.sporthub.utils.LocalThemeManager
+import androidx.appcompat.app.AppCompatDelegate
+
 
 class SignInActivity : AppCompatActivity() {
 
     companion object {
         private const val RC_SIGN_IN = 9001
         private const val TAG = "SignInActivity"
+
+        var preferencesAlreadyChecked = false
     }
 
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
-
+    private var preferencesAlreadyChecked = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sign_in)
@@ -35,7 +40,7 @@ class SignInActivity : AppCompatActivity() {
 
         val currentUser = auth.currentUser
 
-        if (currentUser != null) {
+        if (currentUser != null && !preferencesAlreadyChecked) {
             // El usuario ya inició sesión, verificar si necesita seleccionar género
             checkUserExistsInFirestore(currentUser.uid)
         }
@@ -99,7 +104,23 @@ class SignInActivity : AppCompatActivity() {
             .addOnSuccessListener { document ->
                 if (document.exists() && document.contains("gender") && document.contains("name") &&
                     document.contains("birth_date") && document.contains("sports_liked")) {
-                    // Usuario existente con todos los datos registrados - ir a MainActivity
+                    preferencesAlreadyChecked = true
+
+                    val userId = FirebaseAuth.getInstance().currentUser?.uid
+                    if (userId != null) {
+                        val isDarkMode = LocalThemeManager.getUserTheme(this, userId)
+                        if (isDarkMode != null) {
+                            if (isDarkMode) {
+                                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                            } else {
+                                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                            }
+                        } else {
+                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO) // Default to light
+                        }
+                    }
+
+
                     navigateToMainActivity()
                 } else {
                     // Usuario nuevo o con datos incompletos - iniciar flujo de registro

@@ -1,6 +1,7 @@
 package com.example.sporthub.ui.profile.edit
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -16,6 +17,9 @@ import com.example.sporthub.R
 import com.example.sporthub.data.repository.UserRepository
 import com.example.sporthub.ui.MainActivity
 import com.example.sporthub.viewmodel.SportSelectionViewModel
+import android.app.DatePickerDialog
+import androidx.appcompat.app.AppCompatDelegate
+import java.util.Calendar
 
 class EditSportsActivity : AppCompatActivity() {
 
@@ -179,14 +183,21 @@ class EditSportsActivity : AppCompatActivity() {
     }
 
     private fun updateCardAppearance(cardView: CardView, isSelected: Boolean) {
+        val isDarkMode = (resources.configuration.uiMode and
+                Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+
         if (isSelected) {
             // Use a very light lavender background to indicate selection
             cardView.setCardBackgroundColor(Color.parseColor("#EDE7F6"))
             // Increase elevation for "raised" effect
             cardView.cardElevation = 8f
         } else {
-            // Restore to white when not selected
-            cardView.setCardBackgroundColor(Color.WHITE)
+            // Restore to appropriate background color based on theme
+            if (isDarkMode) {
+                cardView.setCardBackgroundColor(Color.parseColor("#303030")) // Dark gray for dark mode
+            } else {
+                cardView.setCardBackgroundColor(Color.WHITE) // White for light mode
+            }
             // Restore original elevation
             cardView.cardElevation = 2f
         }

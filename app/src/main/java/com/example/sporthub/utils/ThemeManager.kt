@@ -62,6 +62,9 @@ class ThemeManager(context: Context) {
             }
         }
     }
+    fun clearThemePreference() {
+        prefs.edit().remove("dark_mode").apply()
+    }
 
     /**
      * Checks if dark mode is currently active
