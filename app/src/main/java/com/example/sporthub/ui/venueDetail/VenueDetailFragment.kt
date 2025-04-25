@@ -18,6 +18,8 @@ import com.example.sporthub.ui.findVenues.FindVenuesViewModel
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.sporthub.ui.venueDetail.BookingAdapter
+import androidx.navigation.fragment.findNavController
+
 
 class VenueDetailFragment : Fragment() {
 
@@ -83,5 +85,12 @@ class VenueDetailFragment : Fragment() {
             }
         }
 
+        val btnCreateBooking = view.findViewById<View>(R.id.btnCreateBooking)
+        btnCreateBooking.setOnClickListener {
+            val action = VenueDetailFragmentDirections
+                .actionVenueDetailFragmentToNavigationCreate(args.venueId)
+            findNavController().navigate(action)
+
+        }
     }
 }

@@ -1,10 +1,11 @@
-// com.example.sporthub.data.model.Sport.kt
 package com.example.sporthub.data.model
 
+import com.google.firebase.firestore.PropertyName
+
 data class Sport(
-    val id: String,
-    val name: String,
-    val logo: String
+    @PropertyName("id") val id: String = "",
+    @PropertyName("name") val name: String = "",
+    @PropertyName("logo") val logo: String = ""
 )
 
 {

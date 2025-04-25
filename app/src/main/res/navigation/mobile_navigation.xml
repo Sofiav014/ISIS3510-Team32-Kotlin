@@ -27,6 +27,11 @@
             android:name="venueId"
             app:argType="string"
             app:nullable="false"/>
+
+        <action
+            android:id="@+id/action_venueDetailFragment_to_navigation_create"
+            app:destination="@id/navigation_create" />
+
     </fragment>
 
 
@@ -57,5 +62,12 @@
     <fragment
         android:id="@+id/navigation_create"
         android:name="com.example.sporthub.ui.createBooking.CreateBookingFragment"
-        android:label="Create Booking"/>
+        android:label="Create Booking">
+
+    <argument
+        android:name="venueId"
+        app:argType="string"
+        app:nullable="false" />
+    </fragment>
+
 </navigation>
