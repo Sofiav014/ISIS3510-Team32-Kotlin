@@ -11,7 +11,9 @@ import com.bumptech.glide.Glide
 import com.example.sporthub.R
 import com.example.sporthub.data.model.Venue
 
-class VenueAdapter : RecyclerView.Adapter<VenueAdapter.VenueViewHolder>() {
+class VenueAdapter(
+    private val onVenueClick: (Venue) -> Unit
+) : RecyclerView.Adapter<VenueAdapter.VenueViewHolder>() {
 
     private var venues: List<Venue> = emptyList()
     private var userLocation: Location? = null
@@ -49,7 +51,7 @@ class VenueAdapter : RecyclerView.Adapter<VenueAdapter.VenueViewHolder>() {
             val distanceText = String.format("%.1f km", distanceInMeters / 1000)
 
             // Display distance in sport field
-            holder.venueSport.text = "$distanceText away" 
+            holder.venueSport.text = "$distanceText away"
         } else {
             // If no location is available, show sport name as fallback
             holder.venueSport.text = "Distance not available"
@@ -62,6 +64,11 @@ class VenueAdapter : RecyclerView.Adapter<VenueAdapter.VenueViewHolder>() {
         Glide.with(holder.itemView.context)
             .load(venue.image)
             .into(holder.venueImage)
+
+        //Handle click on venue
+        holder.itemView.setOnClickListener {
+            onVenueClick(venue)
+        }
     }
 
     override fun getItemCount() = venues.size

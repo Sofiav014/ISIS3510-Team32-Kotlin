@@ -23,7 +23,6 @@
             android:textColor="@android:color/black"/>
     </LinearLayout>
 
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewSports"
         android:layout_width="match_parent"
@@ -31,7 +30,5 @@
         android:layout_marginTop="80dp"
         android:padding="16dp"
         tools:listitem="@layout/item_sport_card"/>
-
-
 
 </FrameLayout>

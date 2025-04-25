@@ -27,6 +27,8 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import java.util.Locale
+import android.widget.TextView
 
 class VenueListFragment : Fragment() {
 
@@ -36,7 +38,8 @@ class VenueListFragment : Fragment() {
     private var userLocation: Location? = null
     private var sportId: String? = null
     private var venuesLoaded = false
-    private val cancellationTokenSource = CancellationTokenSource()
+    private var cancellationTokenSource = CancellationTokenSource()
+    private var sportName: String? = "Unknown"
 
     // Launcher para solicitar permisos de ubicación
     private val requestPermissionLauncher = registerForActivityResult(
@@ -76,6 +79,13 @@ class VenueListFragment : Fragment() {
             return
         }
 
+        sportName = arguments?.getString("sport") ?: "Unknown"
+
+        val titleTextView = view.findViewById<TextView>(R.id.textViewVenueTitle)
+        titleTextView.text = String.format(Locale.getDefault(), "%s Venues List", sportName)
+
+        (requireActivity() as AppCompatActivity).findViewById<TextView>(R.id.toolbarTitle)?.text = "$sportName Venues List"
+
         setupRecyclerView(view)
         setupObservers()
         checkLocationPermission()
@@ -83,13 +93,19 @@ class VenueListFragment : Fragment() {
 
     private fun setupRecyclerView(view: View) {
         val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerViewVenues)
-        venueAdapter = VenueAdapter()
+        venueAdapter = VenueAdapter { selectedVenue ->
+            val action = VenueListFragmentDirections
+                .actionVenueListFragmentToVenueDetailFragment(selectedVenue.id)
+            println("Selected Venue ID: ${selectedVenue.id}")
+            findNavController().navigate(action)
+        }
 
         recyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = venueAdapter
         }
     }
+
 
     private fun setupObservers() {
         viewModel.venues.observe(viewLifecycleOwner, Observer { venues ->
@@ -133,6 +149,8 @@ class VenueListFragment : Fragment() {
 
     @SuppressLint("MissingPermission")
     private fun getCurrentLocation() {
+
+        cancellationTokenSource = CancellationTokenSource()
         // Usamos getCurrentLocation en lugar de lastLocation para mayor precisión
         fusedLocationClient.getCurrentLocation(
             Priority.PRIORITY_HIGH_ACCURACY,

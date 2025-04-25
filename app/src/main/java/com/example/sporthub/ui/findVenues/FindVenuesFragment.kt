@@ -38,12 +38,12 @@ class FindVenuesFragment : Fragment() {
 
         recyclerView.adapter = adapter
 
-
     }
 
     private fun navigateToVenueList(sport: Sport) {
         val bundle = Bundle().apply {
             putString("sportId", sport.id)
+            putString("sport", sport.name)
         }
         findNavController().navigate(R.id.action_findVenuesFragment_to_venueListFragment, bundle)
 

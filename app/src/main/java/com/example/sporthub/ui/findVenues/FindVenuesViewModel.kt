@@ -29,7 +29,9 @@ class FindVenuesViewModel : ViewModel() {
             .whereEqualTo("sport.id", sportId)  // Filter by selected sport
             .get()
             .addOnSuccessListener { snapshot: QuerySnapshot ->
-                val venueList = snapshot.documents.mapNotNull { it.toObject(Venue::class.java) }
+                val venueList = snapshot.documents.mapNotNull { doc ->
+                    doc.toObject(Venue::class.java)?.copy(id = doc.id)
+                }
                 _venues.value = venueList
             }
             .addOnFailureListener {
