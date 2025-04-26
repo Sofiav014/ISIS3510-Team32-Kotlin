@@ -26,7 +26,6 @@ import com.example.sporthub.ui.login.SignInActivity
 import com.example.sporthub.viewmodel.SharedUserViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.play.core.integrity.e
 import com.google.firebase.auth.FirebaseAuth
 import com.example.sporthub.ui.profile.edit.EditNameActivity
 import com.example.sporthub.ui.profile.edit.EditGenderActivity
@@ -81,8 +80,8 @@ class ProfileFragment : Fragment() {
         // Setup button listeners
         setupButtons()
 
-        // Initialize theme switch
-        initThemeSwitch()
+        // Initialize theme switch - Important: defer until we observe isDarkMode LiveData
+        // DO NOT call initThemeSwitch() here
 
         // Load data
         viewModel.loadUserData()
@@ -144,7 +143,20 @@ class ProfileFragment : Fragment() {
 
         // Observe dark mode changes
         viewModel.isDarkMode.observe(viewLifecycleOwner) { isDarkMode ->
+            Log.d("ProfileFragment", "Theme changed. isDarkMode=$isDarkMode")
+            // This is important - first update UI, THEN initialize the switch
             updateThemeUI(isDarkMode)
+
+            // Set the switch state without triggering the listener
+            themeSwitch.setOnCheckedChangeListener(null)
+            themeSwitch.isChecked = isDarkMode
+
+            // Re-attach the listener after setting the state
+            themeSwitch.setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked != viewModel.isDarkMode.value) {
+                    viewModel.toggleDarkMode()
+                }
+            }
         }
     }
 
@@ -157,28 +169,16 @@ class ProfileFragment : Fragment() {
         logoutButton.setOnClickListener {
             signOutAndStartSignInActivity()
         }
-    }
 
-    private fun initThemeSwitch() {
-        // Set initial state
-        val isDarkMode = viewModel.isDarkModeActive()
-        themeSwitch.isChecked = isDarkMode
-        updateThemeUI(isDarkMode)
-
-        // Set change listener
+        // Setup theme switch listener
         themeSwitch.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked != viewModel.isDarkModeActive()) {
-                // Only toggle if the state actually changed
+            if (isChecked != viewModel.isDarkMode.value) {
                 viewModel.toggleDarkMode()
-                // Don't add any navigation code here
             }
         }
     }
 
     private fun updateThemeUI(isDarkMode: Boolean) {
-        // Update switch state
-        themeSwitch.isChecked = isDarkMode
-
         // Update theme label
         themeLabel.text = if (isDarkMode) "Dark Mode" else "Light Mode"
 

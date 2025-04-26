@@ -24,20 +24,11 @@ class GenderSelectionActivity : AppCompatActivity() {
     private val TAG = "GenderSelectionActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sign_in_gender_selection)
 
-
-
-
-
-
         // Inicializar el ViewModel
         viewModel = ViewModelProvider(this).get(GenderSelectionViewModel::class.java)
-
-
-
 
         // Verificar autenticación
         if (!viewModel.checkAuthentication()) {
@@ -94,13 +85,11 @@ class GenderSelectionActivity : AppCompatActivity() {
         cardOther.isEnabled = true
     }
 
-
     private fun disableAllCards() {
         cardMale.isEnabled = false
         cardFemale.isEnabled = false
         cardOther.isEnabled = false
     }
-
 
     private fun handleGenderSelected(gender: String) {
         if (isCardClicked) return // Prevent multiple clicks fast
@@ -108,14 +97,7 @@ class GenderSelectionActivity : AppCompatActivity() {
 
         disableAllCards()
         viewModel.saveGender(gender)
-
-        // Navigate to next screen
-        val intent = Intent(this, BirthDateSelectionActivity::class.java)
-        startActivity(intent)
-
-        // No finish() here — so if the user presses Back, he can come back.
     }
-
 
     private fun setupObservers() {
         viewModel.saveSuccessEvent.observe(this) { success ->
@@ -127,7 +109,10 @@ class GenderSelectionActivity : AppCompatActivity() {
 
         viewModel.errorEvent.observe(this) { errorMessage ->
             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
-
+            isCardClicked = false // Reset flag to allow retrying
+            cardMale.isEnabled = true
+            cardFemale.isEnabled = true
+            cardOther.isEnabled = true
         }
 
         viewModel.userNotAuthenticatedEvent.observe(this) { notAuthenticated ->
@@ -141,6 +126,7 @@ class GenderSelectionActivity : AppCompatActivity() {
     private fun navigateToBirthDateSelection() {
         val intent = Intent(this, BirthDateSelectionActivity::class.java)
         startActivity(intent)
+        // Do not finish this activity yet, to allow proper back navigation
     }
 
     private fun redirectToSignIn() {
@@ -148,5 +134,4 @@ class GenderSelectionActivity : AppCompatActivity() {
         startActivity(intent)
         finish()
     }
-
 }

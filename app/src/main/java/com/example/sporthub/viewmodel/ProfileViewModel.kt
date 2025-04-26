@@ -46,7 +46,8 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     val isDarkMode: LiveData<Boolean> = _isDarkMode
 
     init {
-        _isDarkMode.value = themeManager.isDarkModeActive()
+        // Initialize with the current system theme status
+        updateThemeStatus()
     }
 
     fun loadUserData() {
@@ -58,6 +59,9 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 _userData.value = user
                 _favoriteVenues.value = user.venuesLiked
                 _isLoading.value = false
+
+                // Update theme status based on current user preference
+                updateThemeStatus()
             }
         } else {
             _errorMessage.value = "User not authenticated"
@@ -98,7 +102,27 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
     // Theme management methods
     fun isDarkModeActive(): Boolean {
-        return themeManager.isDarkModeActive()
+        return AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
+    }
+
+    // Update theme status based on current settings
+    private fun updateThemeStatus() {
+        val userId = userRepository.getCurrentUser()?.uid
+        if (userId != null) {
+            // Get user's saved preference
+            val savedDarkMode = LocalThemeManager.getUserTheme(getApplication(), userId)
+
+            // If we have a saved preference, use it
+            if (savedDarkMode != null) {
+                _isDarkMode.value = savedDarkMode
+            } else {
+                // Otherwise use the current theme state
+                _isDarkMode.value = isDarkModeActive()
+            }
+        } else {
+            // If no user, just use current theme state
+            _isDarkMode.value = isDarkModeActive()
+        }
     }
 
     fun toggleDarkMode() {
@@ -107,14 +131,23 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         editor.putBoolean("is_theme_changing", true)
         editor.apply()
 
+        // Get current theme status
+        val newDarkModeValue = !isDarkModeActive()
+
         // Change the theme
-        themeManager.toggleDarkMode()
-        _isDarkMode.value = themeManager.isDarkModeActive()
+        if (newDarkModeValue) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        }
+
+        // Update our LiveData
+        _isDarkMode.value = newDarkModeValue
 
         // Save user preference
         val userId = userRepository.getCurrentUser()?.uid
         if (userId != null) {
-            LocalThemeManager.saveUserTheme(getApplication(), userId, themeManager.isDarkModeActive())
+            LocalThemeManager.saveUserTheme(getApplication(), userId, newDarkModeValue)
         }
 
         // Clear the flag after a short delay to ensure it's processed
@@ -125,15 +158,10 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         }, 500)
     }
 
-
     fun signOut() {
-
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-
         val userId = userRepository.getCurrentUser()?.uid
-
         userRepository.signOut()
         SignInActivity.preferencesAlreadyChecked = false
     }
-
 }

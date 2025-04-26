@@ -19,6 +19,7 @@ class FavoriteSportsSelectionActivity : AppCompatActivity() {
 
     private lateinit var viewModel: SportSelectionViewModel
     private val TAG = "FavoriteSportsSelectionActivity"
+    private var hasNavigated = false // Flag to prevent double navigation
 
     // Map to track selected sports
     private val selectedSports = mutableMapOf(
@@ -95,12 +96,13 @@ class FavoriteSportsSelectionActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         discoverButton.isEnabled = true // Enable the Discover button again
+        hasNavigated = false // Reset navigation flag
     }
-
 
     private fun setupObservers() {
         viewModel.saveSuccessEvent.observe(this) { success ->
-            if (success) {
+            if (success && !hasNavigated) {
+                hasNavigated = true // Set flag to prevent double navigation
                 Toast.makeText(this, "Sports preferences saved!", Toast.LENGTH_SHORT).show()
                 navigateToMainActivity()
             }
@@ -161,10 +163,11 @@ class FavoriteSportsSelectionActivity : AppCompatActivity() {
     private fun navigateToMainActivity() {
         Log.d("SportsDebug", "Navigating to MainActivity")
         val intent = Intent(this, MainActivity::class.java)
+        // Clear the activity stack so user can't go back to registration screens
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
     }
-
 
     private fun redirectToSignIn() {
         val intent = Intent(this, SignInActivity::class.java)

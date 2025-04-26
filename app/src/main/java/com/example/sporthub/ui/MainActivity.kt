@@ -40,7 +40,8 @@ import com.example.sporthub.ui.findVenues.FindVenuesFragment
 import com.example.sporthub.ui.profile.ProfileFragment
 import com.example.sporthub.utils.LocalThemeManager
 import com.google.android.material.appbar.MaterialToolbar
-
+import androidx.activity.OnBackPressedCallback
+import androidx.navigation.NavController
 
 class MainActivity : AppCompatActivity() {
 
@@ -51,6 +52,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var userRepository: UserRepository
     private val sharedUserViewModel: SharedUserViewModel by viewModels()
     private lateinit var bottomNavigationView: BottomNavigationView
+    private lateinit var navController: NavController
 
     var currentUser: User? = null
         private set
@@ -60,15 +62,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
         mAuth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
         userRepository = UserRepository()
-
-
-
-
-
 
         val authUser = mAuth.currentUser
         if (authUser == null) {
@@ -77,6 +73,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         val uid = authUser.uid
+
+        // Apply saved theme preference immediately on startup
+        applyUserThemePreference(uid)
 
         userRepository.getUserModel(uid).observe(this) { user ->
             if (user != null && (user.id != "")) {
@@ -89,18 +88,70 @@ class MainActivity : AppCompatActivity() {
                 setContentView(binding.root)
 
                 setupNavigation()
+
+                // Setup back button handling
+                setupBackHandling()
             } else {
                 Log.e(TAG, "Usuario no encontrado o error al obtener usuario")
                 goToSignIn()
             }
         }
+    }
 
-        // After loading the user and setting it in the shared view model
-        val isDarkMode = LocalThemeManager.getUserTheme(this, uid) ?: false
-        if (AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES && !isDarkMode) {
+    /**
+     * Setup proper back button handling
+     */
+    private fun setupBackHandling() {
+        // Add a callback for handling the back button press
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // Check if we're at the start destination
+                if (navController.currentDestination?.id == navController.graph.startDestinationId) {
+                    // If at home/start destination, minimize the app instead of exiting
+                    moveTaskToBack(true)
+                } else {
+                    // If not at the start destination, do normal navigation
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                    isEnabled = true
+                }
+            }
+        })
+    }
+
+    /**
+     * Apply the user's saved theme preference
+     */
+    private fun applyUserThemePreference(userId: String) {
+        try {
+            // Get the user's theme preference
+            val isDarkMode = LocalThemeManager.getUserTheme(this, userId)
+
+            Log.d(TAG, "User theme preference: isDarkMode=$isDarkMode")
+
+            // Apply the theme based on the preference
+            if (isDarkMode != null) {
+                val currentMode = if (AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES) true else false
+
+                // Only apply if different from current to avoid unnecessary recreation
+                if (isDarkMode != currentMode) {
+                    Log.d(TAG, "Applying theme change: isDarkMode=$isDarkMode, current=$currentMode")
+
+                    if (isDarkMode) {
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                    } else {
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                    }
+                }
+            } else {
+                // Default to light mode if no preference set
+                Log.d(TAG, "No theme preference, defaulting to light mode")
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error applying theme preference: ${e.message}")
+            // Default to light mode in case of error
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-        } else if (AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_NO && isDarkMode) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
         }
     }
 
@@ -116,7 +167,7 @@ class MainActivity : AppCompatActivity() {
         // Get NavController from NavHostFragment
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
+        navController = navHostFragment.navController
 
         val toolbar: MaterialToolbar = findViewById(R.id.topAppBar)
         setSupportActionBar(toolbar)
@@ -162,8 +213,14 @@ class MainActivity : AppCompatActivity() {
 
     fun signOutAndGoToLogin() {
         try {
+            // Save current user ID before signing out
+            val userId = mAuth.currentUser?.uid
+
             mAuth.signOut()
             mGoogleSignInClient.signOut().addOnCompleteListener(this) {
+                // Clear theme preference on logout (optional)
+                // userId?.let { LocalThemeManager.clearUserTheme(this, it) }
+
                 goToSignIn()
             }
         } catch (e: Exception) {
@@ -173,6 +230,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun goToSignIn() {
         val intent = Intent(this, SignInActivity::class.java)
+        // Clear the task stack so users can't navigate back
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
     }

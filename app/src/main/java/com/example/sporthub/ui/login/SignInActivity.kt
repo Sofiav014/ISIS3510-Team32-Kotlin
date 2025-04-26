@@ -31,6 +31,7 @@ class SignInActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
     private var preferencesAlreadyChecked = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sign_in)
@@ -50,6 +51,14 @@ class SignInActivity : AppCompatActivity() {
             Log.d(TAG, "Sign In button clicked")
             signIn()
         }
+    }
+
+    // Block back button to prevent app closure during sign-in
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        super.onBackPressed()
+        // Either do nothing, or minimize the app
+        moveTaskToBack(true)
     }
 
     private fun signIn() {
@@ -97,6 +106,7 @@ class SignInActivity : AppCompatActivity() {
                 }
             }
     }
+
     // In SignInActivity.kt
     private fun checkUserExistsInFirestore(userId: String) {
         db.collection("users").document(userId)
@@ -139,6 +149,8 @@ class SignInActivity : AppCompatActivity() {
 
     private fun navigateToMainActivity() {
         val intent = Intent(this, MainActivity::class.java)
+        // Clear the task stack so users can't navigate back
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
     }
@@ -146,6 +158,7 @@ class SignInActivity : AppCompatActivity() {
     // Cambiamos esta función para navegar a NameSelectionActivity
     private fun navigateToNameSelectionActivity() {
         val intent = Intent(this, NameSelectionActivity::class.java)
+        // Don't clear stack here, as we need the registration flow to work
         startActivity(intent)
         finish()
     }
