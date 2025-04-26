@@ -2,10 +2,28 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootViewGenderSelection"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/primaryNeutral"
     tools:context=".ui.login.GenderSelectionActivity">
+
+    <!-- Network connectivity message -->
+    <TextView
+        android:id="@+id/networkMessageText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="#80FF5252"
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="No internet connection. Please check your Wi-Fi or mobile data and try again."
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Guía horizontal para posicionamiento vertical consistente -->
     <androidx.constraintlayout.widget.Guideline

@@ -1,29 +1,21 @@
 package com.example.sporthub.utils
 
 import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
-import android.os.Build
 import android.view.View
 import android.widget.Toast
 import com.google.android.material.snackbar.Snackbar
 
-object ConnectivityHelper {
-    @JvmStatic
-    fun isNetworkAvailable(context: Context): Boolean {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val network = connectivityManager.activeNetwork ?: return false
-            val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-            capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-        } else {
-            @Suppress("DEPRECATION")
-            val networkInfo = connectivityManager.activeNetworkInfo ?: return false
-            @Suppress("DEPRECATION")
-            networkInfo.isConnected
-        }
-    }
+/**
+ * Extension to the existing ConnectivityHelper to add user-friendly error notifications
+ */
+object ConnectivityHelperExt {
 
+    /**
+     * Checks if network is available and shows a message if it's not
+     * @param context The context to use for checking connectivity and showing message
+     * @param rootView The view to show Snackbar on (optional)
+     * @return true if network is available, false otherwise
+     */
     fun checkNetworkAndNotify(context: Context, rootView: View? = null): Boolean {
         val isNetworkAvailable = ConnectivityHelper.isNetworkAvailable(context)
 

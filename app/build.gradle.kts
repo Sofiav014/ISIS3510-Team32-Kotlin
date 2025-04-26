@@ -48,6 +48,8 @@ android {
 
 dependencies {
     // Firebase BoM
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
     implementation(platform("com.google.firebase:firebase-bom:32.3.1"))
 
     // Firebase Crashlytics and Analytics
