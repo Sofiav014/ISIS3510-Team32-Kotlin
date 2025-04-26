@@ -15,6 +15,8 @@ class FindVenuesViewModel : ViewModel() {
     private val _venues = MutableLiveData<List<Venue>>()
     val venues: LiveData<List<Venue>> get() = _venues
 
+    val venueCache = mutableMapOf<String, List<Venue>>()
+
     // Lista de deportes disponibles
 
     val sportsList = listOf(
@@ -24,19 +26,36 @@ class FindVenuesViewModel : ViewModel() {
         Sport(id = "tennis", name = "Tennis", logo = "https://firebasestorage.googleapis.com/v0/b/moviles-isis3510.firebasestorage.app/o/icons%2Fsports%2Ftennis-logo.png?alt=media&token=84fde031-9c77-4cc5-b4d3-dd785e203b99")
     )
 
-    fun fetchVenuesBySport(sportId: String) {
+    fun fetchVenuesBySport(sportId: String, forceFetchFromNetwork: Boolean = false) {
+        val cachedVenues = venueCache[sportId]
+
+        if (!forceFetchFromNetwork && !cachedVenues.isNullOrEmpty()) {
+            _venues.value = cachedVenues
+            return
+        }
+
         db.collection("venues")
-            .whereEqualTo("sport.id", sportId)  // Filter by selected sport
+            .whereEqualTo("sport.id", sportId)
             .get()
             .addOnSuccessListener { snapshot: QuerySnapshot ->
                 val venueList = snapshot.documents.mapNotNull { doc ->
                     doc.toObject(Venue::class.java)?.copy(id = doc.id)
                 }
                 _venues.value = venueList
+                venueCache[sportId] = venueList
             }
             .addOnFailureListener {
-                _venues.value = emptyList()  // Handle failure
+                // Only fallback if there's a previous cache
+                if (!cachedVenues.isNullOrEmpty()) {
+                    _venues.value = cachedVenues
+                } else {
+                    _venues.value = emptyList()
+                }
             }
     }
+
+
+
+
 
 }

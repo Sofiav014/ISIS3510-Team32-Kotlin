@@ -49,4 +49,8 @@ class VenueDetailViewModel : ViewModel() {
             }
     }
 
+    fun setVenueFromCache(cachedVenue: Venue) {
+        _venue.value = cachedVenue
+    }
+
 }
