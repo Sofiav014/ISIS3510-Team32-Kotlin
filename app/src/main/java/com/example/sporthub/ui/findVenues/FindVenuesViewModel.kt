@@ -29,8 +29,8 @@ class FindVenuesViewModel : ViewModel() {
         val cachedVenues = venueCache[sportId]
 
         if (!forceFetchFromNetwork && !cachedVenues.isNullOrEmpty()) {
-            // Fixed: Use non-null value by using cachedVenues directly (as we've checked it's not null)
-            _venues.value = cachedVenues
+            // Use a non-null empty list as the default
+            _venues.value = cachedVenues ?: emptyList()
             return
         }
 
@@ -47,8 +47,8 @@ class FindVenuesViewModel : ViewModel() {
             .addOnFailureListener {
                 // Only fallback if there's a previous cache
                 if (!cachedVenues.isNullOrEmpty()) {
-                    // Fixed: Use non-null value by using cachedVenues directly
-                    _venues.value = cachedVenues
+                    // Use a non-null empty list as the default
+                    _venues.value = cachedVenues ?: emptyList()
                 } else {
                     _venues.value = emptyList()
                 }
