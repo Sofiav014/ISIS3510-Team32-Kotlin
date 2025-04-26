@@ -18,6 +18,7 @@ import com.example.sporthub.ui.findVenues.FindVenuesViewModel
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.sporthub.ui.venueDetail.BookingAdapter
+import com.google.android.material.snackbar.Snackbar
 
 class VenueDetailFragment : Fragment() {
 
@@ -57,7 +58,15 @@ class VenueDetailFragment : Fragment() {
         bookingsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
 
 
-        viewModel.fetchVenueById(args.venueId)
+        val cachedVenue = findVenuesViewModel.venueCache.values
+            .flatten()
+            .firstOrNull { it.id == args.venueId }
+
+        if (cachedVenue != null) {
+            viewModel.setVenueFromCache(cachedVenue)
+        } else {
+            viewModel.fetchVenueById(args.venueId)
+        }
 
         viewModel.venue.observe(viewLifecycleOwner) { venue ->
             if (venue != null) {
@@ -81,8 +90,21 @@ class VenueDetailFragment : Fragment() {
 
                 // Log and display bookings
                 Log.d("DEBUG", "Fetched bookings: ${venue.bookings}")
-                println("Fetched bookings: ${venue.bookings}")
                 bookingAdapter.submitList(venue.bookings ?: emptyList())
+            }
+            else {
+                venueName.text = "Venue not available"
+                venueLocation.text = ""
+                venueSport.text = ""
+                venueRating.text = ""
+                venueImage.setImageResource(R.drawable.ic_court_logo) // Optional placeholder image
+
+                bookingAdapter = BookingAdapter("")
+                bookingsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+                bookingsRecyclerView.adapter = bookingAdapter
+                bookingAdapter.submitList(emptyList())
+
+                Snackbar.make(requireView(), "Unable to load venue details. Please check your connection.", Snackbar.LENGTH_LONG).show()
             }
         }
 

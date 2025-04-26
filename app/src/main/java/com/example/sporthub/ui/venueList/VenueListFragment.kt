@@ -30,6 +30,7 @@ import com.google.android.gms.tasks.CancellationTokenSource
 import java.util.Locale
 import android.widget.TextView
 import com.example.sporthub.utils.ConnectivityHelper
+import com.google.android.material.snackbar.Snackbar
 
 class VenueListFragment : Fragment() {
 
@@ -115,13 +116,14 @@ class VenueListFragment : Fragment() {
             if (venues.isEmpty()) {
                 val hasInternet = ConnectivityHelper.isNetworkAvailable(requireContext())
                 if (!hasInternet) {
-                    Toast.makeText(
-                        requireContext(),
-                        "No internet connection and no cached venues available.",
-                        Toast.LENGTH_LONG
+                    Snackbar.make(
+                        requireView(),
+                        "Unable to load venues list. Please check your internet connection.",
+                        Snackbar.LENGTH_LONG
                     ).show()
                 }
             }
+
 
             val sortedVenues = if (userLocation != null) {
                 sortVenuesByDistance(venues)

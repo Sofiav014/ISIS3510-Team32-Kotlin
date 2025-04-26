@@ -15,7 +15,7 @@ class FindVenuesViewModel : ViewModel() {
     private val _venues = MutableLiveData<List<Venue>>()
     val venues: LiveData<List<Venue>> get() = _venues
 
-    private val venueCache = mutableMapOf<String, List<Venue>>()
+    val venueCache = mutableMapOf<String, List<Venue>>()
 
     // Lista de deportes disponibles
 
