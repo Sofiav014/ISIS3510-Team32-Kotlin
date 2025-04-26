@@ -23,6 +23,15 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.example.sporthub.utils.LocalThemeManager
 import androidx.appcompat.app.AppCompatDelegate
 
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+import kotlinx.coroutines.tasks.await
+
+
+
 class SignInActivity : AppCompatActivity() {
 
     companion object {
@@ -116,11 +125,10 @@ class SignInActivity : AppCompatActivity() {
                 if (task.isSuccessful) {
                     val user = auth.currentUser
                     Toast.makeText(this, "Signed in as ${user?.displayName}", Toast.LENGTH_SHORT).show()
-
-                    // Verify network availability before checking Firestore
+                    // Only proceed if we have network connectivity
                     if (ConnectivityHelper.isNetworkAvailable(this)) {
-                        // Verificar si el usuario necesita seleccionar género
                         if (user != null) {
+                            // Launch a coroutine to fetch user data from Firestore
                             checkUserExistsInFirestore(user.uid)
                         }
                     } else {
@@ -147,80 +155,82 @@ class SignInActivity : AppCompatActivity() {
      * If profile is incomplete, redirect to the appropriate step
      */
     private fun checkUserExistsInFirestore(userId: String) {
-        // First check connectivity
+        // First, check for internet connectivity
         if (!ConnectivityHelper.isNetworkAvailable(this)) {
             showOfflineMessage()
             return
         }
+        hideOfflineMessage()  // we're online, so hide any offline indicator
 
-        hideOfflineMessage() // Hide message if we're online
+        // Launch a coroutine on a background thread for Firestore operations
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                // Fetch the user's document from Firestore (suspend until the task completes)
+                val document = db.collection("users").document(userId).get().await()
+                // Switch to the Main thread to work with UI and navigate
+                withContext(Dispatchers.Main) {
+                    // 1. Check if the document exists in Firestore
+                    if (!document.exists()) {
+                        // No user document found – start profile setup from the beginning (Name)
+                        navigateToNameSelectionActivity()
+                        return@withContext  // exit the coroutine block early
+                    }
+                    // 2. Check if Name is provided
+                    val name = document.getString("name").orEmpty()
+                    if (name.isEmpty()) {
+                        navigateToNameSelectionActivity()
+                        return@withContext
+                    }
+                    // 3. Check if Gender is provided
+                    val gender = document.getString("gender").orEmpty()
+                    if (gender.isEmpty()) {
+                        navigateToGenderSelectionActivity()
+                        return@withContext
+                    }
+                    // 4. Check if Birth Date is provided
+                    val birthDate = document.get("birth_date")
+                    if (birthDate == null || (birthDate is String && birthDate.isEmpty())) {
+                        navigateToBirthDateSelectionActivity()
+                        return@withContext
+                    }
+                    // 5. Check if at least one favorite sport is selected
+                    val sportsLiked = document.get("sports_liked")
+                    if (sportsLiked == null || (sportsLiked is List<*> && sportsLiked.isEmpty())) {
+                        navigateToSportsSelectionActivity()
+                        return@withContext
+                    }
 
-        db.collection("users").document(userId)
-            .get()
-            .addOnSuccessListener { document ->
-                // Check if user document exists and has all required fields
-                // Check document existence first
-                if (!document.exists()) {
-                    // User doesn't exist at all, start from the beginning
-                    navigateToNameSelectionActivity()
-                    return@addOnSuccessListener
-                }
+                    // If we've reached here, all required fields are present and profile is complete.
+                    preferencesAlreadyChecked = true  // mark that we've verified the profile
 
-                // Check if name is present
-                val name = document.getString("name")
-                if (name.isNullOrEmpty()) {
-                    navigateToNameSelectionActivity()
-                    return@addOnSuccessListener
-                }
-
-                // Check if gender is present
-                val gender = document.getString("gender")
-                if (gender.isNullOrEmpty()) {
-                    navigateToGenderSelectionActivity()
-                    return@addOnSuccessListener
-                }
-
-                // Check if birth_date exists
-                val birthDate = document.get("birth_date")
-                if (birthDate == null || (birthDate is String && birthDate.isEmpty())) {
-                    navigateToBirthDateSelectionActivity()
-                    return@addOnSuccessListener
-                }
-
-                // Check if sports_liked exists and has at least one entry
-                val sportsLiked = document.get("sports_liked")
-                if (sportsLiked == null || (sportsLiked is List<*> && sportsLiked.isEmpty())) {
-                    navigateToSportsSelectionActivity()
-                    return@addOnSuccessListener
-                }
-
-                // If we've reached here, the profile is complete
-                preferencesAlreadyChecked = true
-
-                // Apply theme preference if available
-                val isDarkMode = LocalThemeManager.getUserTheme(this, userId)
-                if (isDarkMode != null) {
-                    if (isDarkMode) {
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                    // Apply the user's theme preference (if available)
+                    val isDarkMode = LocalThemeManager.getUserTheme(this@SignInActivity, userId)
+                    if (isDarkMode != null) {
+                        // Set dark or light mode based on saved preference
+                        AppCompatDelegate.setDefaultNightMode(
+                            if (isDarkMode) AppCompatDelegate.MODE_NIGHT_YES
+                            else AppCompatDelegate.MODE_NIGHT_NO
+                        )
                     } else {
+                        // If no preference saved, default to light mode
                         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
                     }
-                } else {
-                    // Default to light for existing users who don't have a preference set
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                }
 
-                // Navigate to the main activity as the user is fully registered
-                navigateToMainActivity()
+                    // Navigate to MainActivity since the user’s profile is complete
+                    navigateToMainActivity()
+                }
+            } catch (e: Exception) {
+                // Handle any errors during Firestore fetch (e.g., network issues)
+                withContext(Dispatchers.Main) {
+                    Log.e(TAG, "Error checking user data: ${e.message}")
+                    // Show a friendly error message
+                    Snackbar.make(rootView, "Failed to fetch your profile. Please try again.", Snackbar.LENGTH_LONG).show()
+                    // On failure, treat as a new user (ensure light mode and start profile setup from Name)
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                    navigateToNameSelectionActivity()
+                }
             }
-            .addOnFailureListener { e ->
-                Log.e(TAG, "Error checking user data: ${e.message}")
-                // Show user-friendly error message
-                Snackbar.make(rootView, "Failed to check your account information. Please try again.", Snackbar.LENGTH_LONG).show()
-                // If there's an error, assume it's a new user and set light mode
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                navigateToNameSelectionActivity()
-            }
+        }
     }
 
     private fun navigateToMainActivity() {
