@@ -18,6 +18,7 @@ import com.example.sporthub.data.repository.UserRepository
 import com.example.sporthub.ui.MainActivity
 import com.example.sporthub.viewmodel.SportSelectionViewModel
 import android.app.DatePickerDialog
+import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
 import java.util.Calendar
 
@@ -45,8 +46,32 @@ class EditSportsActivity : AppCompatActivity() {
     private lateinit var backButton: ImageButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+
+
+        val isThemeChanging = getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+            .getBoolean("is_theme_changing", false)
+
+        if (isThemeChanging) {
+
+            setContentView(R.layout.activity_edit_name)
+
+            initViews()
+            return
+        }
+
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_sign_in_favorite_sports_selection)
+        setContentView(R.layout.activity_edit_sports)
+
+        // Initialize views
+        basketballCard = findViewById(R.id.button_basketball)
+        footballCard = findViewById(R.id.button_football)
+        volleyballCard = findViewById(R.id.button_volleyball)
+        tennisCard = findViewById(R.id.button_tennis)
+        saveButton = findViewById(R.id.button_discover)
+        titleText = findViewById(R.id.textview_title)
+        subtitleText = findViewById(R.id.textview_subtitle)
+        backButton = findViewById(R.id.button_back_sport)
 
         // Get edit mode from intent
         isEditMode = intent.getBooleanExtra("EDIT_MODE", false)

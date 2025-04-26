@@ -70,12 +70,21 @@ class BirthDateSelectionActivity : AppCompatActivity() {
         buttonContinue.setOnClickListener {
             val birthDate = datePickerEditText.text.toString()
             if (birthDate.isNotEmpty() && birthDate != "01 / 01 / 2025") {
+                buttonContinue.isEnabled = false
                 saveBirthDate(birthDate)
             } else {
                 Toast.makeText(this, "Please select your birth date", Toast.LENGTH_SHORT).show()
             }
         }
+
     }
+
+
+    override fun onResume() {
+        super.onResume()
+        buttonContinue.isEnabled = true // Enable the Continue button again
+    }
+
 
     private fun setupObservers() {
         viewModel.saveSuccessEvent.observe(this) { success ->
@@ -87,6 +96,7 @@ class BirthDateSelectionActivity : AppCompatActivity() {
 
         viewModel.errorEvent.observe(this) { errorMessage ->
             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
+            buttonContinue.isEnabled = true
         }
 
         viewModel.userNotAuthenticatedEvent.observe(this) { notAuthenticated ->

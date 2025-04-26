@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/primaryNeutral"
-    tools:context=".ui.login.GenderSelectionActivity">
+    tools:context=".ui.profile.edit.EditGenderActivity">
 
     <!-- Guía horizontal para posicionamiento vertical consistente -->
     <androidx.constraintlayout.widget.Guideline
@@ -33,7 +33,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
-        android:text="Let us begin with a couple of questions"
+        android:text="Edit Your Gender"
         android:textAlignment="center"
         android:textColor="@color/primary"
         android:textSize="24sp"
@@ -47,7 +47,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="What gender do you identify with?"
+        android:text="Update your gender preference"
         android:textAlignment="center"
         android:textColor="@color/primary"
         android:textSize="18sp"
@@ -71,7 +71,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintVertical_bias="0.2">
 
-        <!-- Male Button - Simplified -->
+        <!-- Male Button - Unchanged from original -->
         <androidx.cardview.widget.CardView
             android:id="@+id/button_male"
             android:layout_width="0dp"
@@ -111,7 +111,6 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Female Button - Simplified -->
         <androidx.cardview.widget.CardView
             android:id="@+id/button_female"
             android:layout_width="0dp"
@@ -190,6 +189,7 @@
                     android:textSize="16sp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

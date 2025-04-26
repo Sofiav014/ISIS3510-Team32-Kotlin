@@ -85,11 +85,18 @@ class FavoriteSportsSelectionActivity : AppCompatActivity() {
             // Configurar listener para el botón DISCOVER
             discoverButton.setOnClickListener {
                 saveSportsAndProceed()
+                discoverButton.isEnabled = false
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error setting up sports selection: ${e.message}")
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        discoverButton.isEnabled = true // Enable the Discover button again
+    }
+
 
     private fun setupObservers() {
         viewModel.saveSuccessEvent.observe(this) { success ->
@@ -100,7 +107,9 @@ class FavoriteSportsSelectionActivity : AppCompatActivity() {
         }
 
         viewModel.errorEvent.observe(this) { errorMessage ->
+            Log.d("SportsDebug", "Error event triggered: $errorMessage")
             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
+            discoverButton.isEnabled = true
         }
 
         viewModel.userNotAuthenticatedEvent.observe(this) { notAuthenticated ->
@@ -136,18 +145,26 @@ class FavoriteSportsSelectionActivity : AppCompatActivity() {
     }
 
     private fun saveSportsAndProceed() {
-        // Get list of selected sports keys
         val selectedSportsKeys = selectedSports.filter { it.value }.keys.toList()
+        Log.d("SportsDebug", "Selected sports: $selectedSportsKeys")
 
-        // Delegar la lógica al ViewModel
+        if (selectedSportsKeys.isEmpty()) {
+            Toast.makeText(this, "Please select at least one sport", Toast.LENGTH_SHORT).show()
+            discoverButton.isEnabled = true
+            return
+        }
+
+        Log.d("SportsDebug", "Calling viewModel.saveSportsPreferences()")
         viewModel.saveSportsPreferences(selectedSportsKeys)
     }
 
     private fun navigateToMainActivity() {
+        Log.d("SportsDebug", "Navigating to MainActivity")
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
         finish()
     }
+
 
     private fun redirectToSignIn() {
         val intent = Intent(this, SignInActivity::class.java)

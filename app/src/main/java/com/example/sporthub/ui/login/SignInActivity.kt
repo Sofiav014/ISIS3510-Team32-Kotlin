@@ -97,7 +97,7 @@ class SignInActivity : AppCompatActivity() {
                 }
             }
     }
-
+    // In SignInActivity.kt
     private fun checkUserExistsInFirestore(userId: String) {
         db.collection("users").document(userId)
             .get()
@@ -116,20 +116,23 @@ class SignInActivity : AppCompatActivity() {
                                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
                             }
                         } else {
-                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO) // Default to light
+                            // Default to light for existing users who don't have a preference set
+                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
                         }
                     }
 
-
                     navigateToMainActivity()
                 } else {
-                    // Usuario nuevo o con datos incompletos - iniciar flujo de registro
+                    // This is a new user - force light mode
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                    // Navigate to name selection for new user registration
                     navigateToNameSelectionActivity()
                 }
             }
             .addOnFailureListener { e ->
                 Log.e(TAG, "Error checking user data: ${e.message}")
-                // Por defecto, ir a selección de nombre por seguridad
+                // If there's an error, assume it's a new user and set light mode
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
                 navigateToNameSelectionActivity()
             }
     }

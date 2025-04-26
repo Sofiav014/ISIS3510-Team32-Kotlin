@@ -30,6 +30,7 @@ import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import android.widget.Button
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -37,6 +38,7 @@ import com.example.sporthub.ui.bookings.BookingsFragment
 import com.example.sporthub.ui.createBooking.CreateBookingFragment
 import com.example.sporthub.ui.findVenues.FindVenuesFragment
 import com.example.sporthub.ui.profile.ProfileFragment
+import com.example.sporthub.utils.LocalThemeManager
 import com.google.android.material.appbar.MaterialToolbar
 
 
@@ -93,7 +95,13 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-
+        // After loading the user and setting it in the shared view model
+        val isDarkMode = LocalThemeManager.getUserTheme(this, uid) ?: false
+        if (AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES && !isDarkMode) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        } else if (AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_NO && isDarkMode) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        }
     }
 
     // Snippet from MainActivity.kt showing toolbar setup

@@ -1,6 +1,7 @@
 package com.example.sporthub.ui.profile.edit
 
 import android.app.DatePickerDialog
+import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
@@ -40,8 +41,29 @@ class EditBirthDateActivity : AppCompatActivity() {
     private var isEditMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+
+        val isThemeChanging = getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+            .getBoolean("is_theme_changing", false)
+
+        if (isThemeChanging) {
+
+            setContentView(R.layout.activity_edit_name)
+
+            initViews()
+            return
+        }
+
+
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_sign_in_birth_date_selection)
+        setContentView(R.layout.activity_edit_birth_date)
+
+        // Initialize views
+        datePickerEditText = findViewById(R.id.date_picker_edit_text)
+        saveButton = findViewById(R.id.button_continue)
+        titleText = findViewById(R.id.textview_title)
+        subtitleText = findViewById(R.id.textview_subtitle)
+        backButton = findViewById(R.id.button_back_birth)
 
         // Get edit mode from intent
         isEditMode = intent.getBooleanExtra("EDIT_MODE", false)

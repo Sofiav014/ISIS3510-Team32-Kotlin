@@ -168,8 +168,9 @@ class ProfileFragment : Fragment() {
         // Set change listener
         themeSwitch.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked != viewModel.isDarkModeActive()) {
-                // Only toggle if the state actually changed to avoid recursive calls
+                // Only toggle if the state actually changed
                 viewModel.toggleDarkMode()
+                // Don't add any navigation code here
             }
         }
     }

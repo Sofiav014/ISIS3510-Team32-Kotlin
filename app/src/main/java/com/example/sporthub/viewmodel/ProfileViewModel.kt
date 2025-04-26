@@ -1,7 +1,10 @@
 package com.example.sporthub.ui.profile
 
 import android.app.Application
+import android.content.Context
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.AndroidViewModel
@@ -99,25 +102,38 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun toggleDarkMode() {
+        // Save the flag to prevent activities from recreating improperly
+        val editor = getApplication<Application>().getSharedPreferences("theme_prefs", Context.MODE_PRIVATE).edit()
+        editor.putBoolean("is_theme_changing", true)
+        editor.apply()
+
+        // Change the theme
         themeManager.toggleDarkMode()
         _isDarkMode.value = themeManager.isDarkModeActive()
+
+        // Save user preference
         val userId = userRepository.getCurrentUser()?.uid
         if (userId != null) {
             LocalThemeManager.saveUserTheme(getApplication(), userId, themeManager.isDarkModeActive())
         }
 
-
+        // Clear the flag after a short delay to ensure it's processed
+        Handler(Looper.getMainLooper()).postDelayed({
+            val editor = getApplication<Application>().getSharedPreferences("theme_prefs", Context.MODE_PRIVATE).edit()
+            editor.putBoolean("is_theme_changing", false)
+            editor.apply()
+        }, 500)
     }
 
-    // Sign out method
+
     fun signOut() {
+
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+
+        val userId = userRepository.getCurrentUser()?.uid
+
         userRepository.signOut()
         SignInActivity.preferencesAlreadyChecked = false
-
-        // Reset theme
-        val themeManager = ThemeManager.getInstance(getApplication())
-        themeManager.clearThemePreference()
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
     }
 
 }
