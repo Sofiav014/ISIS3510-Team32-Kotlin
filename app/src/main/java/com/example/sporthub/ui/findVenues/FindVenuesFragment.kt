@@ -14,6 +14,8 @@ import com.example.sporthub.R
 import com.example.sporthub.data.model.Sport
 import com.example.sporthub.ui.findVenues.SportsAdapter
 import android.widget.Button
+import com.example.sporthub.utils.ConnectivityHelper
+import com.google.android.material.snackbar.Snackbar
 
 class FindVenuesFragment : Fragment() {
 
@@ -37,6 +39,10 @@ class FindVenuesFragment : Fragment() {
         }
 
         recyclerView.adapter = adapter
+
+        if (!ConnectivityHelper.isNetworkAvailable(requireContext())) {
+            Snackbar.make(view, "You are offline. Some venues might not load.", Snackbar.LENGTH_LONG).show()
+        }
 
     }
 

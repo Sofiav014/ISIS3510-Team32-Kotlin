@@ -21,8 +21,10 @@ class SportsAdapter(
 
         fun bind(sport: Sport) {
             sportName.text = sport.name
-            Glide.with(itemView.context).load(sport.logo).into(sportImage)
-
+            Glide.with(itemView.context)
+                .load(sport.logo)
+                .error(R.drawable.sport_logo)
+                .into(sportImage)
             itemView.setOnClickListener {
                 onItemClick(sport)
             }
