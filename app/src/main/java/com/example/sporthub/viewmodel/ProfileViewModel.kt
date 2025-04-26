@@ -112,13 +112,9 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             // Get user's saved preference
             val savedDarkMode = LocalThemeManager.getUserTheme(getApplication(), userId)
 
-            // If we have a saved preference, use it
-            if (savedDarkMode != null) {
-                _isDarkMode.value = savedDarkMode
-            } else {
-                // Otherwise use the current theme state
-                _isDarkMode.value = isDarkModeActive()
-            }
+            // Fixed: Don't directly assign potentially nullable savedDarkMode to _isDarkMode
+            // Instead, use a safe default value (current theme state) if savedDarkMode is null
+            _isDarkMode.value = savedDarkMode ?: isDarkModeActive()
         } else {
             // If no user, just use current theme state
             _isDarkMode.value = isDarkModeActive()

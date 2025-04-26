@@ -18,7 +18,6 @@ class FindVenuesViewModel : ViewModel() {
     val venueCache = mutableMapOf<String, List<Venue>>()
 
     // Lista de deportes disponibles
-
     val sportsList = listOf(
         Sport(id = "basketball", name = "Basketball", logo = "https://firebasestorage.googleapis.com/v0/b/moviles-isis3510.firebasestorage.app/o/icons%2Fsports%2Fbasketball-logo.png?alt=media&token=fa52fa07-44ea-4465-b33b-cb07fa2fb228"),
         Sport(id = "football", name = "Football", logo = "https://firebasestorage.googleapis.com/v0/b/moviles-isis3510.firebasestorage.app/o/icons%2Fsports%2Ffootball-logo.png?alt=media&token=3c8d8b50-b926-4a0a-8b7b-224a8e3b352c"),
@@ -30,6 +29,7 @@ class FindVenuesViewModel : ViewModel() {
         val cachedVenues = venueCache[sportId]
 
         if (!forceFetchFromNetwork && !cachedVenues.isNullOrEmpty()) {
+            // Fixed: Use non-null value by using cachedVenues directly (as we've checked it's not null)
             _venues.value = cachedVenues
             return
         }
@@ -47,15 +47,11 @@ class FindVenuesViewModel : ViewModel() {
             .addOnFailureListener {
                 // Only fallback if there's a previous cache
                 if (!cachedVenues.isNullOrEmpty()) {
+                    // Fixed: Use non-null value by using cachedVenues directly
                     _venues.value = cachedVenues
                 } else {
                     _venues.value = emptyList()
                 }
             }
     }
-
-
-
-
-
 }
