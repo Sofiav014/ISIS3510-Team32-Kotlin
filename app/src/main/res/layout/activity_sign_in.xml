@@ -2,6 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
@@ -44,9 +45,25 @@
         android:textSize="70sp"
         android:textStyle="bold" />
 
+    <!-- Network connectivity message -->
+    <TextView
+        android:id="@+id/networkMessageText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/signInButtonContainer"
+        android:layout_marginBottom="16dp"
+        android:background="#80FF5252"
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="No internet connection. Please check your Wi-Fi or mobile data and try again."
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
     <!-- Sign in button at bottom -->
-    <!-- Reemplaza el LinearLayout y su contenido con este botón moderno -->
     <androidx.cardview.widget.CardView
+        android:id="@+id/signInButtonContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"

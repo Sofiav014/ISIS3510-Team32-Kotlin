@@ -3,14 +3,18 @@ package com.example.sporthub.ui.login
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.lifecycle.ViewModelProvider
 import com.example.sporthub.R
+import com.example.sporthub.utils.ConnectivityHelper
+import com.example.sporthub.utils.ConnectivityHelperExt
 import com.example.sporthub.viewmodel.GenderSelectionViewModel
 
 class GenderSelectionActivity : AppCompatActivity() {
@@ -18,6 +22,8 @@ class GenderSelectionActivity : AppCompatActivity() {
     private lateinit var cardMale: CardView
     private lateinit var cardFemale: CardView
     private lateinit var cardOther: CardView
+    private lateinit var networkMessageText: TextView
+    private lateinit var rootView: View
     private var isCardClicked = false
 
     private lateinit var viewModel: GenderSelectionViewModel
@@ -27,19 +33,26 @@ class GenderSelectionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sign_in_gender_selection)
 
-        // Inicializar el ViewModel
+        // Initialize the ViewModel
         viewModel = ViewModelProvider(this).get(GenderSelectionViewModel::class.java)
 
-        // Verificar autenticación
+        // Verify authentication
         if (!viewModel.checkAuthentication()) {
             redirectToSignIn()
             return
         }
 
-        // Configurar observadores para eventos del ViewModel
+        // Initialize views
+        rootView = findViewById(R.id.rootViewGenderSelection)
+        networkMessageText = findViewById(R.id.networkMessageText)
+
+        // Check connectivity initially
+        checkConnectivity()
+
+        // Configure observers for events from the ViewModel
         setupObservers()
 
-        // Manejar botón de retroceso del dispositivo
+        // Handle device back button
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 Toast.makeText(
@@ -51,26 +64,32 @@ class GenderSelectionActivity : AppCompatActivity() {
             }
         })
 
-        // Manejar botón de retroceso nuevo
+        // Handle new back button
         val backButton = findViewById<ImageButton>(R.id.button_back_gender)
         backButton.setOnClickListener {
             finish()
         }
 
         try {
-            // Configurar listeners para los botones
+            // Configure listeners for the buttons
             cardMale = findViewById(R.id.button_male)
             cardFemale = findViewById(R.id.button_female)
             cardOther = findViewById(R.id.button_other)
 
             cardMale.setOnClickListener {
-                handleGenderSelected("male")
+                if (checkNetworkBeforeAction()) {
+                    handleGenderSelected("male")
+                }
             }
             cardFemale.setOnClickListener {
-                handleGenderSelected("female")
+                if (checkNetworkBeforeAction()) {
+                    handleGenderSelected("female")
+                }
             }
             cardOther.setOnClickListener {
-                handleGenderSelected("other")
+                if (checkNetworkBeforeAction()) {
+                    handleGenderSelected("other")
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error setting up gender selection: ${e.message}")
@@ -83,6 +102,24 @@ class GenderSelectionActivity : AppCompatActivity() {
         cardMale.isEnabled = true
         cardFemale.isEnabled = true
         cardOther.isEnabled = true
+        // Check connectivity when resuming
+        checkConnectivity()
+    }
+
+    private fun checkConnectivity() {
+        if (!ConnectivityHelper.isNetworkAvailable(this)) {
+            networkMessageText.visibility = View.VISIBLE
+        } else {
+            networkMessageText.visibility = View.GONE
+        }
+    }
+
+    private fun checkNetworkBeforeAction(): Boolean {
+        if (!ConnectivityHelper.isNetworkAvailable(this)) {
+            ConnectivityHelperExt.checkNetworkAndNotify(this, rootView)
+            return false
+        }
+        return true
     }
 
     private fun disableAllCards() {

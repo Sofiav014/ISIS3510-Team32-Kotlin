@@ -3,13 +3,18 @@ package com.example.sporthub.ui.login
 import android.content.Intent
 import android.os.Bundle
 import android.text.InputFilter
+import android.view.View
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.sporthub.R
+import com.example.sporthub.utils.ConnectivityHelper
+import com.example.sporthub.utils.ConnectivityHelperExt
 import com.example.sporthub.viewmodel.NameSelectionViewModel
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 
 class NameSelectionActivity : AppCompatActivity() {
@@ -17,31 +22,38 @@ class NameSelectionActivity : AppCompatActivity() {
     private lateinit var viewModel: NameSelectionViewModel
     private lateinit var nameEditText: TextInputEditText
     private lateinit var continueButton: Button
+    private lateinit var networkMessageText: TextView
+    private lateinit var rootView: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sign_in_name_selection)
 
-        // Inicializar el ViewModel
+        // Initialize the ViewModel
         viewModel = ViewModelProvider(this).get(NameSelectionViewModel::class.java)
 
-        // Verificar autenticación
+        // Verify authentication
         if (!viewModel.checkAuthentication()) {
             redirectToSignIn()
             return
         }
 
-        // Inicializar vistas
+        // Initialize views
+        rootView = findViewById(R.id.rootViewNameSelection)
         nameEditText = findViewById(R.id.edit_text_name)
         continueButton = findViewById(R.id.button_continue)
+        networkMessageText = findViewById(R.id.networkMessageText)
 
-        // Configurar filtro para solo permitir letras
+        // Check connectivity initially
+        checkConnectivity()
+
+        // Configure filter to only allow letters
         setupLettersOnlyFilter()
 
-        // Configurar observadores para eventos del ViewModel
+        // Configure observers for events from the ViewModel
         setupObservers()
 
-        // Manejar botón de retroceso
+        // Handle back button
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 Toast.makeText(
@@ -52,8 +64,14 @@ class NameSelectionActivity : AppCompatActivity() {
             }
         })
 
-        // Configurar el botón de continuar
+        // Configure the continue button
         continueButton.setOnClickListener {
+            // Check connectivity before proceeding
+            if (!ConnectivityHelper.isNetworkAvailable(this)) {
+                ConnectivityHelperExt.checkNetworkAndNotify(this, rootView)
+                return@setOnClickListener
+            }
+
             val name = nameEditText.text.toString().trim()
             if (name.isEmpty()) {
                 Toast.makeText(this, "Please enter your name", Toast.LENGTH_SHORT).show()
@@ -67,30 +85,39 @@ class NameSelectionActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         continueButton.isEnabled = true // Enable the Continue button again
+        // Check connectivity when resuming
+        checkConnectivity()
     }
 
+    private fun checkConnectivity() {
+        if (!ConnectivityHelper.isNetworkAvailable(this)) {
+            networkMessageText.visibility = View.VISIBLE
+        } else {
+            networkMessageText.visibility = View.GONE
+        }
+    }
 
     private fun setupLettersOnlyFilter() {
-        // Filtro para permitir solo letras, espacios y algunos caracteres especiales para nombres compuestos
+        // Filter to allow only letters, spaces and some special characters for compound names
         val lettersFilter = InputFilter { source, start, end, dest, dstart, dend ->
             val regex = Regex("^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ '-]+$")
             for (i in start until end) {
                 if (!regex.matches(source[i].toString())) {
-                    // Si no coincide con el patrón, no permitir la entrada
+                    // If it doesn't match the pattern, don't allow the input
                     return@InputFilter ""
                 }
             }
-            null // Permitir la entrada
+            null // Allow the input
         }
 
-        // Filtro de longitud - limita a 30 caracteres
+        // Length filter - limit to 30 characters
         val lengthFilter = InputFilter.LengthFilter(35)
 
-        // Aplicar ambos filtros
+        // Apply both filters
         nameEditText.filters = arrayOf(lettersFilter, lengthFilter)
 
-        // Opcional: Mostrar contador de caracteres
-        // Primero obtener la referencia al TextInputLayout
+        // Optional: Show character counter
+        // First get the reference to the TextInputLayout
         val nameInputLayout = findViewById<com.google.android.material.textfield.TextInputLayout>(R.id.name_input_layout)
 
         nameEditText.addTextChangedListener(object : android.text.TextWatcher {
@@ -100,7 +127,7 @@ class NameSelectionActivity : AppCompatActivity() {
 
             override fun afterTextChanged(s: android.text.Editable?) {
                 val length = s?.length ?: 0
-                if (length >= 25) { // Aviso cuando se acerca al límite
+                if (length >= 25) { // Warning when approaching the limit
                     val remaining = 30 - length
                     nameInputLayout.helperText = "$remaining characters left"
                 } else {
@@ -115,7 +142,6 @@ class NameSelectionActivity : AppCompatActivity() {
             if (success) {
                 Toast.makeText(this, "Name saved successfully!", Toast.LENGTH_SHORT).show()
                 navigateToGenderSelection()
-
             }
         }
 
