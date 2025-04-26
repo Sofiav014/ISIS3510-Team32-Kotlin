@@ -6,6 +6,7 @@ import android.view.*
 import android.widget.*
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
 import com.example.sporthub.databinding.FragmentCreateBookingBinding
@@ -14,15 +15,19 @@ import java.time.*
 import java.time.format.DateTimeFormatter
 import com.example.sporthub.R
 import androidx.navigation.fragment.findNavController
+import com.example.sporthub.data.model.Venue
+import com.example.sporthub.viewmodel.SharedUserViewModel
+import java.util.Calendar
 
 
 class CreateBookingFragment : Fragment() {
 
     private val viewModel: CreateBookingViewModel by viewModels()
     private lateinit var binding: FragmentCreateBookingBinding
+    private val userViewModel: SharedUserViewModel by activityViewModels()
 
     private val timeSlots = listOf(
-        "9:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00", "12:00 - 13:00", "13:00 - 14:00",
+        "07:00 - 08:00", "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00", "12:00 - 13:00", "13:00 - 14:00",
         "14:00 - 15:00", "15:00 - 16:00",  "16:00 - 17:00", "17:00 - 18:00", "18:00 - 19:00"
     )
     private var selectedTimeSlot: String? = null
@@ -30,12 +35,17 @@ class CreateBookingFragment : Fragment() {
     private val dateStringFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
     private val args: CreateBookingFragmentArgs by navArgs()
+    private lateinit var venue1: Venue
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentCreateBookingBinding.inflate(inflater, container, false)
+
+        venue1 = args.venue
+
 
         setupDatePicker()
         setupTimeSlotButtons()
@@ -50,9 +60,15 @@ class CreateBookingFragment : Fragment() {
     }
 
     private fun setupDatePicker() {
+        val calendar = Calendar.getInstance()
+        binding.calendarView.minDate = calendar.timeInMillis
         binding.calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
             selectedDate = LocalDate.of(year, month + 1, dayOfMonth)
         }
+    }
+
+    private fun isToday(date: LocalDate?): Boolean {
+        return date != null && date == LocalDate.now()
     }
 
     private fun setupTimeSlotButtons() {
@@ -67,6 +83,16 @@ class CreateBookingFragment : Fragment() {
                 isAllCaps = false
                 stateListAnimator = null
                 setOnClickListener {
+                    if (isToday(selectedDate)) {
+                        val now = LocalTime.now()
+                        val startHour = slot.split(" - ")[0]
+                        val slotTime = LocalTime.parse(startHour, DateTimeFormatter.ofPattern("HH:mm"))
+                        if (slotTime.isBefore(now)) {
+                            Toast.makeText(context, "You can't select a past time.", Toast.LENGTH_SHORT).show()
+                            return@setOnClickListener
+                        }
+                    }
+
                     selectedTimeSlot = slot
                     updateTimeSlotSelection(this)
                 }
@@ -77,6 +103,8 @@ class CreateBookingFragment : Fragment() {
                 columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f)
                 setMargins(8, 8, 8, 8)
             }
+
+
 
             button.layoutParams = params
             binding.timeSlotGrid.addView(button)
@@ -97,6 +125,8 @@ class CreateBookingFragment : Fragment() {
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, players)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.playerCountSpinner.adapter = adapter
+
+
     }
 
     private fun isDateInPast(): Boolean {
@@ -107,7 +137,12 @@ class CreateBookingFragment : Fragment() {
         val dateString = selectedDate?.format(dateStringFormatter)
         val selectedPlayers = binding.playerCountSpinner.selectedItem?.toString()
         val selectedTime = selectedTimeSlot
-        val venueId = args.venueId
+        val user = userViewModel.currentUser.value
+
+        if (user == null) {
+            Toast.makeText(context, "User not available", Toast.LENGTH_SHORT).show()
+            return
+        }
 
         when {
             selectedDate == null -> {
@@ -128,8 +163,8 @@ class CreateBookingFragment : Fragment() {
             date = dateString ?: "",
             timeSlot = selectedTime ?: "",
             players = selectedPlayers?.toInt() ?: 1,
-            userId = "someUserId",
-            venueId = venueId
+            userId = user.id,
+            venue = venue1
         )
     }
 

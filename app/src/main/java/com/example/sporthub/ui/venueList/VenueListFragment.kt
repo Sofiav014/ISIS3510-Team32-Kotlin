@@ -95,7 +95,7 @@ class VenueListFragment : Fragment() {
         val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerViewVenues)
         venueAdapter = VenueAdapter { selectedVenue ->
             val action = VenueListFragmentDirections
-                .actionVenueListFragmentToVenueDetailFragment(selectedVenue.id)
+                .actionVenueListFragmentToVenueDetailFragment(selectedVenue)
             println("Selected Venue ID: ${selectedVenue.id}")
             findNavController().navigate(action)
         }

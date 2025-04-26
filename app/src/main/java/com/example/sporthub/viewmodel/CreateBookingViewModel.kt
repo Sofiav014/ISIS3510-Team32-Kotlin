@@ -19,14 +19,13 @@ class CreateBookingViewModel : ViewModel() {
     private val _bookingCreated = MutableLiveData<Boolean>()
     val bookingCreated: LiveData<Boolean> get() = _bookingCreated
 
-    fun createReservation(date: String, timeSlot: String, players: Int, userId: String, venueId: String) {
+    fun createReservation(date: String, timeSlot: String, players: Int, userId: String, venue: Venue) {
         val (startStr, endStr) = timeSlot.split(" - ").map { it.trim() }
         val format = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
 
         val start = format.parse("$date $startStr")
         val end = format.parse("$date $endStr")
 
-        val venue = Venue(id = venueId, name = "Sample Venue") //
 
         val booking = Booking(
             id = UUID.randomUUID().toString(),
@@ -38,9 +37,24 @@ class CreateBookingViewModel : ViewModel() {
         )
 
         repository.createBooking(booking,
-            onSuccess = { _reservationResult.postValue(true)
-                _bookingCreated.postValue(true) },
-            onFailure = { _reservationResult.postValue(false) }
+            onSuccess = {
+                repository.addBookingToVenue(venue.id, booking,
+                    onSuccess = {
+                        repository.addBookingToUser(userId, booking,
+                            onSuccess = {
+                                _reservationResult.postValue(true)
+                                _bookingCreated.postValue(true)
+                            },
+                            onFailure = { _reservationResult.postValue(false) }
+                        )
+                    },
+                    onFailure = { _reservationResult.postValue(false) }
+                )
+            },
+            onFailure = {
+                _reservationResult.postValue(false)
+            }
         )
+
     }
 }

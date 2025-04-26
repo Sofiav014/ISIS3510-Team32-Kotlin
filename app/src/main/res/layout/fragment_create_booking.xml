@@ -8,14 +8,14 @@
     android:layout_marginTop="?attr/actionBarSize"
     android:background="@android:color/white"
     android:fitsSystemWindows="true"
-    android:paddingBottom="100dp"
     >
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:gravity="center_horizontal">
+        android:gravity="center_horizontal"
+        android:paddingBottom="50dp">
 
         <!-- Calendario embebido -->
         <androidx.cardview.widget.CardView
@@ -93,36 +93,42 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:orientation="vertical"
+                    android:paddingTop="4dp">
 
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_players"
-                        android:layout_marginEnd="12dp"
-                        card_view:tint="#F5CBA7" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Number of Players"
-                        android:textSize="16sp"
-                        android:textColor="#F5CBA7"
-                        android:layout_marginEnd="12dp"/>
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_players"
+                            android:layout_marginEnd="12dp"
+                            card_view:tint="#F5CBA7" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Number of Players"
+                            android:textSize="16sp"
+                            android:textColor="#F5CBA7"/>
+                    </LinearLayout>
 
                     <Spinner
                         android:id="@+id/playerCountSpinner"
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="48dp"
                         android:minHeight="48dp"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginEnd="8dp"
-                        android:layout_weight="1"
+                        android:layout_marginTop="8dp"
                         android:paddingStart="16dp"
                         android:paddingEnd="16dp"
+                        android:textColor="#60508C"
                         android:background="@drawable/bg_spinner_touch_area" />
                 </LinearLayout>
+
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -139,6 +145,7 @@
             android:textColor="#60508C"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:layout_marginBottom="24dp"/>
+            android:layout_marginBottom="24dp"
+            />
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

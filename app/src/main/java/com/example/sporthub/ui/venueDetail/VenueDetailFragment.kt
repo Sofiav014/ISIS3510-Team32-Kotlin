@@ -1,96 +1,92 @@
 package com.example.sporthub.ui.venueDetail
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.navArgs
-import com.bumptech.glide.Glide
-import com.example.sporthub.R
-import com.example.sporthub.data.model.Venue
-import com.example.sporthub.ui.findVenues.FindVenuesViewModel
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.example.sporthub.ui.venueDetail.BookingAdapter
 import androidx.navigation.fragment.findNavController
-
+import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
+import com.example.sporthub.databinding.FragmentVenueDetailBinding
 
 class VenueDetailFragment : Fragment() {
 
+    private var _binding: FragmentVenueDetailBinding? = null
+    private val binding get() = _binding!!
+
     private val args: VenueDetailFragmentArgs by navArgs()
     private val viewModel: VenueDetailViewModel by viewModels()
-    private lateinit var bookingsRecyclerView: RecyclerView
-    private lateinit var bookingAdapter: BookingAdapter
 
-    private lateinit var venueImage: ImageView
-    private lateinit var venueName: TextView
-    private lateinit var venueLocation: TextView
-    private lateinit var venueSport: TextView
-    private lateinit var venueRating: TextView
+    private var _bookingAdapter: BookingAdapter? = null
+    private val bookingAdapter get() = _bookingAdapter!!
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        return inflater.inflate(R.layout.fragment_venue_detail, container, false)
+        _binding = FragmentVenueDetailBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        venueImage = view.findViewById(R.id.venueImageDetail)
-        venueName = view.findViewById(R.id.venueNameDetail)
-        venueLocation = view.findViewById(R.id.venueLocationDetail)
-        venueSport = view.findViewById(R.id.venueSportDetail)
-        venueRating = view.findViewById(R.id.venueRatingDetail)
+        setupRecyclerView()
+        setupVenueInfo()
+        observeVenue()
+        setupButton()
+    }
 
-        bookingsRecyclerView = view.findViewById(R.id.recyclerViewBookings)
+    private fun setupRecyclerView() {
+        _bookingAdapter = BookingAdapter(args.venue.name)
+        binding.recyclerViewBookings.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = bookingAdapter
+        }
+    }
 
-        bookingsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+    private fun setupVenueInfo() {
+        viewModel.setVenue(args.venue)
+    }
 
-
-        viewModel.fetchVenueById(args.venueId)
-
+    private fun observeVenue() {
         viewModel.venue.observe(viewLifecycleOwner) { venue ->
-            if (venue != null) {
-                // Initialize adapter with venue name
-                bookingAdapter = BookingAdapter(venue.name)
+            venue?.let {
+                binding.venueNameDetail.text = it.name
+                binding.venueLocationDetail.text = it.locationName
+                binding.venueSportDetail.text = it.sport?.name ?: "Sport not available"
+                binding.venueRatingDetail.text = String.format("%.1f", it.rating)
 
-                // Set adapter and layout manager here (moved from earlier)
-                bookingsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-                bookingsRecyclerView.adapter = bookingAdapter
+                Glide.with(binding.root.context)
+                    .load(it.image)
+                    .into(binding.venueImageDetail)
 
-                // Set venue details
-                venueName.text = venue.name
-                venueLocation.text = venue.name
-                venueSport.text = venue.sport?.name ?: "Sport name not available"
-                venueRating.text = String.format("%.1f", venue.rating)
+                bookingAdapter.submitList(it.bookings ?: emptyList())
 
-                // Load venue image
-                Glide.with(requireContext())
-                    .load(venue.image)
-                    .into(venueImage)
-
-                // Log and display bookings
-                Log.d("DEBUG", "Fetched bookings: ${venue.bookings}")
-                println("Fetched bookings: ${venue.bookings}")
-                bookingAdapter.submitList(venue.bookings ?: emptyList())
             }
         }
+    }
 
-        val btnCreateBooking = view.findViewById<View>(R.id.btnCreateBooking)
-        btnCreateBooking.setOnClickListener {
-            val action = VenueDetailFragmentDirections
-                .actionVenueDetailFragmentToNavigationCreate(args.venueId)
-            findNavController().navigate(action)
+    private fun setupButton() {
+        binding.btnCreateBooking.setOnClickListener {
+            viewModel.venue.value?.let { venue ->
 
+                android.util.Log.d("VenueDetailFragment", "Navigating with venue: ${venue.name} (${venue.id})")
+
+                val action = VenueDetailFragmentDirections
+                    .actionVenueDetailFragmentToNavigationCreate(venue)
+                findNavController().navigate(action)
+            }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _bookingAdapter = null
+        _binding = null // liberar binding para evitar memory leaks
     }
 }

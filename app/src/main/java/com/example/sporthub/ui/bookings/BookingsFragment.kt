@@ -51,6 +51,7 @@ class BookingsFragment : Fragment() {
             image = "https://via.placeholder.com/300"
         )
         val now = Calendar.getInstance()
+
         val booking = Booking(
             id = "b1",
             startTime = Timestamp(now.time),

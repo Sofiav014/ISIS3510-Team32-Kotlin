@@ -48,5 +48,9 @@ class VenueDetailViewModel : ViewModel() {
                 _venue.value = null
             }
     }
+    fun setVenue(venue: Venue) {
+        _venue.value = venue
+    }
+
 
 }
