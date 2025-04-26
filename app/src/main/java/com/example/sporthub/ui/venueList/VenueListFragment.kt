@@ -29,6 +29,7 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import java.util.Locale
 import android.widget.TextView
+import com.example.sporthub.utils.ConnectivityHelper
 
 class VenueListFragment : Fragment() {
 
@@ -108,8 +109,20 @@ class VenueListFragment : Fragment() {
 
 
     private fun setupObservers() {
-        viewModel.venues.observe(viewLifecycleOwner, Observer { venues ->
+        viewModel.venues.observe(viewLifecycleOwner) { venues ->
             venuesLoaded = true
+
+            if (venues.isEmpty()) {
+                val hasInternet = ConnectivityHelper.isNetworkAvailable(requireContext())
+                if (!hasInternet) {
+                    Toast.makeText(
+                        requireContext(),
+                        "No internet connection and no cached venues available.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+
             val sortedVenues = if (userLocation != null) {
                 sortVenuesByDistance(venues)
             } else {
@@ -117,10 +130,10 @@ class VenueListFragment : Fragment() {
             }
             venueAdapter.submitList(sortedVenues)
 
-            // Pass user location to adapter to display distances
             venueAdapter.setUserLocation(userLocation)
-        })
+        }
     }
+
 
     private fun checkLocationPermission() {
         when {
@@ -187,9 +200,11 @@ class VenueListFragment : Fragment() {
 
     private fun loadVenues() {
         sportId?.let { id ->
-            viewModel.fetchVenuesBySport(id)
+            val hasInternet = ConnectivityHelper.isNetworkAvailable(requireContext())
+            viewModel.fetchVenuesBySport(id, forceFetchFromNetwork = hasInternet)
         }
     }
+
 
     private fun sortVenuesByDistance(venues: List<Venue>): List<Venue> {
         val currentLocation = userLocation ?: return venues
