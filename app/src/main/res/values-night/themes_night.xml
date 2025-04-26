@@ -20,8 +20,19 @@
         <!-- Button style -->
         <item name="buttonStyle">@style/RoundedButtonStyle.Dark</item>
 
+        <!-- Toolbar style for dark mode -->
+        <item name="toolbarStyle">@style/Widget.SportHub.Toolbar.Dark</item>
+
         <!-- Bottom nav bar color -->
         <item name="android:navigationBarColor">@color/primaryNeutral</item>
+    </style>
+
+    <!-- Custom toolbar style for dark mode -->
+    <style name="Widget.SportHub.Toolbar.Dark" parent="Widget.AppCompat.Toolbar">
+        <item name="android:background">@color/primaryNeutral</item>
+        <item name="titleTextColor">@color/primary</item>
+        <item name="subtitleTextColor">@color/primary</item>
+        <item name="android:elevation">4dp</item>
     </style>
 
     <style name="RoundedButtonStyle.Dark" parent="Widget.AppCompat.Button">
@@ -38,6 +49,33 @@
         <item name="android:textColor">@color/primary</item>
     </style>
 
+    <!-- DatePicker Dark Mode Specific Styles -->
+    <style name="DatePickerTheme.Dark" parent="Theme.AppCompat.Dialog">
+        <item name="colorAccent">@color/primary</item>
+        <item name="android:textColorPrimary">@color/purple_700</item>
+        <item name="android:textColorSecondary">@color/black</item>
+        <item name="android:windowBackground">@color/primaryDark</item>
+        <item name="android:colorBackgroundFloating">@color/primaryDark</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textColorTertiary">@color/white</item>
+        <item name="android:buttonBarPositiveButtonStyle">@style/DatePickerButtonStyle.Dark</item>
+        <item name="android:buttonBarNegativeButtonStyle">@style/DatePickerButtonStyle.Dark</item>
+    </style>
+
+    <style name="DatePickerButtonStyle.Dark" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">@color/primary</item>
+    </style>
+
+    <!-- Sport card styles for dark mode -->
+    <style name="SportCardStyle">
+        <item name="cardBackgroundColor">#303030</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="SportCardSelectedStyle">
+        <item name="cardBackgroundColor">#512DA8</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
 
     <style name="Theme.SportHUB.SignIn" parent="Theme.SportHUB">
         <!-- Custom colors for sign-in screen in dark mode -->

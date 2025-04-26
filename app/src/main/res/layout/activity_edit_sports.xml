@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/primaryNeutral"
-    tools:context=".ui.login.FavoriteSportsSelectionActivity">
+    tools:context=".ui.profile.edit.EditSportsActivity">
 
     <!-- Guía horizontal al 15% desde la parte superior para posicionamiento vertical -->
     <androidx.constraintlayout.widget.Guideline
@@ -19,7 +19,7 @@
         android:id="@+id/button_back_sport"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:background="?attr/colorBackgroundFloating"
+        android:background="?attr/selectableItemBackgroundBorderless"
         android:src="@drawable/ic_arrow_back"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
@@ -31,7 +31,7 @@
         android:id="@+id/textview_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="We want to know you better"
+        android:text="Edit Your Favorite Sports"
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="@color/primary"
@@ -47,7 +47,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Choose the sports you are interested in"
+        android:text="Update your sport preferences"
         android:textAlignment="center"
         android:textColor="@color/primary"
         android:textSize="18sp"
@@ -241,7 +241,7 @@
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="24dp"
-        android:text="DISCOVER"
+        android:text="Save Changes"
         android:textSize="16sp"
         android:textColor="@android:color/white"
         android:padding="12dp"

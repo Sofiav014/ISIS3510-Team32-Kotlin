@@ -1,5 +1,6 @@
 package com.example.sporthub.ui.profile.edit
 
+import android.content.Context
 import android.os.Bundle
 import android.text.InputFilter
 import android.widget.Button
@@ -22,8 +23,24 @@ class EditNameActivity : AppCompatActivity() {
     private var isEditMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        val isThemeChanging = getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+            .getBoolean("is_theme_changing", false)
+
+        if (isThemeChanging) {
+
+            setContentView(R.layout.activity_edit_name)
+
+            initViews()
+            return
+        }
+
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_sign_in_name_selection)
+        setContentView(R.layout.activity_edit_name)
+
+        // Initialize views
+        nameEditText = findViewById(R.id.edit_text_name)
+        saveButton = findViewById(R.id.button_continue)
 
         // Get edit mode from intent
         isEditMode = intent.getBooleanExtra("EDIT_MODE", false)

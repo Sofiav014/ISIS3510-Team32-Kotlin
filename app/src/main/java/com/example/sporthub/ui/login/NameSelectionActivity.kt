@@ -59,10 +59,16 @@ class NameSelectionActivity : AppCompatActivity() {
                 Toast.makeText(this, "Please enter your name", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-
+            continueButton.isEnabled = false
             viewModel.saveName(name)
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        continueButton.isEnabled = true // Enable the Continue button again
+    }
+
 
     private fun setupLettersOnlyFilter() {
         // Filtro para permitir solo letras, espacios y algunos caracteres especiales para nombres compuestos
@@ -109,11 +115,13 @@ class NameSelectionActivity : AppCompatActivity() {
             if (success) {
                 Toast.makeText(this, "Name saved successfully!", Toast.LENGTH_SHORT).show()
                 navigateToGenderSelection()
+
             }
         }
 
         viewModel.errorEvent.observe(this) { errorMessage ->
             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
+            continueButton.isEnabled = true
         }
 
         viewModel.userNotAuthenticatedEvent.observe(this) { notAuthenticated ->

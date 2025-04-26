@@ -1,5 +1,6 @@
 package com.example.sporthub.ui.profile.edit
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageButton
@@ -23,8 +24,25 @@ class EditGenderActivity : AppCompatActivity() {
     private lateinit var backButton: ImageButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        val isThemeChanging = getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+            .getBoolean("is_theme_changing", false)
+
+        if (isThemeChanging) {
+
+            setContentView(R.layout.activity_edit_name)
+
+            initViews()
+            return
+        }
+
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_sign_in_gender_selection)
+        setContentView(R.layout.activity_edit_gender)
+
+        // Initialize views
+        titleText = findViewById(R.id.textview_title)
+        subtitleText = findViewById(R.id.textview_subtitle)
+        backButton = findViewById(R.id.button_back_gender)
 
         // Get edit mode from intent
         isEditMode = intent.getBooleanExtra("EDIT_MODE", false)

@@ -5,18 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/primaryNeutral"
-    tools:context=".ui.login.BirthDateSelectionActivity">
+    tools:context=".ui.profile.edit.EditNameActivity">
 
-    <!-- Guía horizontal al 20% desde la parte superior para posicionamiento vertical -->
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline_top"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.2" />
-
+    <!-- Back button -->
     <ImageButton
-        android:id="@+id/button_back_birth"
+        android:id="@+id/button_back_name"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:background="?attr/selectableItemBackgroundBorderless"
@@ -27,51 +20,61 @@
         app:layout_constraintTop_toTopOf="parent"
         app:tint="@color/primary"/>
 
+    <!-- Title -->
     <TextView
         android:id="@+id/textview_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
-        android:text="Great! Now, let's move on to the next question"
+        android:layout_marginTop="64dp"
+        android:text="Edit Your Name"
         android:textAlignment="center"
         android:textColor="@color/primary"
         android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/guideline_top" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/textview_subtitle"
+        android:id="@+id/textview_question"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="When were you born?"
-        android:textAlignment="center"
+        android:text="What is your name?"
         android:textColor="@color/primary"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textview_title" />
 
-    <EditText
-        android:id="@+id/date_picker_edit_text"
-        android:layout_width="wrap_content"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/name_input_layout"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="36dp"
-        android:background="@drawable/date_picker_background"
-        android:clickable="true"
-        android:focusable="false"
-        android:hint="01 / 01 / 2025"
-        android:inputType="none"
-        android:padding="16dp"
-        android:textAlignment="center"
-        android:textColor="@color/primary"
-        android:textColorHint="?android:attr/textColorSecondary"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="32dp"
+        android:backgroundTint="@android:color/transparent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textview_subtitle" />
+        app:layout_constraintTop_toBottomOf="@+id/textview_question">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_text_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter your name"
+            android:inputType="textPersonName"
+            android:digits="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZáéíóúÁÉÍÓÚüÜñÑ '-"
+            android:maxLines="1"
+            android:maxLength="35"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textColorHint="?android:attr/textColorSecondary"
+            android:textSize="16sp" />
+
+    </com.google.android.material.textfield.TextInputLayout>
 
     <Button
         android:id="@+id/button_continue"
@@ -80,12 +83,12 @@
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
         android:layout_marginBottom="32dp"
-        android:text="Continue"
+        android:text="Save"
         android:textColor="?android:attr/textColorPrimaryInverse"
-        app:backgroundTint="@color/primary"
+        android:backgroundTint="@color/primary"
         style="@style/RoundedButtonStyle"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

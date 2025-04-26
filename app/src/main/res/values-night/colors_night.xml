@@ -13,7 +13,7 @@
     <color name="contrast_black">#EEEEEE</color>
 
     <!-- Dark theme specific colors -->
-    <color name="primaryNeutral">#FF121212</color>
+    <color name="primaryNeutral">#303030</color>
     <color name="primary">#FF9683C6</color>
     <color name="primaryLight">#FFA596D1</color>
     <color name="lightPurple">#C89683C6</color>

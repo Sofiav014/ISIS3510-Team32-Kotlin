@@ -1,4 +1,3 @@
-// com.example.sporthub.viewmodel.NameSelectionViewModel.kt
 package com.example.sporthub.viewmodel
 
 import android.util.Log
@@ -30,7 +29,7 @@ class NameSelectionViewModel : ViewModel() {
             return
         }
 
-        // Actualizar el perfil de autenticación
+        // Update the authentication profile
         val profileUpdates = UserProfileChangeRequest.Builder()
             .setDisplayName(name)
             .build()
@@ -39,11 +38,11 @@ class NameSelectionViewModel : ViewModel() {
             .addOnSuccessListener {
                 Log.d(TAG, "User profile updated with new name")
 
-                // Después de actualizar el perfil, verificar si el usuario ya existe en Firestore
+                // Check if the user already exists in Firestore
                 repository.getUserData(currentUser.uid)
                     .addOnSuccessListener { document ->
                         if (document.exists()) {
-                            // Si el documento existe, actualizar solo el nombre
+                            // If the document exists, only update the name field
                             repository.updateUserName(currentUser.uid, name)
                                 .addOnSuccessListener {
                                     Log.d(TAG, "User name updated in Firestore")
@@ -54,17 +53,16 @@ class NameSelectionViewModel : ViewModel() {
                                     _errorEvent.value = "Error saving data. Please try again"
                                 }
                         } else {
-                            // Si el documento no existe, crear un nuevo perfil de usuario
-                            // Eliminamos la línea que guarda el email
-                            val userData = hashMapOf<String, Any>(
-                                "name" to name,
-                                // Ya no guardamos el email aquí
-                                "bookings" to ArrayList<String>(),
-                                "sports_liked" to ArrayList<String>(),
-                                "venues_liked" to ArrayList<String>(),
-                                "birth_date" to "",
-                                "gender" to ""
-                            )
+                            // If the document doesn't exist, create a new user profile
+                            // with minimal initial data
+                            val userData = HashMap<String, Any>().apply {
+                                put("name", name)
+                                put("bookings", ArrayList<Any>())
+                                put("sports_liked", ArrayList<Any>())
+                                put("venues_liked", ArrayList<Any>())
+                                put("birth_date", "")
+                                put("gender", "")
+                            }
 
                             repository.createUserProfile(currentUser.uid, userData)
                                 .addOnSuccessListener {
