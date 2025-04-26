@@ -77,8 +77,6 @@ class HomeFragment : Fragment() {
             }
         }
 
-        // Replace this in your HomeFragment.kt file to ensure the data is passed correctly
-
         homeViewModel.popularityReport.observe(viewLifecycleOwner) { report ->
             Log.d("PopularityReport", "Received report: $report")
 
@@ -153,6 +151,9 @@ class HomeFragment : Fragment() {
         }
         val filter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
         requireContext().registerReceiver(networkReceiver, filter)
+        userViewModel.currentUser.value?.let { user ->
+            homeViewModel.loadHomeData(requireContext(), user)
+        }
     }
 
 
@@ -160,6 +161,13 @@ class HomeFragment : Fragment() {
         super.onStop()
         networkReceiver?.let {
             requireContext().unregisterReceiver(it)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        userViewModel.currentUser.value?.let { user ->
+            homeViewModel.loadHomeData(requireContext(), user)
         }
     }
 }

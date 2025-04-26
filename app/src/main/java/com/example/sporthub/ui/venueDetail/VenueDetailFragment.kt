@@ -17,8 +17,10 @@ import com.example.sporthub.data.model.Venue
 import com.example.sporthub.ui.findVenues.FindVenuesViewModel
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.sporthub.databinding.FragmentVenueDetailBinding
 import com.example.sporthub.ui.venueDetail.BookingAdapter
 import com.google.android.material.snackbar.Snackbar
+import androidx.navigation.fragment.findNavController
 
 class VenueDetailFragment : Fragment() {
 
@@ -35,13 +37,20 @@ class VenueDetailFragment : Fragment() {
 
     private val findVenuesViewModel: FindVenuesViewModel by activityViewModels()
 
+    private var _binding: FragmentVenueDetailBinding? = null
+    private val binding get() = _binding!!
+
+
+    private var _bookingAdapter: BookingAdapter? = null
+    private val bookingAdapter2 get() = _bookingAdapter!!
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        return inflater.inflate(R.layout.fragment_venue_detail, container, false)
+        _binding = FragmentVenueDetailBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -56,16 +65,21 @@ class VenueDetailFragment : Fragment() {
         bookingsRecyclerView = view.findViewById(R.id.recyclerViewBookings)
 
         bookingsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        super.onViewCreated(view, savedInstanceState)
 
+        setupRecyclerView()
+        setupVenueInfo()
+        observeVenue()
+        setupButton()
 
         val cachedVenue = findVenuesViewModel.venueCache.values
             .flatten()
-            .firstOrNull { it.id == args.venueId }
+            .firstOrNull { it.id == args.venue.id }
 
         if (cachedVenue != null) {
             viewModel.setVenueFromCache(cachedVenue)
         } else {
-            viewModel.fetchVenueById(args.venueId)
+            viewModel.fetchVenueById(args.venue.id)
         }
 
         viewModel.venue.observe(viewLifecycleOwner) { venue ->
@@ -108,5 +122,53 @@ class VenueDetailFragment : Fragment() {
             }
         }
 
+    }
+    private fun setupRecyclerView() {
+        _bookingAdapter = BookingAdapter(args.venue.name)
+        binding.recyclerViewBookings.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = bookingAdapter2
+        }
+    }
+
+    private fun setupVenueInfo() {
+        viewModel.setVenue(args.venue)
+    }
+
+    private fun observeVenue() {
+        viewModel.venue.observe(viewLifecycleOwner) { venue ->
+            venue?.let {
+                binding.venueNameDetail.text = it.name
+                binding.venueLocationDetail.text = it.locationName
+                binding.venueSportDetail.text = it.sport?.name ?: "Sport not available"
+                binding.venueRatingDetail.text = String.format("%.1f", it.rating)
+
+                Glide.with(binding.root.context)
+                    .load(it.image)
+                    .into(binding.venueImageDetail)
+
+                bookingAdapter2.submitList(it.bookings ?: emptyList())
+
+            }
+        }
+    }
+
+    private fun setupButton() {
+        binding.btnCreateBooking.setOnClickListener {
+            viewModel.venue.value?.let { venue ->
+
+                android.util.Log.d("VenueDetailFragment", "Navigating with venue: ${venue.name} (${venue.id})")
+
+                val action = VenueDetailFragmentDirections
+                    .actionVenueDetailFragmentToNavigationCreate(venue)
+                findNavController().navigate(action)
+            }
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _bookingAdapter = null
+        _binding = null // liberar binding para evitar memory leaks
     }
 }

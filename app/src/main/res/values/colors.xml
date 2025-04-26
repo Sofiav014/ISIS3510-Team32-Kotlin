@@ -11,6 +11,7 @@
     <color name="red">#FF0000</color>
     <color name="sb_purple">#ece6f0</color>
     <color name="contrast_black">#070304</color>
+    <color name="background_color">#CAC4D0</color>
 
     <color name="primaryNeutral">#FFFFFFFF</color>
     <color name="primary">#FF60508C</color>

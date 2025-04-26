@@ -180,13 +180,14 @@
             android:id="@+id/recyclerViewBookings"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:nestedScrollingEnabled="false"
             android:clipToPadding="false"
-            android:paddingBottom="16dp"
+            android:nestedScrollingEnabled="false"
             android:overScrollMode="never"
-            app:layout_constraintTop_toBottomOf="@id/activeBookingsText"
-            app:layout_constraintStart_toStartOf="parent"
+            android:paddingBottom="16dp"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/activeBookingsText"
             tools:listitem="@layout/item_booking_card" />
 
         <View
