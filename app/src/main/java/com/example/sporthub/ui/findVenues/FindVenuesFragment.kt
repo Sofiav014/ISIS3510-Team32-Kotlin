@@ -26,14 +26,18 @@ class FindVenuesFragment : Fragment() {
     private val viewModel: FindVenuesViewModel by viewModels()
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: SportsAdapter
+    private var connectionFlag = false
+
 
     private val connectivityReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent?) {
-            if (ConnectivityHelper.isNetworkAvailable(context)) {
+            if (ConnectivityHelper.isNetworkAvailable(context) && connectionFlag) {
                 // Refresh the adapter to reload images
                 recyclerView.adapter?.notifyDataSetChanged()
 
                 Snackbar.make(requireView(), "Internet connection restored.", Snackbar.LENGTH_SHORT).show()
+                connectionFlag = false
+
             }
         }
     }
@@ -57,6 +61,7 @@ class FindVenuesFragment : Fragment() {
         recyclerView.adapter = adapter
 
         if (!ConnectivityHelper.isNetworkAvailable(requireContext())) {
+            connectionFlag = true
             Snackbar.make(view, "You are offline. Some venues might not load.", Snackbar.LENGTH_INDEFINITE)
                 .setAction("Dismiss") {} // User can dismiss manually
                 .show()
