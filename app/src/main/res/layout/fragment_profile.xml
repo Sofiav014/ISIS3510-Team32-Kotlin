@@ -187,8 +187,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
-                        app:thumbTint="#60508C"
-                        app:trackTint="#EDE7F6" />
+                        app:thumbTint="@color/primary"
+                        app:trackTint="#80FFFFFF" />
                 </LinearLayout>
 
                 <!-- Settings Button -->

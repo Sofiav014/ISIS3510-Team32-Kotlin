@@ -22,6 +22,7 @@ class BirthDateSelectionActivity : AppCompatActivity() {
     private lateinit var datePickerEditText: EditText
     private lateinit var buttonContinue: Button
     private val calendar = Calendar.getInstance()
+    private var hasNavigated = false // Flag to prevent double navigation
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,6 +71,7 @@ class BirthDateSelectionActivity : AppCompatActivity() {
         buttonContinue.setOnClickListener {
             val birthDate = datePickerEditText.text.toString()
             if (birthDate.isNotEmpty() && birthDate != "01 / 01 / 2025") {
+                buttonContinue.isEnabled = false
                 saveBirthDate(birthDate)
             } else {
                 Toast.makeText(this, "Please select your birth date", Toast.LENGTH_SHORT).show()
@@ -77,9 +79,16 @@ class BirthDateSelectionActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        buttonContinue.isEnabled = true // Enable the Continue button again
+        hasNavigated = false // Reset navigation flag
+    }
+
     private fun setupObservers() {
         viewModel.saveSuccessEvent.observe(this) { success ->
-            if (success) {
+            if (success && !hasNavigated) {
+                hasNavigated = true // Set flag to prevent double navigation
                 Toast.makeText(this, "Birth date updated successfully!", Toast.LENGTH_SHORT).show()
                 navigateToSportsSelection()
             }
@@ -87,6 +96,7 @@ class BirthDateSelectionActivity : AppCompatActivity() {
 
         viewModel.errorEvent.observe(this) { errorMessage ->
             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
+            buttonContinue.isEnabled = true
         }
 
         viewModel.userNotAuthenticatedEvent.observe(this) { notAuthenticated ->
@@ -139,15 +149,18 @@ class BirthDateSelectionActivity : AppCompatActivity() {
                 viewModel.saveBirthDate(birthDate)
             } else {
                 Toast.makeText(this, "Invalid date format", Toast.LENGTH_SHORT).show()
+                buttonContinue.isEnabled = true
             }
         } catch (e: Exception) {
             Toast.makeText(this, "Unexpected error", Toast.LENGTH_SHORT).show()
+            buttonContinue.isEnabled = true
         }
     }
 
     private fun navigateToSportsSelection() {
         val intent = Intent(this, FavoriteSportsSelectionActivity::class.java)
         startActivity(intent)
+        // Do not finish this activity yet, to allow proper back navigation
     }
 
     private fun redirectToSignIn() {

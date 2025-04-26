@@ -3,6 +3,7 @@ package com.example.sporthub.ui.login
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -13,6 +14,11 @@ import com.example.sporthub.R
 import com.example.sporthub.viewmodel.GenderSelectionViewModel
 
 class GenderSelectionActivity : AppCompatActivity() {
+
+    private lateinit var cardMale: CardView
+    private lateinit var cardFemale: CardView
+    private lateinit var cardOther: CardView
+    private var isCardClicked = false
 
     private lateinit var viewModel: GenderSelectionViewModel
     private val TAG = "GenderSelectionActivity"
@@ -53,24 +59,44 @@ class GenderSelectionActivity : AppCompatActivity() {
 
         try {
             // Configurar listeners para los botones
-            val buttonMale = findViewById<CardView>(R.id.button_male)
-            val buttonFemale = findViewById<CardView>(R.id.button_female)
-            val buttonOther = findViewById<CardView>(R.id.button_other)
+            cardMale = findViewById(R.id.button_male)
+            cardFemale = findViewById(R.id.button_female)
+            cardOther = findViewById(R.id.button_other)
 
-            buttonMale.setOnClickListener {
-                viewModel.saveGender("Male")
+            cardMale.setOnClickListener {
+                handleGenderSelected("male")
             }
-
-            buttonFemale.setOnClickListener {
-                viewModel.saveGender("Female")
+            cardFemale.setOnClickListener {
+                handleGenderSelected("female")
             }
-
-            buttonOther.setOnClickListener {
-                viewModel.saveGender("Other")
+            cardOther.setOnClickListener {
+                handleGenderSelected("other")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error setting up gender selection: ${e.message}")
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        isCardClicked = false // Allow clicking cards again
+        cardMale.isEnabled = true
+        cardFemale.isEnabled = true
+        cardOther.isEnabled = true
+    }
+
+    private fun disableAllCards() {
+        cardMale.isEnabled = false
+        cardFemale.isEnabled = false
+        cardOther.isEnabled = false
+    }
+
+    private fun handleGenderSelected(gender: String) {
+        if (isCardClicked) return // Prevent multiple clicks fast
+        isCardClicked = true
+
+        disableAllCards()
+        viewModel.saveGender(gender)
     }
 
     private fun setupObservers() {
@@ -83,6 +109,10 @@ class GenderSelectionActivity : AppCompatActivity() {
 
         viewModel.errorEvent.observe(this) { errorMessage ->
             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
+            isCardClicked = false // Reset flag to allow retrying
+            cardMale.isEnabled = true
+            cardFemale.isEnabled = true
+            cardOther.isEnabled = true
         }
 
         viewModel.userNotAuthenticatedEvent.observe(this) { notAuthenticated ->
@@ -96,6 +126,7 @@ class GenderSelectionActivity : AppCompatActivity() {
     private fun navigateToBirthDateSelection() {
         val intent = Intent(this, BirthDateSelectionActivity::class.java)
         startActivity(intent)
+        // Do not finish this activity yet, to allow proper back navigation
     }
 
     private fun redirectToSignIn() {
@@ -103,5 +134,4 @@ class GenderSelectionActivity : AppCompatActivity() {
         startActivity(intent)
         finish()
     }
-
 }

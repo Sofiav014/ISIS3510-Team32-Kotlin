@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/primaryNeutral"
-    tools:context=".ui.login.BirthDateSelectionActivity">
+    tools:context=".ui.profile.edit.EditBirthDateActivity">
 
     <!-- Guía horizontal al 20% desde la parte superior para posicionamiento vertical -->
     <androidx.constraintlayout.widget.Guideline
@@ -33,7 +33,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
-        android:text="Great! Now, let's move on to the next question"
+        android:text="Edit Your Birth Date"
         android:textAlignment="center"
         android:textColor="@color/primary"
         android:textSize="24sp"
@@ -47,7 +47,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="When were you born?"
+        android:text="Update your birth date"
         android:textAlignment="center"
         android:textColor="@color/primary"
         android:textSize="18sp"
@@ -80,7 +80,7 @@
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
         android:layout_marginBottom="32dp"
-        android:text="Continue"
+        android:text="Save"
         android:textColor="?android:attr/textColorPrimaryInverse"
         app:backgroundTint="@color/primary"
         style="@style/RoundedButtonStyle"

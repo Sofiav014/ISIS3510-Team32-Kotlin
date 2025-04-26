@@ -1,7 +1,9 @@
 package com.example.sporthub.ui.profile.edit
 
 import android.app.DatePickerDialog
+import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -21,6 +23,11 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
+
+import android.graphics.Color
+import androidx.appcompat.app.AppCompatDelegate
+
+
 class EditBirthDateActivity : AppCompatActivity() {
 
     private val TAG = "EditBirthDateActivity"
@@ -34,8 +41,29 @@ class EditBirthDateActivity : AppCompatActivity() {
     private var isEditMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+
+        val isThemeChanging = getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+            .getBoolean("is_theme_changing", false)
+
+        if (isThemeChanging) {
+
+            setContentView(R.layout.activity_edit_name)
+
+            initViews()
+            return
+        }
+
+
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_sign_in_birth_date_selection)
+        setContentView(R.layout.activity_edit_birth_date)
+
+        // Initialize views
+        datePickerEditText = findViewById(R.id.date_picker_edit_text)
+        saveButton = findViewById(R.id.button_continue)
+        titleText = findViewById(R.id.textview_title)
+        subtitleText = findViewById(R.id.textview_subtitle)
+        backButton = findViewById(R.id.button_back_birth)
 
         // Get edit mode from intent
         isEditMode = intent.getBooleanExtra("EDIT_MODE", false)
@@ -176,10 +204,14 @@ class EditBirthDateActivity : AppCompatActivity() {
         }
     }
 
+    // Add this code to EditBirthDateActivity.kt in the showDatePicker() method
+
     private fun showDatePicker() {
+        val datePickerTheme = if (isNightMode()) R.style.DatePickerTheme_Dark else R.style.DatePickerTheme
+
         val datePickerDialog = DatePickerDialog(
             this,
-            R.style.DatePickerTheme,
+            datePickerTheme,
             { _, year, monthOfYear, dayOfMonth ->
                 calendar.set(Calendar.YEAR, year)
                 calendar.set(Calendar.MONTH, monthOfYear)
@@ -191,17 +223,27 @@ class EditBirthDateActivity : AppCompatActivity() {
             calendar.get(Calendar.DAY_OF_MONTH)
         )
 
-        // Set max date (Age requirement - Users must be at least 14 years old)
+        // Establish date limits
         val maxDate = Calendar.getInstance()
         maxDate.add(Calendar.YEAR, -14)
         datePickerDialog.datePicker.maxDate = maxDate.timeInMillis
 
-        // Set min date (e.g., 100 years ago)
         val minDate = Calendar.getInstance()
         minDate.add(Calendar.YEAR, -100)
         datePickerDialog.datePicker.minDate = minDate.timeInMillis
 
+        // Additional styling for visibility in dark mode if needed
+        if (isNightMode()) {
+            // You can set additional properties here if needed
+        }
+
         datePickerDialog.show()
+    }
+
+    // Helper method to check if we're in night mode
+    private fun isNightMode(): Boolean {
+        return (resources.configuration.uiMode and
+                Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
     }
 
     private fun updateDateInView() {
