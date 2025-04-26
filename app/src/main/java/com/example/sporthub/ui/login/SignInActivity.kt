@@ -4,20 +4,24 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import com.example.sporthub.R
 import com.example.sporthub.ui.MainActivity
+import com.example.sporthub.utils.ConnectivityHelper
+import com.example.sporthub.utils.ConnectivityHelperExt
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.example.sporthub.utils.LocalThemeManager
 import androidx.appcompat.app.AppCompatDelegate
-
 
 class SignInActivity : AppCompatActivity() {
 
@@ -28,7 +32,10 @@ class SignInActivity : AppCompatActivity() {
         var preferencesAlreadyChecked = false
     }
 
-    // to make event conectivity message
+    // to make event connectivity message
+    private lateinit var rootView: View
+    private lateinit var networkMessageText: TextView
+    private lateinit var signInButton: LinearLayout
 
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
@@ -41,17 +48,29 @@ class SignInActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
 
+        // Initialize views
+        rootView = findViewById(R.id.rootView) // Make sure to add this ID to your layout
+        networkMessageText = findViewById(R.id.networkMessageText) // Add this to your layout
+        signInButton = findViewById(R.id.signInButton)
+
         val currentUser = auth.currentUser
 
         if (currentUser != null && !preferencesAlreadyChecked) {
-            // El usuario ya inició sesión, verificar si necesita seleccionar género
-            checkUserExistsInFirestore(currentUser.uid)
+            // Only check user if there's network connectivity
+            if (ConnectivityHelper.isNetworkAvailable(this)) {
+                checkUserExistsInFirestore(currentUser.uid)
+            } else {
+                // Show offline message and enable sign-in button
+                showOfflineMessage()
+            }
         }
 
-        val signInButton = findViewById<LinearLayout>(R.id.signInButton)
         signInButton.setOnClickListener {
             Log.d(TAG, "Sign In button clicked")
-            signIn()
+            // Check network before proceeding
+            if (ConnectivityHelperExt.checkNetworkAndNotify(this, rootView)) {
+                signIn()
+            }
         }
     }
 
@@ -98,9 +117,14 @@ class SignInActivity : AppCompatActivity() {
                     val user = auth.currentUser
                     Toast.makeText(this, "Signed in as ${user?.displayName}", Toast.LENGTH_SHORT).show()
 
-                    // Verificar si el usuario necesita seleccionar género
-                    if (user != null) {
-                        checkUserExistsInFirestore(user.uid)
+                    // Verify network availability before checking Firestore
+                    if (ConnectivityHelper.isNetworkAvailable(this)) {
+                        // Verificar si el usuario necesita seleccionar género
+                        if (user != null) {
+                            checkUserExistsInFirestore(user.uid)
+                        }
+                    } else {
+                        showOfflineMessage()
                     }
                 } else {
                     Log.e(TAG, "Authentication failed", task.exception)
@@ -109,40 +133,90 @@ class SignInActivity : AppCompatActivity() {
             }
     }
 
-    // In SignInActivity.kt
+    private fun showOfflineMessage() {
+        networkMessageText.visibility = View.VISIBLE
+        networkMessageText.text = "You're offline. Please check your internet connection and try again."
+    }
+
+    private fun hideOfflineMessage() {
+        networkMessageText.visibility = View.GONE
+    }
+
+    /**
+     * Check if user exists and has all required profile data
+     * If profile is incomplete, redirect to the appropriate step
+     */
     private fun checkUserExistsInFirestore(userId: String) {
+        // First check connectivity
+        if (!ConnectivityHelper.isNetworkAvailable(this)) {
+            showOfflineMessage()
+            return
+        }
+
+        hideOfflineMessage() // Hide message if we're online
+
         db.collection("users").document(userId)
             .get()
             .addOnSuccessListener { document ->
-                if (document.exists() && document.contains("gender") && document.contains("name") &&
-                    document.contains("birth_date") && document.contains("sports_liked")) {
-                    preferencesAlreadyChecked = true
-
-                    val userId = FirebaseAuth.getInstance().currentUser?.uid
-                    if (userId != null) {
-                        val isDarkMode = LocalThemeManager.getUserTheme(this, userId)
-                        if (isDarkMode != null) {
-                            if (isDarkMode) {
-                                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                            } else {
-                                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                            }
-                        } else {
-                            // Default to light for existing users who don't have a preference set
-                            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                        }
-                    }
-
-                    navigateToMainActivity()
-                } else {
-                    // This is a new user - force light mode
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                    // Navigate to name selection for new user registration
+                // Check if user document exists and has all required fields
+                // Check document existence first
+                if (!document.exists()) {
+                    // User doesn't exist at all, start from the beginning
                     navigateToNameSelectionActivity()
+                    return@addOnSuccessListener
                 }
+
+                // Check if name is present
+                val name = document.getString("name")
+                if (name.isNullOrEmpty()) {
+                    navigateToNameSelectionActivity()
+                    return@addOnSuccessListener
+                }
+
+                // Check if gender is present
+                val gender = document.getString("gender")
+                if (gender.isNullOrEmpty()) {
+                    navigateToGenderSelectionActivity()
+                    return@addOnSuccessListener
+                }
+
+                // Check if birth_date exists
+                val birthDate = document.get("birth_date")
+                if (birthDate == null || (birthDate is String && birthDate.isEmpty())) {
+                    navigateToBirthDateSelectionActivity()
+                    return@addOnSuccessListener
+                }
+
+                // Check if sports_liked exists and has at least one entry
+                val sportsLiked = document.get("sports_liked")
+                if (sportsLiked == null || (sportsLiked is List<*> && sportsLiked.isEmpty())) {
+                    navigateToSportsSelectionActivity()
+                    return@addOnSuccessListener
+                }
+
+                // If we've reached here, the profile is complete
+                preferencesAlreadyChecked = true
+
+                // Apply theme preference if available
+                val isDarkMode = LocalThemeManager.getUserTheme(this, userId)
+                if (isDarkMode != null) {
+                    if (isDarkMode) {
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                    } else {
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                    }
+                } else {
+                    // Default to light for existing users who don't have a preference set
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                }
+
+                // Navigate to the main activity as the user is fully registered
+                navigateToMainActivity()
             }
             .addOnFailureListener { e ->
                 Log.e(TAG, "Error checking user data: ${e.message}")
+                // Show user-friendly error message
+                Snackbar.make(rootView, "Failed to check your account information. Please try again.", Snackbar.LENGTH_LONG).show()
                 // If there's an error, assume it's a new user and set light mode
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
                 navigateToNameSelectionActivity()
@@ -157,7 +231,6 @@ class SignInActivity : AppCompatActivity() {
         finish()
     }
 
-    // Cambiamos esta función para navegar a NameSelectionActivity
     private fun navigateToNameSelectionActivity() {
         val intent = Intent(this, NameSelectionActivity::class.java)
         // Don't clear stack here, as we need the registration flow to work
@@ -165,9 +238,20 @@ class SignInActivity : AppCompatActivity() {
         finish()
     }
 
-    // Mantenemos esta función por si necesitamos usarla en algún momento
     private fun navigateToGenderSelectionActivity() {
         val intent = Intent(this, GenderSelectionActivity::class.java)
+        startActivity(intent)
+        finish()
+    }
+
+    private fun navigateToBirthDateSelectionActivity() {
+        val intent = Intent(this, BirthDateSelectionActivity::class.java)
+        startActivity(intent)
+        finish()
+    }
+
+    private fun navigateToSportsSelectionActivity() {
+        val intent = Intent(this, FavoriteSportsSelectionActivity::class.java)
         startActivity(intent)
         finish()
     }
