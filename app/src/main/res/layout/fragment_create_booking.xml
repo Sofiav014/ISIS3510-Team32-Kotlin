@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:padding="20dp"
     android:layout_marginTop="?attr/actionBarSize"
-    android:background="@android:color/white"
+    android:background="@color/primaryNeutral"
     android:fitsSystemWindows="true"
     >
 
@@ -50,7 +50,7 @@
                     android:focusedMonthDateColor="#60508C"
                     android:selectedWeekBackgroundColor="#A293DC"
                     android:weekSeparatorLineColor="#FFFFFF"
-                    android:background="#F5F0FF"
+                    android:background="#60508C"
                     android:dateTextAppearance="@style/TextAppearance.AppCompat.Medium"/>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
