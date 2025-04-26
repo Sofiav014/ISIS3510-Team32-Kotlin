@@ -36,8 +36,8 @@ class BookingsFragment : Fragment() {
 
     private fun setupRecyclerView() {
         adapter = BookingAdapter(emptyList()) // se actualizará con data real
-        binding.recyclerViewBookings.layoutManager = LinearLayoutManager(requireContext())
-        binding.recyclerViewBookings.adapter = adapter
+        //binding.recyclerViewBookings.layoutManager = LinearLayoutManager(requireContext())
+        //binding.recyclerViewBookings.adapter = adapter
     }
 
     private fun loadBookings() {
@@ -62,6 +62,6 @@ class BookingsFragment : Fragment() {
         )
 
         adapter = BookingAdapter(listOf(booking))
-        binding.recyclerViewBookings.adapter = adapter
+        //binding.recyclerViewBookings.adapter = adapter
     }
 }

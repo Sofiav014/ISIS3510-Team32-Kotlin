@@ -125,7 +125,7 @@
                         android:layout_marginTop="8dp"
                         android:paddingStart="16dp"
                         android:paddingEnd="16dp"
-                        android:textColor="#60508C"
+                        android:textColor="#000"
                         android:background="@drawable/bg_spinner_touch_area" />
                 </LinearLayout>
 
