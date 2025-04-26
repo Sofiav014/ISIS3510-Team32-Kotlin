@@ -28,6 +28,8 @@ class SignInActivity : AppCompatActivity() {
         var preferencesAlreadyChecked = false
     }
 
+    // to make event conectivity message
+
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
     private var preferencesAlreadyChecked = false
