@@ -5,6 +5,8 @@ plugins {
     id("com.google.firebase.crashlytics")
     // Reemplaza kapt con ksp para versiones más recientes de Kotlin
     id("com.google.devtools.ksp") version "1.8.0-1.0.9"
+    id("androidx.navigation.safeargs.kotlin")
+    id("kotlin-parcelize")
 }
 
 android {
@@ -46,6 +48,8 @@ android {
 
 dependencies {
     // Firebase BoM
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
     implementation(platform("com.google.firebase:firebase-bom:32.3.1"))
 
     // Firebase Crashlytics and Analytics
@@ -89,4 +93,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+
+    // Para caching
+    implementation("com.google.code.gson:gson:2.10.1")
 }

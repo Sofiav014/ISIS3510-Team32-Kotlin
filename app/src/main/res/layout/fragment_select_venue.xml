@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="50dp">
+
+    <TextView
+        android:id="@+id/activeBookingsText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="You need to choose a venue first to create a booking"
+        android:textColor="#60508C"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp" />
+
+    <Button
+        android:id="@+id/selectVenueButton"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/contrast900"
+        android:text="Select Venue"
+        android:layout_marginTop="24dp"
+        android:textColor="#60508C"
+        android:textAllCaps="false"/>
+
+</LinearLayout>

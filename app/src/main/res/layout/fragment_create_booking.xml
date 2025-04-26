@@ -1,13 +1,151 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.createBooking.CreateBookingFragment">
+    android:padding="20dp"
+    android:layout_marginTop="?attr/actionBarSize"
+    android:background="@color/primaryNeutral"
+    android:fitsSystemWindows="true"
+    >
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="This is the Create Bookings Fragment" />
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingBottom="50dp">
 
-</FrameLayout>
+        <!-- Calendario embebido -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            card_view:cardCornerRadius="16dp"
+            card_view:cardElevation="4dp"
+            android:layout_marginBottom="24dp"
+            android:background="#F5F0FF">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:background="#F5F0FF">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Select date"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#60508C"
+                    android:layout_marginBottom="8dp"
+                    android:background="#F5F0FF"/>
+
+                <CalendarView
+                    android:id="@+id/calendarView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:focusedMonthDateColor="#60508C"
+                    android:selectedWeekBackgroundColor="#A293DC"
+                    android:weekSeparatorLineColor="#FFFFFF"
+                    android:background="#60508C"
+                    android:dateTextAppearance="@style/TextAppearance.AppCompat.Medium"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Tarjeta combinada de horarios + jugadores -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            card_view:cardCornerRadius="16dp"
+            card_view:cardElevation="4dp"
+            android:layout_marginBottom="24dp"
+            android:backgroundTint="#60508C">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:text="Select time slot"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+
+                <GridLayout
+                    android:id="@+id/timeSlotGrid"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:alignmentMode="alignMargins"
+                    android:columnCount="3"
+                    android:padding="5dp"
+                    android:rowCount="2"
+                    android:rowOrderPreserved="false"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingTop="4dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_players"
+                            android:layout_marginEnd="12dp"
+                            card_view:tint="#F5CBA7" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Number of Players"
+                            android:textSize="16sp"
+                            android:textColor="#F5CBA7"/>
+                    </LinearLayout>
+
+                    <Spinner
+                        android:id="@+id/playerCountSpinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:minHeight="48dp"
+                        android:layout_marginTop="8dp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:textColor="#000"
+                        android:background="@drawable/bg_spinner_touch_area" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Botón de reserva -->
+        <Button
+            android:id="@+id/btnCreateReservation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="32dp"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="#77E996"
+            android:text="Create Reservation"
+            android:textAllCaps="false"
+            android:textColor="#60508C"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp"
+            />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

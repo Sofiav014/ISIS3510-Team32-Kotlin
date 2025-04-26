@@ -1,4 +1,3 @@
-// com.example.sporthub.viewmodel.BirthDateViewModel.kt
 package com.example.sporthub.viewmodel
 
 import android.util.Log
@@ -33,6 +32,7 @@ class BirthDateViewModel : ViewModel() {
         val userId = currentUser.uid
         val timestamp = Timestamp(birthDate)
 
+        // Only update the birth_date field
         repository.updateUserBirthDate(userId, timestamp)
             .addOnSuccessListener {
                 Log.d(TAG, "Birth date saved successfully as timestamp")

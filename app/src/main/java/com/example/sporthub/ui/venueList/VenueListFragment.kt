@@ -27,6 +27,10 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import java.util.Locale
+import android.widget.TextView
+import com.example.sporthub.utils.ConnectivityHelper
+import com.google.android.material.snackbar.Snackbar
 
 class VenueListFragment : Fragment() {
 
@@ -36,7 +40,8 @@ class VenueListFragment : Fragment() {
     private var userLocation: Location? = null
     private var sportId: String? = null
     private var venuesLoaded = false
-    private val cancellationTokenSource = CancellationTokenSource()
+    private var cancellationTokenSource = CancellationTokenSource()
+    private var sportName: String? = "Unknown"
 
     // Launcher para solicitar permisos de ubicación
     private val requestPermissionLauncher = registerForActivityResult(
@@ -76,6 +81,13 @@ class VenueListFragment : Fragment() {
             return
         }
 
+        sportName = arguments?.getString("sport") ?: "Unknown"
+
+        val titleTextView = view.findViewById<TextView>(R.id.textViewVenueTitle)
+        titleTextView.text = String.format(Locale.getDefault(), "%s Venues List", sportName)
+
+        (requireActivity() as AppCompatActivity).findViewById<TextView>(R.id.toolbarTitle)?.text = "$sportName Venues List"
+
         setupRecyclerView(view)
         setupObservers()
         checkLocationPermission()
@@ -83,7 +95,12 @@ class VenueListFragment : Fragment() {
 
     private fun setupRecyclerView(view: View) {
         val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerViewVenues)
-        venueAdapter = VenueAdapter()
+        venueAdapter = VenueAdapter { selectedVenue ->
+            val action = VenueListFragmentDirections
+                .actionVenueListFragmentToVenueDetailFragment(selectedVenue)
+            println("Selected Venue ID: ${selectedVenue.id}")
+            findNavController().navigate(action)
+        }
 
         recyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
@@ -91,17 +108,34 @@ class VenueListFragment : Fragment() {
         }
     }
 
+
     private fun setupObservers() {
-        viewModel.venues.observe(viewLifecycleOwner, Observer { venues ->
+        viewModel.venues.observe(viewLifecycleOwner) { venues ->
             venuesLoaded = true
+
+            if (venues.isEmpty()) {
+                val hasInternet = ConnectivityHelper.isNetworkAvailable(requireContext())
+                if (!hasInternet) {
+                    Snackbar.make(
+                        requireView(),
+                        "Unable to load venues list. Please check your internet connection.",
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                }
+            }
+
+
             val sortedVenues = if (userLocation != null) {
                 sortVenuesByDistance(venues)
             } else {
                 venues
             }
             venueAdapter.submitList(sortedVenues)
-        })
+
+            venueAdapter.setUserLocation(userLocation)
+        }
     }
+
 
     private fun checkLocationPermission() {
         when {
@@ -130,12 +164,17 @@ class VenueListFragment : Fragment() {
 
     @SuppressLint("MissingPermission")
     private fun getCurrentLocation() {
+
+        cancellationTokenSource = CancellationTokenSource()
         // Usamos getCurrentLocation en lugar de lastLocation para mayor precisión
         fusedLocationClient.getCurrentLocation(
             Priority.PRIORITY_HIGH_ACCURACY,
             cancellationTokenSource.token
         ).addOnSuccessListener { location ->
             userLocation = location
+
+            // Pass the location to the adapter
+            venueAdapter.setUserLocation(location)
 
             // Si ya teníamos los venues cargados, los reordenamos
             if (venuesLoaded) {
@@ -163,9 +202,11 @@ class VenueListFragment : Fragment() {
 
     private fun loadVenues() {
         sportId?.let { id ->
-            viewModel.fetchVenuesBySport(id)
+            val hasInternet = ConnectivityHelper.isNetworkAvailable(requireContext())
+            viewModel.fetchVenuesBySport(id, forceFetchFromNetwork = hasInternet)
         }
     }
+
 
     private fun sortVenuesByDistance(venues: List<Venue>): List<Venue> {
         val currentLocation = userLocation ?: return venues

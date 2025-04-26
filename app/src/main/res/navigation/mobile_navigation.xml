@@ -2,58 +2,88 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/mobile_navigation"
     app:startDestination="@id/navigation_home">
-    <!--
-    <fragment
-        android:id="@+id/nav_search"
-        android:name="com.example.sporthub.ui.search.SearchFragment"
-        android:label="@string/title_search"
-        tools:layout="@layout/fragment_search" />
-    -->
-    <!--
-    <fragment
-        android:id="@+id/nav_calendar"
-        android:name="com.example.sporthub.ui.calendar.CalendarFragment"
-        android:label="@string/title_calendar"
-        tools:layout="@layout/fragment_calendar" />
-    -->
+
     <fragment
         android:id="@+id/navigation_home"
         android:name="com.example.sporthub.ui.home.HomeFragment"
-        android:label="Home"/>
+        android:label="Home" />
 
     <fragment
         android:id="@+id/findVenuesFragment"
         android:name="com.example.sporthub.ui.findVenues.FindVenuesFragment"
         android:label="Find Venues">
-
-        <!-- ✅ Re-adding the navigation action -->
         <action
             android:id="@+id/action_findVenuesFragment_to_venueListFragment"
-            app:destination="@id/venueListFragment"/>
+            app:destination="@id/venueListFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/venueDetailFragment"
+        android:name="com.example.sporthub.ui.venueDetail.VenueDetailFragment"
+        android:label="Venue Detail">
+
+        <argument
+            android:name="venue"
+            app:argType="com.example.sporthub.data.model.Venue"
+            app:nullable="false" />
+
+        <action
+            android:id="@+id/action_venueDetailFragment_to_navigation_create"
+            app:destination="@id/navigation_create">
+
+        </action>
+
     </fragment>
 
     <fragment
         android:id="@+id/venueListFragment"
         android:name="com.example.sporthub.ui.venueList.VenueListFragment"
         android:label="Venue List">
+
         <argument
             android:name="sportId"
             app:argType="string"
-            app:nullable="false"/>
+            app:nullable="false" />
+        <action
+            android:id="@+id/action_venueListFragment_to_venueDetailFragment"
+            app:destination="@id/venueDetailFragment" />
     </fragment>
 
     <fragment
         android:id="@+id/navigation_profile"
         android:name="com.example.sporthub.ui.profile.ProfileFragment"
-        android:label="Profile"/>
+        android:label="Profile" />
 
     <fragment
         android:id="@+id/navigation_booking"
         android:name="com.example.sporthub.ui.bookings.BookingsFragment"
-        android:label="Bookings"/>
+        android:label="Bookings" />
 
     <fragment
         android:id="@+id/navigation_create"
         android:name="com.example.sporthub.ui.createBooking.CreateBookingFragment"
-        android:label="Create Booking"/>
+        android:label="Create Booking">
+
+        <argument
+            android:name="venue"
+            app:argType="com.example.sporthub.data.model.Venue"
+            app:nullable="false" />
+
+        <action
+            android:id="@+id/action_navigation_create_to_navigation_home"
+            app:destination="@id/navigation_home"
+            app:popUpTo="@id/navigation_home"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/selectVenueFragment"
+        android:name="com.example.sporthub.ui.selectVenue.SelectVenueFragment"
+        android:label="Select Venue" >
+
+        <action
+            android:id="@+id/action_selectVenueFragment_to_venue_list"
+            app:destination="@id/findVenuesFragment" />
+    </fragment>
+
 </navigation>

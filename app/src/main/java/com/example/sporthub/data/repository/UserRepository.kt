@@ -1,4 +1,4 @@
-// com.example.sporthub.data.repository.UserRepository.kt
+// UserRepository.kt
 package com.example.sporthub.data.repository
 
 import android.util.Log
@@ -7,10 +7,7 @@ import com.example.sporthub.data.model.User
 import com.example.sporthub.data.model.Sport
 import com.example.sporthub.data.model.Venue
 import com.example.sporthub.data.model.Booking
-
 import com.google.firebase.firestore.GeoPoint
-
-
 import com.google.android.gms.tasks.Task
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -19,9 +16,6 @@ import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import androidx.lifecycle.MutableLiveData
-import kotlin.collections.filterIsInstance
-
-
 
 class UserRepository {
     private val db = FirebaseFirestore.getInstance()
@@ -33,26 +27,36 @@ class UserRepository {
         return db.collection("users").document(userId).get()
     }
 
+    // Method to update a single field in the user document
+    fun updateUserField(userId: String, fieldName: String, value: Any?): Task<Void> {
+        // This only updates the specific field without affecting other fields
+        return db.collection("users").document(userId).update(fieldName, value)
+    }
+
     fun updateUserBirthDate(userId: String, birthDate: Timestamp): Task<Void> {
-        return db.collection("users").document(userId).update("birth_date", birthDate)
+        return updateUserField(userId, "birth_date", birthDate)
     }
 
     fun signOut() {
         auth.signOut()
     }
-    // Añadir a UserRepository.kt
+
     fun updateUserSports(userId: String, sports: List<Map<String, Any>?>): Task<Void> {
-        return db.collection("users").document(userId).update("sports_liked", sports)
+        // Only updates the sports_liked field
+        return updateUserField(userId, "sports_liked", sports)
     }
 
-    // Añadir a UserRepository.kt en data/repository/
-    fun createUserProfile(userId: String, userData: Map<String, Any>): Task<Void> {
+    fun createUserProfile(userId: String, userData: HashMap<String, Any>): Task<Void> {
+        // This should only be used for new users, not for updating existing ones
         return db.collection("users").document(userId).set(userData)
     }
 
-    // Añadir a UserRepository.kt en data/repository/
     fun updateUserName(userId: String, name: String): Task<Void> {
-        return db.collection("users").document(userId).update("name", name)
+        return updateUserField(userId, "name", name)
+    }
+
+    fun updateUserGender(userId: String, gender: String): Task<Void> {
+        return updateUserField(userId, "gender", gender)
     }
 
     fun updateUserProfileName(user: FirebaseUser, name: String): Task<Void> {
@@ -62,8 +66,18 @@ class UserRepository {
         return user.updateProfile(profileUpdates)
     }
 
-    fun getUserModel(userId:String): LiveData<User>{
+    // Add this helper method to safely get timestamps
+    private fun safeGetTimestamp(snapshot: DocumentSnapshot, field: String): Timestamp? {
+        return try {
+            snapshot.getTimestamp(field)
+        } catch (e: Exception) {
+            // If the field is not a Timestamp, return null
+            Log.d("UserRepository", "Field $field is not a Timestamp: ${e.message}")
+            null
+        }
+    }
 
+    fun getUserModel(userId:String): LiveData<User>{
         val liveData = MutableLiveData<User>()
 
         db.collection("users").document(userId).get()
@@ -138,7 +152,7 @@ class UserRepository {
                         id = snapshot.id,
                         name = snapshot.getString("name") ?: "",
                         gender = snapshot.getString("gender") ?: "",
-                        birthDate = snapshot.getTimestamp("birth_date"),
+                        birthDate = safeGetTimestamp(snapshot, "birth_date"),
                         sportsLiked = sportsLiked,
                         bookings = bookings,
                         venuesLiked = venuesLiked,
@@ -171,5 +185,4 @@ class UserRepository {
             }
         return liveData
     }
-
 }

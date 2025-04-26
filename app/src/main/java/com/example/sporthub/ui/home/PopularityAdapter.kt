@@ -11,8 +11,17 @@ import com.example.sporthub.ui.home.viewholder.PopularityViewHolder
 
 
 sealed class PopularityItem {
-    data class VenueItem(val venue: Venue, val title: String) : PopularityItem()
-    data class SportItem(val sport: Sport, val title: String) : PopularityItem()
+    data class VenueItem(
+        val venue: Venue,
+        val title: String,
+        val additionalInfo: String? = null
+    ) : PopularityItem()
+
+    data class SportItem(
+        val sport: Sport,
+        val title: String,
+        val additionalInfo: String? = null
+    ) : PopularityItem()
 }
 
 class PopularityAdapter : ListAdapter<PopularityItem, PopularityViewHolder>(DIFF_CALLBACK) {

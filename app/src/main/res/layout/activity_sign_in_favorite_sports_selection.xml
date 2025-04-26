@@ -2,10 +2,28 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootViewSports"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="@color/primaryNeutral"
     tools:context=".ui.login.FavoriteSportsSelectionActivity">
+
+    <!-- Network connectivity message -->
+    <TextView
+        android:id="@+id/networkMessageText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="#80FF5252"
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="No internet connection. Please check your Wi-Fi or mobile data and try again."
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Guía horizontal al 15% desde la parte superior para posicionamiento vertical -->
     <androidx.constraintlayout.widget.Guideline
@@ -15,6 +33,18 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.15" />
 
+    <ImageButton
+        android:id="@+id/button_back_sport"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="?attr/colorBackgroundFloating"
+        android:src="@drawable/ic_arrow_back"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/primary"/>
+
     <TextView
         android:id="@+id/textview_title"
         android:layout_width="0dp"
@@ -22,7 +52,7 @@
         android:text="We want to know you better"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="#673AB7"
+        android:textColor="@color/primary"
         android:textAlignment="center"
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
@@ -37,7 +67,7 @@
         android:layout_marginTop="16dp"
         android:text="Choose the sports you are interested in"
         android:textAlignment="center"
-        android:textColor="#673AB7"
+        android:textColor="@color/primary"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -76,7 +106,7 @@
                 android:foreground="?attr/selectableItemBackground"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="2dp"
-                app:cardBackgroundColor="#FFFFFF"
+                app:cardBackgroundColor="@android:color/white"
                 app:contentPadding="12dp"
                 app:cardUseCompatPadding="true">
 
@@ -98,7 +128,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="BASKETBALL"
-                        android:textColor="#673AB7"
+                        android:textColor="@color/primary"
                         android:textSize="14sp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -115,7 +145,7 @@
                 android:foreground="?attr/selectableItemBackground"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="2dp"
-                app:cardBackgroundColor="#FFFFFF"
+                app:cardBackgroundColor="@android:color/white"
                 app:contentPadding="12dp"
                 app:cardUseCompatPadding="true">
 
@@ -137,7 +167,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="FOOTBALL"
-                        android:textColor="#673AB7"
+                        android:textColor="@color/primary"
                         android:textSize="14sp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -154,7 +184,7 @@
                 android:foreground="?attr/selectableItemBackground"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="2dp"
-                app:cardBackgroundColor="#FFFFFF"
+                app:cardBackgroundColor="@android:color/white"
                 app:contentPadding="12dp"
                 app:cardUseCompatPadding="true">
 
@@ -176,7 +206,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="VOLLEYBALL"
-                        android:textColor="#673AB7"
+                        android:textColor="@color/primary"
                         android:textSize="14sp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -193,7 +223,7 @@
                 android:foreground="?attr/selectableItemBackground"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="2dp"
-                app:cardBackgroundColor="#FFFFFF"
+                app:cardBackgroundColor="@android:color/white"
                 app:contentPadding="12dp"
                 app:cardUseCompatPadding="true">
 
@@ -215,7 +245,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:text="TENNIS"
-                        android:textColor="#673AB7"
+                        android:textColor="@color/primary"
                         android:textSize="14sp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -231,9 +261,9 @@
         android:layout_marginBottom="24dp"
         android:text="DISCOVER"
         android:textSize="16sp"
-        android:textColor="@color/white"
+        android:textColor="@android:color/white"
         android:padding="12dp"
-        android:backgroundTint="#673AB7"
+        app:backgroundTint="@color/primary"
         style="@style/RoundedButtonStyle"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

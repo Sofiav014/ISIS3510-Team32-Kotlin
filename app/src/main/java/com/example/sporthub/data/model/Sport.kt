@@ -1,13 +1,12 @@
-// com.example.sporthub.data.model.Sport.kt
 package com.example.sporthub.data.model
 
-data class Sport(
-    val id: String,
-    val name: String,
-    val logo: String
-)
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+import com.google.firebase.firestore.PropertyName
 
-{
-    // No-argument constructor required for Firestore
-    constructor() : this("", "", "")
-}
+@Parcelize
+data class Sport(
+    @PropertyName("id") val id: String = "",
+    @PropertyName("name") val name: String = "",
+    @PropertyName("logo") val logo: String = ""
+) : Parcelable

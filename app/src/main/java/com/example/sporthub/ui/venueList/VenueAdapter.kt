@@ -1,5 +1,6 @@
 package com.example.sporthub.ui.venueList.adapter
 
+import android.location.Location
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,16 +11,19 @@ import com.bumptech.glide.Glide
 import com.example.sporthub.R
 import com.example.sporthub.data.model.Venue
 
-class VenueAdapter : RecyclerView.Adapter<VenueAdapter.VenueViewHolder>() {
+class VenueAdapter(
+    private val onVenueClick: (Venue) -> Unit
+) : RecyclerView.Adapter<VenueAdapter.VenueViewHolder>() {
 
     private var venues: List<Venue> = emptyList()
+    private var userLocation: Location? = null
 
     class VenueViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val venueImage: ImageView = view.findViewById(R.id.venueImage)
         val venueName: TextView = view.findViewById(R.id.venueName)
         val venueLocation: TextView = view.findViewById(R.id.venueLocation)
         val venueSport: TextView = view.findViewById(R.id.venueSport)
-        val venueRating: TextView = view.findViewById(R.id.venueRating) // ✅ Changed from RatingBar to TextView
+        val venueRating: TextView = view.findViewById(R.id.venueRating)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VenueViewHolder {
@@ -30,13 +34,41 @@ class VenueAdapter : RecyclerView.Adapter<VenueAdapter.VenueViewHolder>() {
 
     override fun onBindViewHolder(holder: VenueViewHolder, position: Int) {
         val venue = venues[position]
+
+        // Set venue name
         holder.venueName.text = venue.name
+
+        // Set venue location - MOSTRAR LA UBICACIÓN EN SU CAMPO ORIGINAL
         holder.venueLocation.text = venue.name
-        holder.venueSport.text = venue.sport?.name
+
+        // Calculate and display distance in the sport text view
+        if (userLocation != null && venue.coords != null) {
+            val venueLocation = Location("").apply {
+                latitude = venue.coords.latitude
+                longitude = venue.coords.longitude
+            }
+            val distanceInMeters = userLocation!!.distanceTo(venueLocation)
+            val distanceText = String.format("%.1f km", distanceInMeters / 1000)
+
+            // Display distance in sport field
+            holder.venueSport.text = "$distanceText away"
+        } else {
+            // If no location is available, show sport name as fallback
+            holder.venueSport.text = "Distance not available"
+        }
+
+        // Set rating
         holder.venueRating.text = String.format("%.1f", venue.rating.toFloat())
+
+        // Load image
         Glide.with(holder.itemView.context)
             .load(venue.image)
             .into(holder.venueImage)
+
+        //Handle click on venue
+        holder.itemView.setOnClickListener {
+            onVenueClick(venue)
+        }
     }
 
     override fun getItemCount() = venues.size
@@ -44,5 +76,10 @@ class VenueAdapter : RecyclerView.Adapter<VenueAdapter.VenueViewHolder>() {
     fun submitList(newVenues: List<Venue>) {
         venues = newVenues
         notifyDataSetChanged()
+    }
+
+    fun setUserLocation(location: Location?) {
+        userLocation = location
+        notifyDataSetChanged() // Refresh to update distances
     }
 }

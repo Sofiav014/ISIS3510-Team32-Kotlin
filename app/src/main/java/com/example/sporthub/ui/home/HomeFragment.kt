@@ -1,12 +1,14 @@
 package com.example.sporthub.ui.home
 
+import android.content.BroadcastReceiver
+import android.content.IntentFilter
+import android.net.ConnectivityManager
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.sporthub.data.repository.HomeRepository
@@ -26,6 +28,8 @@ class HomeFragment : Fragment() {
     private lateinit var upcomingBookingsAdapter: UpcomingBookingsAdapter
     private lateinit var recommendedBookingsAdapter: RecommendedBookingsAdapter
 
+    private var networkReceiver: BroadcastReceiver? = null
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -44,41 +48,66 @@ class HomeFragment : Fragment() {
         binding.recyclerPopularity.apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
             adapter = popularityAdapter
+            binding.recyclerPopularity.isNestedScrollingEnabled = false
         }
 
         upcomingBookingsAdapter = UpcomingBookingsAdapter()
         binding.recyclerUpcomingBookings.apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
             adapter = upcomingBookingsAdapter
+            binding.recyclerUpcomingBookings.isNestedScrollingEnabled = false
+
         }
 
         recommendedBookingsAdapter = RecommendedBookingsAdapter()
         binding.recyclerRecommendedBookings.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = recommendedBookingsAdapter
+            binding.recyclerRecommendedBookings.isNestedScrollingEnabled = false
+            binding.root.post {
+                binding.recyclerRecommendedBookings.requestLayout()
+            }
         }
     }
 
     private fun observeViewModels() {
         userViewModel.currentUser.observe(viewLifecycleOwner) { user ->
             if (user != null) {
-                homeViewModel.loadData(user)
+                homeViewModel.loadHomeData(requireContext(), user)
             }
         }
 
         homeViewModel.popularityReport.observe(viewLifecycleOwner) { report ->
-
-            Log.d("PopularityReport", "First: ${report.first}, Second: ${report.second}, Third: ${report.third}")
-
+            Log.d("PopularityReport", "Received report: $report")
 
             val items = listOfNotNull(
-                report.first?.let { PopularityItem.VenueItem(it, "Best Rated Overall") },
-                report.second?.takeIf { it.id != "unknown" }?.let { PopularityItem.SportItem(it, "Most Played by You") },
-                report.third?.let { PopularityItem.VenueItem(it, "Most Booked Overall")}
+                // For the Best Rated venue, include the rating as additional info
+                report.highestRatedVenue?.let {
+                    PopularityItem.VenueItem(
+                        it,
+                        "Best Rated Overall",
+                        "★ ${String.format("%.1f", it.rating)}"
+                    )
+                },
+                // Include most played sport if it's not "unknown"
+                report.mostPlayedSport.takeIf { it.id != "unknown" }?.let {
+                    PopularityItem.SportItem(
+                        it,
+                        "Most Played by You",
+                        "Played ${report.mostPlayedSportCount} time(s)"
+                    )
+                },
+                // For the Most Booked venue, include the booking count as additional info
+                report.mostBookedVenue?.let {
+                    PopularityItem.VenueItem(
+                        it,
+                        "Most Booked Overall",
+                        "${report.mostBookedCount} bookings"
+                    )
+                }
             )
 
-            Log.d("PopularityReport", "Items size: ${items.size}")
-
+            Log.d("PopularityReport", "Items being submitted: $items")
             popularityAdapter.submitList(items)
         }
 
@@ -92,12 +121,53 @@ class HomeFragment : Fragment() {
         }
 
         homeViewModel.recommendedBookings.observe(viewLifecycleOwner) { bookings ->
-            recommendedBookingsAdapter.submitList(bookings)
+            // Si estamos offline, no mostramos bookings recomendados
+            if (homeViewModel.isOffline.value == true) {
+                recommendedBookingsAdapter.submitList(emptyList())
+            } else {
+                recommendedBookingsAdapter.submitList(bookings)
+            }
         }
+
+        homeViewModel.isOffline.observe(viewLifecycleOwner) { offline ->
+            binding.textRecommendedOfflineWarning.visibility =
+                if (offline) View.VISIBLE else View.GONE
+        }
+
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun onStart() {
+        super.onStart()
+        networkReceiver = NetworkReceiver {
+            val user = userViewModel.currentUser.value
+            user?.let {
+                homeViewModel.loadHomeData(requireContext(), it)
+            }
+        }
+        val filter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
+        requireContext().registerReceiver(networkReceiver, filter)
+        userViewModel.currentUser.value?.let { user ->
+            homeViewModel.loadHomeData(requireContext(), user)
+        }
+    }
+
+
+    override fun onStop() {
+        super.onStop()
+        networkReceiver?.let {
+            requireContext().unregisterReceiver(it)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        userViewModel.currentUser.value?.let { user ->
+            homeViewModel.loadHomeData(requireContext(), user)
+        }
     }
 }

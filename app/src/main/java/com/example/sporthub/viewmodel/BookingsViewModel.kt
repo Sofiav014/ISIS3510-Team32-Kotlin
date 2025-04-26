@@ -1,4 +1,4 @@
-package com.example.sporthub.ui.bookings
+package com.example.sporthub.viewmodel
 
 import androidx.lifecycle.ViewModel
 

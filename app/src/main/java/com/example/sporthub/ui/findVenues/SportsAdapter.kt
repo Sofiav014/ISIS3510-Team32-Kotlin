@@ -16,12 +16,21 @@ class SportsAdapter(
 ) : RecyclerView.Adapter<SportsAdapter.SportViewHolder>() {
 
     inner class SportViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val sportImage: ImageView = view.findViewById(R.id.sportImage)
-        val sportName: TextView = view.findViewById(R.id.sportName)
+        private val sportImage: ImageView = view.findViewById(R.id.sportImage)
+        private val sportName: TextView = view.findViewById(R.id.sportName)
 
         fun bind(sport: Sport) {
             sportName.text = sport.name
-            Glide.with(itemView.context).load(sport.logo).into(sportImage)
+
+            Glide.with(itemView.context)
+                .clear(sportImage)
+
+
+            Glide.with(itemView.context)
+                .load(sport.logo)
+                .placeholder(R.drawable.sport_logo)
+                .error(R.drawable.sport_logo)
+                .into(sportImage)
 
             itemView.setOnClickListener {
                 onItemClick(sport)

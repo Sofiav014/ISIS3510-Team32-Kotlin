@@ -1,4 +1,3 @@
-// com.example.sporthub.viewmodel.SportSelectionViewModel.kt
 package com.example.sporthub.viewmodel
 
 import android.util.Log
@@ -21,7 +20,7 @@ class SportSelectionViewModel : ViewModel() {
     private val _userNotAuthenticatedEvent = MutableLiveData<Boolean>()
     val userNotAuthenticatedEvent: LiveData<Boolean> = _userNotAuthenticatedEvent
 
-    // Lista de deportes disponibles con sus datos
+    // List of available sports with their data
     val sportsData = mapOf(
         "Basketball" to mapOf(
             "id" to "basketball",
@@ -53,7 +52,7 @@ class SportSelectionViewModel : ViewModel() {
             return
         }
 
-        // Verificar que haya al menos un deporte seleccionado
+        // Verify that at least one sport is selected
         if (selectedSportsKeys.isEmpty()) {
             _errorEvent.value = "Please select at least one sport to continue"
             return
@@ -61,33 +60,20 @@ class SportSelectionViewModel : ViewModel() {
 
         val userId = currentUser.uid
 
-        // Crear lista de deportes seleccionados con sus datos completos
+        // Create list of selected sports with their complete data
         val sportsList = selectedSportsKeys.map { sportName ->
             sportsData[sportName]
         }
 
-        // Primero verificar si el documento del usuario existe
-        repository.getUserData(userId)
-            .addOnSuccessListener { document ->
-                if (document != null && document.exists()) {
-                    // Actualizar deportes seleccionados
-                    repository.updateUserSports(userId, sportsList)
-                        .addOnSuccessListener {
-                            Log.d(TAG, "Sports preferences saved successfully")
-                            _saveSuccessEvent.value = true
-                        }
-                        .addOnFailureListener { e ->
-                            Log.e(TAG, "Error saving sports preferences: ${e.message}")
-                            _errorEvent.value = "Error saving data. Please try again"
-                        }
-                } else {
-                    Log.e(TAG, "User document does not exist")
-                    _errorEvent.value = "Error: User profile not found"
-                }
+        // Only update the sports_liked field
+        repository.updateUserSports(userId, sportsList)
+            .addOnSuccessListener {
+                Log.d(TAG, "Sports preferences saved successfully")
+                _saveSuccessEvent.value = true
             }
             .addOnFailureListener { e ->
-                Log.e(TAG, "Error fetching user document: ${e.message}")
-                _errorEvent.value = "Error retrieving user data. Please try again"
+                Log.e(TAG, "Error saving sports preferences: ${e.message}")
+                _errorEvent.value = "Error saving data. Please try again"
             }
     }
 

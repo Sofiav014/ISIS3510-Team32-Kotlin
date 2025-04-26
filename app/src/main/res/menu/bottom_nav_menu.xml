@@ -17,7 +17,7 @@
         android:title="Home" />
 
     <item
-        android:id="@+id/navigation_create"
+        android:id="@+id/selectVenueFragment"
         android:icon="@drawable/ic_create_outline"
         android:title="Create" />
 

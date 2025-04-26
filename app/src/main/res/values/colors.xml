@@ -11,6 +11,7 @@
     <color name="red">#FF0000</color>
     <color name="sb_purple">#ece6f0</color>
     <color name="contrast_black">#070304</color>
+    <color name="background_color">#CAC4D0</color>
 
     <color name="primaryNeutral">#FFFFFFFF</color>
     <color name="primary">#FF60508C</color>
@@ -18,6 +19,10 @@
     <color name="lightPurple">#C860508C</color>
     <color name="primaryDark">#FF070304</color>
     <color name="contrast900">#FFFBD1A2</color>
+
+    <color name="card_background">#FFFFFF</color>
+    <color name="text_color_primary">#000000</color>
+    <color name="text_color_secondary">#666666</color>
 
 
 
