@@ -32,6 +32,9 @@ class VenueDetailFragment : Fragment() {
     private lateinit var venueSport: TextView
     private lateinit var venueRating: TextView
 
+    private val findVenuesViewModel: FindVenuesViewModel by activityViewModels()
+
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
