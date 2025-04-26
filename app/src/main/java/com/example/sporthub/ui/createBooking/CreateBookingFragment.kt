@@ -1,6 +1,10 @@
 package com.example.sporthub.ui.createBooking
 
+import android.content.Context
 import android.graphics.Color
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkRequest
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -44,9 +48,28 @@ class CreateBookingFragment : Fragment() {
         override fun run() {
             selectedDate = LocalDate.now()
             setupTimeSlotButtons()
-            handler.postDelayed(this, 60_000) // refrescar cada minuto
+            handler.postDelayed(this, 60_000)
         }
     }
+
+    // Adding NetworkCallback for real-time connectivity monitoring
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            super.onAvailable(network)
+            activity?.runOnUiThread {
+                viewModel.checkConnectivity(requireContext())
+            }
+        }
+
+        override fun onLost(network: Network) {
+            super.onLost(network)
+            activity?.runOnUiThread {
+                viewModel.checkConnectivity(requireContext())
+            }
+        }
+    }
+
+    private var isOnline: Boolean = true
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -55,17 +78,25 @@ class CreateBookingFragment : Fragment() {
         binding = FragmentCreateBookingBinding.inflate(inflater, container, false)
         venue1 = args.venue
 
-        selectedDate = LocalDate.now() // Inicializamos selectedDate como hoy
+        selectedDate = LocalDate.now()
         setupDatePicker()
         setupTimeSlotButtons()
         setupPlayerCountSpinner()
         observeViewModel()
 
         binding.btnCreateReservation.setOnClickListener {
-            createReservation()
+            // Force an immediate connectivity check
+            viewModel.checkConnectivity(requireContext())
+
+            Handler(Looper.getMainLooper()).postDelayed({
+                if (viewModel.isOffline.value == true) {
+                    Toast.makeText(requireContext(), "Cannot create a booking without internet connection", Toast.LENGTH_SHORT).show()
+                } else {
+                    createReservation()
+                }
+            }, 100)
         }
 
-        // Comenzar el refresco automático
         handler.post(updateTimeSlotsRunnable)
 
         return binding.root
@@ -74,8 +105,6 @@ class CreateBookingFragment : Fragment() {
     private fun setupDatePicker() {
         val calendar = Calendar.getInstance()
         binding.calendarView.minDate = calendar.timeInMillis
-
-        // Visualmente marcar hoy en el calendario
         binding.calendarView.date = calendar.timeInMillis
 
         binding.calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
@@ -130,7 +159,6 @@ class CreateBookingFragment : Fragment() {
             binding.timeSlotGrid.addView(button)
         }
 
-        // Si el slot previamente seleccionado ya no es válido, lo deseleccionamos
         if (selectedTimeSlot != null && !timeSlotsAvailableNow().contains(selectedTimeSlot)) {
             selectedTimeSlot = null
         }
@@ -210,6 +238,38 @@ class CreateBookingFragment : Fragment() {
                 findNavController().navigate(R.id.action_navigation_create_to_navigation_home)
             }
         }
+        viewModel.isOffline.observe(viewLifecycleOwner) { offline ->
+            isOnline = !offline
+
+            if (offline) {
+                binding.btnCreateReservation.alpha = 0.5f  // Dim the button
+            } else {
+                binding.btnCreateReservation.alpha = 1.0f  // Normal opacity
+            }
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        viewModel.checkConnectivity(requireContext())
+        handler.post(updateTimeSlotsRunnable)
+
+        // Register network callback to track connectivity changes
+        val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            connectivityManager.registerDefaultNetworkCallback(networkCallback)
+        } else {
+            val request = NetworkRequest.Builder().build()
+            connectivityManager.registerNetworkCallback(request, networkCallback)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Unregister network callback
+        val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        connectivityManager.unregisterNetworkCallback(networkCallback)
     }
 
     override fun onDestroyView() {

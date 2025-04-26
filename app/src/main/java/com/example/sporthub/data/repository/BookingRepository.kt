@@ -72,12 +72,6 @@ class BookingRepository {
         }
     }
 
-    fun addBookingToVenue(venueId: String, booking: Booking, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-        val venueRef = FirebaseFirestore.getInstance().collection("venues").document(venueId)
-        venueRef.update("bookings", FieldValue.arrayUnion(booking))
-            .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { onFailure(it) }
-    }
 
     fun addBookingToUser(userId: String, booking: Booking, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         val userRef = FirebaseFirestore.getInstance().collection("users").document(userId)
