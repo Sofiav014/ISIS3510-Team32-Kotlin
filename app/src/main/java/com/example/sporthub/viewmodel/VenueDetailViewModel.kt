@@ -1,4 +1,4 @@
-package com.example.sporthub.ui.venueDetail
+package com.example.sporthub.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.LiveData
