@@ -21,7 +21,7 @@ import android.app.DatePickerDialog
 import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
 import java.util.Calendar
-
+import com.example.sporthub.utils.RegistrationTimerManager
 class EditSportsActivity : AppCompatActivity() {
 
     private lateinit var viewModel: SportSelectionViewModel
@@ -233,6 +233,11 @@ class EditSportsActivity : AppCompatActivity() {
         val selectedSportsKeys = selectedSports.filter { it.value }.keys.toList()
 
         // Delegate the logic to the ViewModel
+        // Inside saveSportsAndProceed(), after viewModel.saveSportsPreferences(selectedSportsKeys)
+        if (!isEditMode) {
+            // Only stop timer if this is part of initial registration (not profile edit)
+            RegistrationTimerManager.stopTimerAndSave()
+        }
         viewModel.saveSportsPreferences(selectedSportsKeys)
     }
 

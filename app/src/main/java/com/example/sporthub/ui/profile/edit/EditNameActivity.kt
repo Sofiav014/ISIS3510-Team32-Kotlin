@@ -12,6 +12,7 @@ import com.example.sporthub.data.repository.UserRepository
 import com.example.sporthub.viewmodel.NameSelectionViewModel
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import com.example.sporthub.utils.RegistrationTimerManager
 
 class EditNameActivity : AppCompatActivity() {
 
@@ -36,6 +37,10 @@ class EditNameActivity : AppCompatActivity() {
         }
 
         super.onCreate(savedInstanceState)
+        if (!isEditMode) {
+            // Only start timer if this is part of initial registration (not profile edit)
+            RegistrationTimerManager.startTimer()
+        }
         setContentView(R.layout.activity_edit_name)
 
         // Initialize views

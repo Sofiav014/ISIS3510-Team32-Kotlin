@@ -4,6 +4,11 @@ import android.app.Application
 import com.example.sporthub.utils.ThemeManager
 
 class SportHubApplication : Application() {
+    companion object {
+        // Add variable to track if registration is in progress
+        var isRegistrationInProgress = false
+    }
+
     override fun onCreate() {
         super.onCreate()
 
@@ -11,7 +16,6 @@ class SportHubApplication : Application() {
         val themeManager = ThemeManager.getInstance(this)
         themeManager.applyTheme()
 
-        // Future app-wide initializations can go here
-        // For example: crash reporting, analytics, etc.
+        // Initialize other utilities here if needed
     }
 }
