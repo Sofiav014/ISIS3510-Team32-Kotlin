@@ -16,6 +16,7 @@ import com.example.sporthub.utils.ConnectivityHelperExt
 import com.example.sporthub.viewmodel.NameSelectionViewModel
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
+import com.example.sporthub.utils.RegistrationTimerManager
 
 class NameSelectionActivity : AppCompatActivity() {
 
@@ -27,6 +28,7 @@ class NameSelectionActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        RegistrationTimerManager.startTimer()
         setContentView(R.layout.activity_sign_in_name_selection)
 
         // Initialize the ViewModel

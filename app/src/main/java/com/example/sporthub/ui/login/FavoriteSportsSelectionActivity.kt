@@ -18,6 +18,7 @@ import com.example.sporthub.ui.MainActivity
 import com.example.sporthub.utils.ConnectivityHelper
 import com.example.sporthub.utils.ConnectivityHelperExt
 import com.example.sporthub.viewmodel.SportSelectionViewModel
+import com.example.sporthub.utils.RegistrationTimerManager
 
 class FavoriteSportsSelectionActivity : AppCompatActivity() {
 
@@ -189,7 +190,12 @@ class FavoriteSportsSelectionActivity : AppCompatActivity() {
 
     private fun navigateToMainActivity() {
         Log.d("SportsDebug", "Navigating to MainActivity")
+
+        RegistrationTimerManager.stopTimerAndSave()
+
         val intent = Intent(this, MainActivity::class.java)
+
+
         // Clear the activity stack so user can't go back to registration screens
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
