@@ -20,6 +20,7 @@ import com.example.sporthub.databinding.FragmentVenueDetailBinding
 import com.example.sporthub.ui.venueDetail.BookingAdapter
 import com.google.android.material.snackbar.Snackbar
 import androidx.navigation.fragment.findNavController
+import com.example.sporthub.viewmodel.VenueDetailViewModel
 
 class VenueDetailFragment : Fragment() {
 
