@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.lifecycle.ViewModelProvider
 import android.graphics.Color
+import androidx.core.content.ContentProviderCompat.requireContext
 import com.example.sporthub.R
 import com.example.sporthub.ui.MainActivity
 import com.example.sporthub.utils.ConnectivityHelper
@@ -191,8 +192,9 @@ class FavoriteSportsSelectionActivity : AppCompatActivity() {
     private fun navigateToMainActivity() {
         Log.d("SportsDebug", "Navigating to MainActivity")
 
+        // In navigateToMainActivity method before starting MainActivity:
         RegistrationTimerManager.stopTimerAndSave()
-
+        Log.d("FavoriteSportsActivity", "Stopping registration timer and saving")
         val intent = Intent(this, MainActivity::class.java)
 
 

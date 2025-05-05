@@ -3,6 +3,7 @@ package com.example.sporthub.ui.login
 import android.content.Intent
 import android.os.Bundle
 import android.text.InputFilter
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
@@ -28,8 +29,10 @@ class NameSelectionActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        RegistrationTimerManager.startTimer()
+
         setContentView(R.layout.activity_sign_in_name_selection)
+        RegistrationTimerManager.startTimer()
+        Log.d("NameSelectionActivity", "Starting registration timer")
 
         // Initialize the ViewModel
         viewModel = ViewModelProvider(this).get(NameSelectionViewModel::class.java)

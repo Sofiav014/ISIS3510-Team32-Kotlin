@@ -1,6 +1,8 @@
 package com.example.sporthub.utils
 
+import android.content.Context
 import android.util.Log
+import com.example.sporthub.utils.ConnectivityHelper
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FieldValue
 import java.util.concurrent.TimeUnit
@@ -8,8 +10,8 @@ import java.util.concurrent.TimeUnit
 object RegistrationTimerManager {
     private const val TAG = "RegistrationTimerManager"
 
-    // Firebase path for analytics storage
-    private const val ANALYTICS_PATH = "analytics/registration_time/all/Registration Flow"
+    // Updated Firebase path to match the path you mentioned
+    private const val ANALYTICS_PATH = "analytics/screen_time/all/Initiation View"
 
     // Start time of the registration process
     private var startTimeMillis: Long = 0
@@ -31,13 +33,19 @@ object RegistrationTimerManager {
     /**
      * Stop the timer and record the time spent in Firebase
      */
-    fun stopTimerAndSave() {
+    fun stopTimerAndSave(context: Context? = null) {
         if (isTimerRunning) {
             val endTimeMillis = System.currentTimeMillis()
             val durationSeconds = TimeUnit.MILLISECONDS.toSeconds(endTimeMillis - startTimeMillis)
 
-            saveRegistrationTime(durationSeconds)
+            // Check connectivity if context is provided
+            if (context != null && !ConnectivityHelper.isNetworkAvailable(context)) {
+                Log.w(TAG, "No internet connection, cannot save registration time")
+                isTimerRunning = false
+                return
+            }
 
+            saveRegistrationTime(durationSeconds)
             isTimerRunning = false
             Log.d(TAG, "Registration completed in $durationSeconds seconds")
         }
