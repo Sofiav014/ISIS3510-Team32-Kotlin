@@ -16,10 +16,9 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.sporthub.R
 import com.example.sporthub.data.model.Sport
-import com.example.sporthub.ui.findVenues.SportsAdapter
 import com.example.sporthub.utils.ConnectivityHelper
 import com.google.android.material.snackbar.Snackbar
-import com.bumptech.glide.Glide
+import com.example.sporthub.viewmodel.FindVenuesViewModel
 
 class FindVenuesFragment : Fragment() {
 
