@@ -1,4 +1,4 @@
-package com.example.sporthub.viewmodel
+package com.example.sporthub.ui.findVenues
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -15,7 +15,7 @@ class FindVenuesViewModel : ViewModel() {
     private val _venues = MutableLiveData<List<Venue>>()
     val venues: LiveData<List<Venue>> get() = _venues
 
-    val venueCache = HashMap<String, List<Venue>>()
+    val venueCache = mutableMapOf<String, List<Venue>>()
 
     // Lista de deportes disponibles
     val sportsList = listOf(
