@@ -11,7 +11,12 @@ object LoadingTimeTracker {
         startTime = System.currentTimeMillis()
     }
 
-    fun stopAndRecord(screenName: String) {
+    fun stopAndRecord(screenName: String, context: android.content.Context) {
+        if (!ConnectivityHelper.isNetworkAvailable(context)) {
+            Log.w("LoadTime", "Skipping Firebase update for $screenName due to no connection")
+            return
+        }
+
         val duration = System.currentTimeMillis() - startTime
         Log.d("LoadTime", "$screenName loaded in $duration ms")
 
