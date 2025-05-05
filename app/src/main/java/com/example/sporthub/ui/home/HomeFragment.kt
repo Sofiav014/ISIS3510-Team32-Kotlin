@@ -15,8 +15,6 @@ import com.example.sporthub.data.repository.HomeRepository
 import com.example.sporthub.databinding.FragmentHomeBinding
 import com.example.sporthub.viewmodel.HomeViewModel
 import com.example.sporthub.viewmodel.SharedUserViewModel
-import com.example.sporthub.utils.LoadingTimeTracker
-
 
 class HomeFragment : Fragment() {
 
@@ -38,8 +36,6 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
-
-        LoadingTimeTracker.start()
 
         setupRecyclerViews()
         observeViewModels()
@@ -113,8 +109,6 @@ class HomeFragment : Fragment() {
 
             Log.d("PopularityReport", "Items being submitted: $items")
             popularityAdapter.submitList(items)
-
-            LoadingTimeTracker.stopAndRecord("Home View", requireContext())
         }
 
         homeViewModel.upcomingBookings.observe(viewLifecycleOwner) { bookings ->

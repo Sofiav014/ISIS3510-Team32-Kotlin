@@ -1,4 +1,4 @@
-package com.example.sporthub.viewmodel
+package com.example.sporthub.ui.venueDetail
 
 import android.util.Log
 import androidx.lifecycle.LiveData
@@ -8,7 +8,6 @@ import com.example.sporthub.data.model.Booking
 import com.example.sporthub.data.model.Venue
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
-import java.util.Date
 
 class VenueDetailViewModel : ViewModel() {
 
@@ -40,7 +39,7 @@ class VenueDetailViewModel : ViewModel() {
                     }
                 } ?: emptyList()
 
-                rawVenue?.bookings = filterUpcomingBookings(bookingsParsed)
+                rawVenue?.bookings = bookingsParsed
                 _venue.value = rawVenue
 
                 Log.d("DEBUG", "Parsed bookings count: ${bookingsParsed.size}")
@@ -57,16 +56,5 @@ class VenueDetailViewModel : ViewModel() {
     fun setVenueFromCache(cachedVenue: Venue) {
         _venue.value = cachedVenue
     }
-
-    private fun filterUpcomingBookings(bookings: List<Booking>): List<Booking> {
-        val now = Date()
-        return bookings.filter { booking ->
-            val startAfterNow = booking.startTime?.toDate()?.after(now) == true
-            val hasAvailableSpots = booking.users.size < booking.maxUsers
-            startAfterNow && hasAvailableSpots
-        }
-    }
-
-
 
 }
