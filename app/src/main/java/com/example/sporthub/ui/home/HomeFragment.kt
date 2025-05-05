@@ -114,7 +114,7 @@ class HomeFragment : Fragment() {
             Log.d("PopularityReport", "Items being submitted: $items")
             popularityAdapter.submitList(items)
 
-            LoadingTimeTracker.stopAndRecord("home view", requireContext())
+            LoadingTimeTracker.stopAndRecord("Home View", requireContext())
         }
 
         homeViewModel.upcomingBookings.observe(viewLifecycleOwner) { bookings ->

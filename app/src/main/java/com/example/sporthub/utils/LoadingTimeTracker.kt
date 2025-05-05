@@ -17,7 +17,7 @@ object LoadingTimeTracker {
             return
         }
 
-        val duration = System.currentTimeMillis() - startTime
+        val duration = (System.currentTimeMillis() - startTime) / 1000.0
         Log.d("LoadTime", "$screenName loaded in $duration ms")
 
         val docRef = firestore
