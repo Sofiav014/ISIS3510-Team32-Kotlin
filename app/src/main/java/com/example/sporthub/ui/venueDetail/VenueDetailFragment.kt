@@ -13,14 +13,14 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
 import com.example.sporthub.R
-import com.example.sporthub.data.model.Venue
-import com.example.sporthub.ui.findVenues.FindVenuesViewModel
+import com.example.sporthub.viewmodel.FindVenuesViewModel
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.sporthub.databinding.FragmentVenueDetailBinding
 import com.example.sporthub.ui.venueDetail.BookingAdapter
 import com.google.android.material.snackbar.Snackbar
 import androidx.navigation.fragment.findNavController
+import com.example.sporthub.viewmodel.VenueDetailViewModel
 
 class VenueDetailFragment : Fragment() {
 
