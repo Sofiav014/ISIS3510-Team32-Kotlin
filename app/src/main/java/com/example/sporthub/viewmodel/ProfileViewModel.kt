@@ -2,9 +2,12 @@ package com.example.sporthub.ui.profile
 
 import android.app.Application
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.AndroidViewModel
@@ -122,9 +125,24 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun toggleDarkMode() {
+        // Check connectivity first
+        val connectivityManager = getApplication<Application>().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val isOffline = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val network = connectivityManager.activeNetwork
+            val capabilities = connectivityManager.getNetworkCapabilities(network)
+            capabilities == null || !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        } else {
+            @Suppress("DEPRECATION")
+            connectivityManager.activeNetworkInfo?.isConnected != true
+        }
+
+        // Log connectivity status
+        Log.d("ThemeSwitch", "Network status: ${if (isOffline) "Offline" else "Online"}")
+
         // Save the flag to prevent activities from recreating improperly
         val editor = getApplication<Application>().getSharedPreferences("theme_prefs", Context.MODE_PRIVATE).edit()
         editor.putBoolean("is_theme_changing", true)
+        editor.putBoolean("is_offline_theme_change", isOffline)
         editor.apply()
 
         // Get current theme status and toggle it
@@ -133,26 +151,31 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         // Update our LiveData before changing the theme
         _isDarkMode.value = newDarkModeValue
 
-        // Save user preference
+        // Save user preference LOCALLY WITHOUT NETWORK OPERATIONS if offline
         val userId = userRepository.getCurrentUser()?.uid
         if (userId != null) {
-            LocalThemeManager.saveUserTheme(getApplication(), userId, newDarkModeValue)
-        }
-
-        // Post the theme change to ensure all observers receive it
-        Handler(Looper.getMainLooper()).post {
-            // Change the theme
-            if (newDarkModeValue) {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            // Use a simpler local-only save when offline
+            if (isOffline) {
+                // Skip any potential network operations
+                val sharedPrefs = getApplication<Application>().getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+                sharedPrefs.edit()
+                    .putBoolean("theme_${userId}", newDarkModeValue)
+                    .apply()
             } else {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                // Normal save when online
+                LocalThemeManager.saveUserTheme(getApplication(), userId, newDarkModeValue)
             }
         }
+
+        // Apply the theme change immediately without delay
+        val mode = if (newDarkModeValue) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+        AppCompatDelegate.setDefaultNightMode(mode)
 
         // Clear the flag after a short delay to ensure it's processed
         Handler(Looper.getMainLooper()).postDelayed({
             val editorCleanup = getApplication<Application>().getSharedPreferences("theme_prefs", Context.MODE_PRIVATE).edit()
             editorCleanup.putBoolean("is_theme_changing", false)
+            editorCleanup.putBoolean("is_offline_theme_change", false)
             editorCleanup.apply()
         }, 1000) // Give it a full second to complete the transition
     }

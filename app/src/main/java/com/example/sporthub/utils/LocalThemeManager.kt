@@ -1,6 +1,9 @@
 package com.example.sporthub.utils
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
 import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 
@@ -19,6 +22,25 @@ object LocalThemeManager {
      */
     fun saveUserTheme(context: Context, userId: String, isDarkMode: Boolean) {
         try {
+            // Check connectivity
+            val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val isOffline = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val network = connectivityManager.activeNetwork
+                val capabilities = connectivityManager.getNetworkCapabilities(network)
+                capabilities == null || !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            } else {
+                @Suppress("DEPRECATION")
+                connectivityManager.activeNetworkInfo?.isConnected != true
+            }
+
+            // If offline, use the offline method
+            if (isOffline) {
+                Log.d(TAG, "Network offline, using offline save method")
+                saveUserThemeOffline(context, userId, isDarkMode)
+                return
+            }
+
+            // Continue with normal online saving
             val sharedPrefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
             sharedPrefs.edit()
                 .putBoolean(KEY_PREFIX + userId, isDarkMode)
@@ -97,6 +119,18 @@ object LocalThemeManager {
             }
         } catch (e: Exception) {
             Log.e("LocalThemeManager", "Error applying theme: ${e.message}")
+        }
+    }
+
+    fun saveUserThemeOffline(context: Context, userId: String, isDarkMode: Boolean) {
+        try {
+            val sharedPrefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            sharedPrefs.edit()
+                .putBoolean(KEY_PREFIX + userId, isDarkMode)
+                .apply()
+            Log.d(TAG, "Saved offline theme preference for user $userId: isDarkMode=$isDarkMode")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error saving offline theme preference: ${e.message}")
         }
     }
 }

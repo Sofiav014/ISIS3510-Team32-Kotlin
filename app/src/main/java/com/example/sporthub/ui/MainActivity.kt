@@ -43,6 +43,7 @@ import com.example.sporthub.utils.LocalThemeManager
 import com.google.android.material.appbar.MaterialToolbar
 import androidx.activity.OnBackPressedCallback
 import androidx.navigation.NavController
+import com.example.sporthub.utils.ThemeSwitcher
 
 class MainActivity : AppCompatActivity() {
 
@@ -63,6 +64,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+
+        ThemeSwitcher.init(this)
+        setContentView(R.layout.activity_main)
         mAuth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
         userRepository = UserRepository()
@@ -77,6 +81,34 @@ class MainActivity : AppCompatActivity() {
 
         // Apply saved theme preference immediately on startup
         applyUserThemePreference(uid)
+
+
+        fun applyUserThemePreferenceOffline() {
+            val isOfflineThemeChange = getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+                .getBoolean("is_offline_theme_change", false)
+
+            if (isOfflineThemeChange) {
+                Log.d(TAG, "Applying offline theme change")
+
+                // Get the user ID
+                val userId = mAuth.currentUser?.uid ?: return
+
+                // Read directly from shared preferences
+                val isDarkMode = getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+                    .getBoolean("theme_${userId}", false)
+
+                // Apply immediately
+                AppCompatDelegate.setDefaultNightMode(
+                    if (isDarkMode) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+                )
+
+                // Clear the flag
+                getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+                    .edit()
+                    .putBoolean("is_offline_theme_change", false)
+                    .apply()
+            }
+        }
 
         userRepository.getUserModel(uid).observe(this) { user ->
             if (user != null && (user.id != "")) {

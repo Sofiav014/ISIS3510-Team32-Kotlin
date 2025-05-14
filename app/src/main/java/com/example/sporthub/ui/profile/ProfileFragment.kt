@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -32,6 +34,7 @@ import com.example.sporthub.ui.profile.edit.EditNameActivity
 import com.example.sporthub.ui.profile.edit.EditGenderActivity
 import com.example.sporthub.ui.profile.edit.EditBirthDateActivity
 import com.example.sporthub.ui.profile.edit.EditSportsActivity
+import com.example.sporthub.utils.ThemeSwitcher
 
 class ProfileFragment : Fragment() {
 
@@ -87,43 +90,29 @@ class ProfileFragment : Fragment() {
         // Load data
         viewModel.loadUserData()
 
-        fun setupThemeSwitchListener() {
-            // Reset any previous listener
-            themeSwitch.setOnCheckedChangeListener(null)
+        fun setupThemeSwitch() {
+            // Get the current theme state (completely independent of any network operations)
+            val isDarkMode = ThemeSwitcher.isDarkMode(requireContext())
 
-            // Get the current theme mode
-            val isDarkMode = viewModel.isDarkMode.value ?: false
-
-            // Set the switch state without triggering the listener
+            // Update UI accordingly
             themeSwitch.isChecked = isDarkMode
+            themeLabel.text = if (isDarkMode) "Dark Mode" else "Light Mode"
+            themeIcon.setImageResource(
+                if (isDarkMode) R.drawable.ic_dark_mode else R.drawable.ic_light_mode
+            )
 
-            // Update UI to match the current theme
-            updateThemeUI(isDarkMode)
-
-            // Add the listener now that switch is properly initialized
+            // Set up the switch listener
             themeSwitch.setOnCheckedChangeListener { _, isChecked ->
-                // Only toggle if there's an actual change
-                val currentValue = viewModel.isDarkMode.value ?: false
-                if (isChecked != currentValue) {
-                    Log.d("ThemeSwitch", "User toggled theme: dark mode = $isChecked")
+                // Disable the switch temporarily to prevent multiple toggles
+                themeSwitch.isEnabled = false
 
-                    // Prevent multiple clicks during theme change
-                    themeSwitch.isEnabled = false
+                // Toggle the theme using our simplified implementation
+                ThemeSwitcher.toggleTheme(requireContext())
 
-                    // Flag that UI should be refreshed after theme change
-                    requireActivity().getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
-                        .edit()
-                        .putBoolean("was_theme_changing", true)
-                        .apply()
-
-                    // Apply the theme change
-                    viewModel.toggleDarkMode()
-
-                    // Re-enable after a delay
-                    themeSwitch.postDelayed({
-                        themeSwitch.isEnabled = true
-                    }, 1000)
-                }
+                // Re-enable the switch after a short delay
+                Handler(Looper.getMainLooper()).postDelayed({
+                    themeSwitch.isEnabled = true
+                }, 1000)
             }
         }
 
@@ -157,13 +146,13 @@ class ProfileFragment : Fragment() {
                 if (themeSwitch.isChecked != isDarkMode) {
                     themeSwitch.setOnCheckedChangeListener(null)
                     themeSwitch.isChecked = isDarkMode
-                    setupThemeSwitchListener()
+                    setupThemeSwitch()
                 }
             }
         }
 
 
-        setupThemeSwitchListener()
+        setupThemeSwitch()
         observeThemeChanges()
     }
 
