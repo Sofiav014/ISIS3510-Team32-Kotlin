@@ -11,11 +11,15 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.sporthub.data.model.Booking
 import com.example.sporthub.data.repository.HomeRepository
 import com.example.sporthub.databinding.FragmentHomeBinding
 import com.example.sporthub.viewmodel.HomeViewModel
 import com.example.sporthub.viewmodel.SharedUserViewModel
 import com.example.sporthub.utils.LoadingTimeTracker
+import com.google.android.material.snackbar.Snackbar
+import com.example.sporthub.data.repository.UserRepository
+import com.example.sporthub.viewmodel.CreateBookingViewModel
 
 
 class HomeFragment : Fragment() {
@@ -25,6 +29,8 @@ class HomeFragment : Fragment() {
 
     private val userViewModel: SharedUserViewModel by activityViewModels()
     private val homeViewModel by lazy { HomeViewModel(HomeRepository()) }
+    private val createBookingViewModel: CreateBookingViewModel by activityViewModels()
+    private val userRepository = UserRepository()
 
     private lateinit var popularityAdapter: PopularityAdapter
     private lateinit var upcomingBookingsAdapter: UpcomingBookingsAdapter
@@ -60,10 +66,12 @@ class HomeFragment : Fragment() {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
             adapter = upcomingBookingsAdapter
             binding.recyclerUpcomingBookings.isNestedScrollingEnabled = false
-
         }
 
-        recommendedBookingsAdapter = RecommendedBookingsAdapter(homeViewModel)
+        recommendedBookingsAdapter = RecommendedBookingsAdapter(homeViewModel) { booking ->
+            joinBooking(booking)
+        }
+
         binding.recyclerRecommendedBookings.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = recommendedBookingsAdapter
@@ -85,29 +93,14 @@ class HomeFragment : Fragment() {
             Log.d("PopularityReport", "Received report: $report")
 
             val items = listOfNotNull(
-                // For the Best Rated venue, include the rating as additional info
                 report.highestRatedVenue?.let {
-                    PopularityItem.VenueItem(
-                        it,
-                        "Best Rated Overall",
-                        "★ ${String.format("%.1f", it.rating)}"
-                    )
+                    PopularityItem.VenueItem(it, "Best Rated Overall", "★ ${String.format("%.1f", it.rating)}")
                 },
-                // Include most played sport if it's not "unknown"
                 report.mostPlayedSport.takeIf { it.id != "unknown" }?.let {
-                    PopularityItem.SportItem(
-                        it,
-                        "Most Played by You",
-                        "Played ${report.mostPlayedSportCount} time(s)"
-                    )
+                    PopularityItem.SportItem(it, "Most Played by You", "Played ${report.mostPlayedSportCount} time(s)")
                 },
-                // For the Most Booked venue, include the booking count as additional info
                 report.mostBookedVenue?.let {
-                    PopularityItem.VenueItem(
-                        it,
-                        "Most Booked Overall",
-                        "${report.mostBookedCount} bookings"
-                    )
+                    PopularityItem.VenueItem(it, "Most Booked Overall", "${report.mostBookedCount} bookings")
                 }
             )
 
@@ -119,15 +112,14 @@ class HomeFragment : Fragment() {
 
         homeViewModel.upcomingBookings.observe(viewLifecycleOwner) { bookings ->
             upcomingBookingsAdapter.submitList(bookings)
+            upcomingBookingsAdapter.notifyDataSetChanged()
 
             Log.d("UpcomingBookings", "Upcoming bookings list: $bookings")
 
-            // Show message if there are no bookings
             binding.textNoUpcomingBookings.visibility = if (bookings.isEmpty()) View.VISIBLE else View.GONE
         }
 
         homeViewModel.recommendedBookings.observe(viewLifecycleOwner) { bookings ->
-            // Si estamos offline, no mostramos bookings recomendados
             if (homeViewModel.isOffline.value == true) {
                 recommendedBookingsAdapter.submitList(emptyList())
             } else {
@@ -136,11 +128,43 @@ class HomeFragment : Fragment() {
         }
 
         homeViewModel.isOffline.observe(viewLifecycleOwner) { offline ->
-            binding.textRecommendedOfflineWarning.visibility =
-                if (offline) View.VISIBLE else View.GONE
+            binding.textRecommendedOfflineWarning.visibility = if (offline) View.VISIBLE else View.GONE
+        }
+
+        createBookingViewModel.bookingCreatedEvent.observe(viewLifecycleOwner) {
+            // Reload or refresh the list of bookings
+            userViewModel.currentUser.value?.let { user ->
+                homeViewModel.refreshBookings(user)
+            }
         }
 
     }
+
+    private fun joinBooking(booking: Booking) {
+        userViewModel.currentUser.value?.let { user ->
+            userRepository.joinBooking(user.id, booking).addOnSuccessListener {
+                val updatedBookings = user.bookings.toMutableList().apply { add(booking) }
+                val updatedUser = user.copy(bookings = updatedBookings)
+
+                userViewModel.updateCurrentUser(updatedUser)  // Triggers UI update
+
+                // Reload home data to show updated bookings
+                homeViewModel.loadHomeData(requireContext(), updatedUser)
+
+                Snackbar.make(binding.root, "You have joined the booking!", Snackbar.LENGTH_SHORT).show()
+            }.addOnFailureListener { e ->
+                Snackbar.make(binding.root, "Failed to join the booking: ${e.message}", Snackbar.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun refreshUpcomingBookings() {
+        // Fetch the updated bookings and update the RecyclerView or UI component that displays bookings
+        userViewModel.currentUser.value?.let { user ->
+            homeViewModel.getUpcomingBookings(user)  // Pass the user parameter
+        }
+    }
+
 
     override fun onDestroyView() {
         super.onDestroyView()
@@ -150,9 +174,8 @@ class HomeFragment : Fragment() {
     override fun onStart() {
         super.onStart()
         networkReceiver = NetworkReceiver {
-            val user = userViewModel.currentUser.value
-            user?.let {
-                homeViewModel.loadHomeData(requireContext(), it)
+            userViewModel.currentUser.value?.let { user ->
+                homeViewModel.loadHomeData(requireContext(), user)
             }
         }
         val filter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
@@ -161,7 +184,6 @@ class HomeFragment : Fragment() {
             homeViewModel.loadHomeData(requireContext(), user)
         }
     }
-
 
     override fun onStop() {
         super.onStop()
