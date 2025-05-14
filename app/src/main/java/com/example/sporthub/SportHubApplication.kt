@@ -2,6 +2,7 @@ package com.example.sporthub
 
 import android.app.Application
 import android.util.Log
+import com.example.sporthub.data.db.AppDatabase
 import com.example.sporthub.utils.ThemeManager
 
 class SportHubApplication : Application() {
@@ -9,7 +10,7 @@ class SportHubApplication : Application() {
         // Add variable to track if registration is in progress
         var isRegistrationInProgress = false
     }
-
+    val database by lazy { AppDatabase.getDatabase(this) }
     override fun onCreate() {
         super.onCreate()
 

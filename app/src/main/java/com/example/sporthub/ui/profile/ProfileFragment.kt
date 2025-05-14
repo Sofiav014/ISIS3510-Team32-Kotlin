@@ -3,6 +3,10 @@ package com.example.sporthub.ui.profile
 import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Drawable
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkRequest
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -19,6 +23,7 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -26,6 +31,7 @@ import com.example.sporthub.R
 import com.example.sporthub.data.model.Sport
 import com.example.sporthub.data.model.User
 import com.example.sporthub.ui.login.SignInActivity
+import com.example.sporthub.utils.ConnectivityHelper
 import com.example.sporthub.viewmodel.SharedUserViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -34,12 +40,14 @@ import com.example.sporthub.ui.profile.edit.EditNameActivity
 import com.example.sporthub.ui.profile.edit.EditGenderActivity
 import com.example.sporthub.ui.profile.edit.EditBirthDateActivity
 import com.example.sporthub.ui.profile.edit.EditSportsActivity
+import com.example.sporthub.viewmodel.FavoriteVenuesViewModel
 import com.google.android.material.snackbar.Snackbar
 
 class ProfileFragment : Fragment() {
 
     private lateinit var viewModel: ProfileViewModel
     private val sharedUserViewModel: SharedUserViewModel by activityViewModels()
+    private val favoriteVenuesViewModel: FavoriteVenuesViewModel by viewModels()
 
     private lateinit var profileName: TextView
     private lateinit var genderValue: TextView
@@ -56,6 +64,9 @@ class ProfileFragment : Fragment() {
     private lateinit var themeSwitch: SwitchCompat
 
     private lateinit var favoriteVenueAdapter: FavoriteVenueAdapter
+
+    // Network callback for syncing when connection is restored
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -90,6 +101,11 @@ class ProfileFragment : Fragment() {
 
         // Load data
         viewModel.loadUserData()
+
+        // Sync with remote if online
+        if (ConnectivityHelper.isNetworkAvailable(requireContext())) {
+            favoriteVenuesViewModel.syncWithRemote()
+        }
     }
 
     private fun initViews(view: View) {
@@ -129,7 +145,8 @@ class ProfileFragment : Fragment() {
             updateUI(user)
         }
 
-        viewModel.favoriteVenues.observe(viewLifecycleOwner) { venues ->
+        // Observe favorite venues from Room database instead of Firebase
+        favoriteVenuesViewModel.favoriteVenues.observe(viewLifecycleOwner) { venues ->
             favoriteVenueAdapter.submitList(venues)
 
             // Show or hide the no venues message
@@ -194,7 +211,6 @@ class ProfileFragment : Fragment() {
             }
         }
     }
-
 
     private fun preloadThemeResources() {
         // This method preloads essential UI resources for both themes
@@ -280,17 +296,8 @@ class ProfileFragment : Fragment() {
         // Update favorite sports
         updateFavoriteSports(user.sportsLiked)
 
-        // Display favorite venues
-        favoriteVenueAdapter.submitList(user.venuesLiked)
-
-        // Show or hide the no venues message
-        if (user.venuesLiked.isNullOrEmpty()) {
-            noFavoriteVenuesText.visibility = View.VISIBLE
-            favoriteVenuesRecyclerView.visibility = View.GONE
-        } else {
-            noFavoriteVenuesText.visibility = View.GONE
-            favoriteVenuesRecyclerView.visibility = View.VISIBLE
-        }
+        // We don't need to update favorite venues here anymore since they're observed from Room
+        // This ensures offline availability
     }
 
     private fun updateFavoriteSports(sports: List<Sport>) {
@@ -381,6 +388,40 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+
+        // Set up network callback to sync when connectivity is restored
+        networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                // Sync with remote when connection is restored
+                favoriteVenuesViewModel.syncWithRemote()
+            }
+        }
+
+        // Register the network callback
+        val connectivityManager =
+            requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            connectivityManager.registerDefaultNetworkCallback(networkCallback!!)
+        } else {
+            val request = NetworkRequest.Builder().build()
+            connectivityManager.registerNetworkCallback(request, networkCallback!!)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        // Unregister the network callback to prevent leaks
+        networkCallback?.let {
+            val connectivityManager =
+                requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            connectivityManager.unregisterNetworkCallback(it)
+        }
+    }
+
     override fun onResume() {
         super.onResume()
 
@@ -400,5 +441,4 @@ class ProfileFragment : Fragment() {
             Log.d("ProfileFragment", "User data already loaded, skipping reload")
         }
     }
-
 }
