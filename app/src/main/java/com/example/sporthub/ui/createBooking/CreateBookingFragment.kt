@@ -183,7 +183,7 @@ class CreateBookingFragment : Fragment() {
     }
 
     private fun setupPlayerCountSpinner() {
-        val players = (1..6).map { it.toString() }
+        val players = (1..22).map { it.toString() }
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, players)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.playerCountSpinner.adapter = adapter
