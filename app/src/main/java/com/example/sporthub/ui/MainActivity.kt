@@ -1,5 +1,6 @@
 package com.example.sporthub.ui
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -234,5 +235,24 @@ class MainActivity : AppCompatActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        // Check if we're returning from a theme change
+        val wasThemeChanging = getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+            .getBoolean("was_theme_changing", false)
+
+        if (wasThemeChanging) {
+            // Clear the flag
+            getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("was_theme_changing", false)
+                .apply()
+
+            // Refresh the UI
+            recreate()
+        }
     }
 }

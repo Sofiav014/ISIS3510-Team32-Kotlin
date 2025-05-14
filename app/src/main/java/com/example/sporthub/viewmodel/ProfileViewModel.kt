@@ -127,17 +127,10 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         editor.putBoolean("is_theme_changing", true)
         editor.apply()
 
-        // Get current theme status
+        // Get current theme status and toggle it
         val newDarkModeValue = !isDarkModeActive()
 
-        // Change the theme
-        if (newDarkModeValue) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-        }
-
-        // Update our LiveData
+        // Update our LiveData before changing the theme
         _isDarkMode.value = newDarkModeValue
 
         // Save user preference
@@ -146,12 +139,22 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             LocalThemeManager.saveUserTheme(getApplication(), userId, newDarkModeValue)
         }
 
+        // Post the theme change to ensure all observers receive it
+        Handler(Looper.getMainLooper()).post {
+            // Change the theme
+            if (newDarkModeValue) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            }
+        }
+
         // Clear the flag after a short delay to ensure it's processed
         Handler(Looper.getMainLooper()).postDelayed({
-            val editor = getApplication<Application>().getSharedPreferences("theme_prefs", Context.MODE_PRIVATE).edit()
-            editor.putBoolean("is_theme_changing", false)
-            editor.apply()
-        }, 500)
+            val editorCleanup = getApplication<Application>().getSharedPreferences("theme_prefs", Context.MODE_PRIVATE).edit()
+            editorCleanup.putBoolean("is_theme_changing", false)
+            editorCleanup.apply()
+        }, 1000) // Give it a full second to complete the transition
     }
 
     fun signOut() {

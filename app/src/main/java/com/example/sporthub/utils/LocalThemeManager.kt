@@ -2,6 +2,7 @@ package com.example.sporthub.utils
 
 import android.content.Context
 import android.util.Log
+import androidx.appcompat.app.AppCompatDelegate
 
 object LocalThemeManager {
 
@@ -77,6 +78,25 @@ object LocalThemeManager {
             Log.d(TAG, "Cleared all theme preferences")
         } catch (e: Exception) {
             Log.e(TAG, "Error clearing all theme preferences: ${e.message}")
+        }
+    }
+
+    fun applyUserTheme(context: Context, userId: String) {
+        try {
+            val isDarkMode = getUserTheme(context, userId)
+
+            if (isDarkMode != null) {
+                // Apply theme only if it's different from current to avoid unnecessary recreation
+                val currentMode = if (AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES) true else false
+
+                if (isDarkMode != currentMode) {
+                    AppCompatDelegate.setDefaultNightMode(
+                        if (isDarkMode) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("LocalThemeManager", "Error applying theme: ${e.message}")
         }
     }
 }

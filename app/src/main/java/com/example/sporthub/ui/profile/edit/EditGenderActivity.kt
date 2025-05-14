@@ -2,6 +2,8 @@ package com.example.sporthub.ui.profile.edit
 
 import android.content.Context
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.widget.ImageButton
 import android.widget.TextView
@@ -29,10 +31,14 @@ class EditGenderActivity : AppCompatActivity() {
             .getBoolean("is_theme_changing", false)
 
         if (isThemeChanging) {
-
+            // Set minimal content until we can safely finish
+            super.onCreate(savedInstanceState)
             setContentView(R.layout.activity_edit_name)
 
-            initViews()
+            // Just return early and finish the activity
+            Handler(Looper.getMainLooper()).postDelayed({
+                finish()
+            }, 100)
             return
         }
 
@@ -87,6 +93,28 @@ class EditGenderActivity : AppCompatActivity() {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error setting up gender selection: ${e.message}")
+        }
+
+        fun handleThemeChange(activity: AppCompatActivity) {
+            val isThemeChanging = activity.getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+                .getBoolean("is_theme_changing", false)
+
+            if (isThemeChanging) {
+                // Just return early without doing the normal initialization
+                // This prevents UI problems during theme changes
+                Log.d("ThemeChange", "Theme changing detected, skipping initialization")
+
+                // Clear flag for next time
+                activity.getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+                    .edit()
+                    .putBoolean("is_theme_changing", false)
+                    .apply()
+
+                // Finish the activity to avoid broken UI state
+                Handler(Looper.getMainLooper()).postDelayed({
+                    activity.finish()
+                }, 100)
+            }
         }
     }
 

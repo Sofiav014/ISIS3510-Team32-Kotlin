@@ -1,5 +1,6 @@
 package com.example.sporthub.ui.profile
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -85,6 +86,85 @@ class ProfileFragment : Fragment() {
 
         // Load data
         viewModel.loadUserData()
+
+        fun setupThemeSwitchListener() {
+            // Reset any previous listener
+            themeSwitch.setOnCheckedChangeListener(null)
+
+            // Get the current theme mode
+            val isDarkMode = viewModel.isDarkMode.value ?: false
+
+            // Set the switch state without triggering the listener
+            themeSwitch.isChecked = isDarkMode
+
+            // Update UI to match the current theme
+            updateThemeUI(isDarkMode)
+
+            // Add the listener now that switch is properly initialized
+            themeSwitch.setOnCheckedChangeListener { _, isChecked ->
+                // Only toggle if there's an actual change
+                val currentValue = viewModel.isDarkMode.value ?: false
+                if (isChecked != currentValue) {
+                    Log.d("ThemeSwitch", "User toggled theme: dark mode = $isChecked")
+
+                    // Prevent multiple clicks during theme change
+                    themeSwitch.isEnabled = false
+
+                    // Flag that UI should be refreshed after theme change
+                    requireActivity().getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+                        .edit()
+                        .putBoolean("was_theme_changing", true)
+                        .apply()
+
+                    // Apply the theme change
+                    viewModel.toggleDarkMode()
+
+                    // Re-enable after a delay
+                    themeSwitch.postDelayed({
+                        themeSwitch.isEnabled = true
+                    }, 1000)
+                }
+            }
+        }
+
+        fun updateThemeUI(isDarkMode: Boolean) {
+            // Update theme label
+            themeLabel.text = if (isDarkMode) "Dark Mode" else "Light Mode"
+
+            // Update theme icon
+            val iconResourceId = if (isDarkMode) {
+                R.drawable.ic_dark_mode
+            } else {
+                R.drawable.ic_light_mode
+            }
+
+            try {
+                themeIcon.setImageResource(iconResourceId)
+            } catch (e: Exception) {
+                Log.e("ProfileFragment", "Error setting theme icon: ${e.message}")
+            }
+        }
+
+        fun observeThemeChanges() {
+            // Observe theme mode changes
+            viewModel.isDarkMode.observe(viewLifecycleOwner) { isDarkMode ->
+                Log.d("ProfileFragment", "Theme changed. isDarkMode=$isDarkMode")
+
+                // Update UI
+                updateThemeUI(isDarkMode)
+
+                // Update switch state without triggering listener
+                if (themeSwitch.isChecked != isDarkMode) {
+                    themeSwitch.setOnCheckedChangeListener(null)
+                    themeSwitch.isChecked = isDarkMode
+                    setupThemeSwitchListener()
+                }
+            }
+        }
+
+
+        setupThemeSwitchListener()
+        observeThemeChanges()
     }
 
     private fun initViews(view: View) {
