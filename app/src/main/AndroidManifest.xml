@@ -12,9 +12,9 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@drawable/logo"
+        android:icon="@drawable/logoclean"
         android:label="@string/app_name"
-        android:roundIcon="@drawable/logo_round"
+        android:roundIcon="@drawable/logoround"
         android:supportsRtl="true"
         android:theme="@style/Theme.SportHUB"
         tools:targetApi="31">
