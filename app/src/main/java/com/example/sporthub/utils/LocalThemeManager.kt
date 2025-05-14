@@ -9,16 +9,19 @@ object LocalThemeManager {
     private const val KEY_PREFIX = "theme_for_user_"
     private const val TAG = "LocalThemeManager"
 
-    /**
-     * Save the user's theme preference
-     *
-     * @param context Application context
-     * @param userId The user ID to associate with this theme preference
-     * @param isDarkMode True if the user prefers dark mode, false for light mode
-     */
+
     fun saveUserTheme(context: Context, userId: String, isDarkMode: Boolean) {
         try {
             val sharedPrefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            // Check if the value is already saved to avoid unnecessary writes
+            if (sharedPrefs.contains(KEY_PREFIX + userId) &&
+                sharedPrefs.getBoolean(KEY_PREFIX + userId, false) == isDarkMode) {
+                // Value already matches, no need to write again
+                Log.d(TAG, "Theme preference unchanged for user $userId: isDarkMode=$isDarkMode")
+                return
+            }
+
+            // Only save if it's actually changing
             sharedPrefs.edit()
                 .putBoolean(KEY_PREFIX + userId, isDarkMode)
                 .apply()

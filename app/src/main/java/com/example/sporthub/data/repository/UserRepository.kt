@@ -20,6 +20,8 @@ import androidx.lifecycle.MutableLiveData
 class UserRepository {
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
+    private var cachedUserLiveData: MutableLiveData<User>? = null
+
 
     fun getCurrentUser(): FirebaseUser? = auth.currentUser
 
@@ -76,9 +78,16 @@ class UserRepository {
             null
         }
     }
+    fun clearUserCache() {
+        cachedUserLiveData = null
+    }
 
-    fun getUserModel(userId:String): LiveData<User>{
+    fun getUserModel(userId: String): LiveData<User> {
+        // Usar la caché si ya está disponible
+        cachedUserLiveData?.let { return it }
+
         val liveData = MutableLiveData<User>()
+        cachedUserLiveData = liveData
 
         db.collection("users").document(userId).get()
             .addOnSuccessListener { snapshot ->
@@ -161,28 +170,14 @@ class UserRepository {
                     liveData.value = currentUser
 
                 } else {
-                    liveData.value = User( // Default user if document doesn't exist
-                        id = "",
-                        name = "",
-                        gender = "",
-                        birthDate = null,
-                        sportsLiked = emptyList(),
-                        bookings = emptyList(),
-                        venuesLiked = emptyList()
-                    )
+                    liveData.value = User("", "", "", null, emptyList(), emptyList(), emptyList())
                 }
             }
             .addOnFailureListener {
-                liveData.value = User( // Default user on failure
-                    id = "",
-                    name = "",
-                    gender = "",
-                    birthDate = null,
-                    sportsLiked = emptyList(),
-                    bookings = emptyList(),
-                    venuesLiked = emptyList()
-                )
+                liveData.value = User("", "", "", null, emptyList(), emptyList(), emptyList())
             }
+
         return liveData
     }
+
 }

@@ -5,25 +5,32 @@ import android.content.Context
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.sporthub.data.model.User
 import com.example.sporthub.data.model.Venue
 import com.example.sporthub.data.repository.UserRepository
 import com.example.sporthub.ui.login.SignInActivity
 import com.example.sporthub.utils.LocalThemeManager
 import com.example.sporthub.utils.ThemeManager
+import com.example.sporthub.utils.ThemeSwitcher
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
+import androidx.core.content.edit
+import androidx.lifecycle.Observer
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -50,24 +57,41 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         updateThemeStatus()
     }
 
+    private var currentUserObserver: Observer<User>? = null
+
     fun loadUserData() {
-        _isLoading.value = true
-
         val currentUser = userRepository.getCurrentUser()
-        if (currentUser != null) {
-            userRepository.getUserModel(currentUser.uid).observeForever { user ->
-                _userData.value = user
-                _favoriteVenues.value = user.venuesLiked
-                _isLoading.value = false
-
-                // Update theme status based on current user preference
-                updateThemeStatus()
-            }
-        } else {
+        if (currentUser == null) {
             _errorMessage.value = "User not authenticated"
             _isLoading.value = false
+            return
         }
+
+        // Si ya tenemos datos, no recargar (salvo que quieras forzar recarga)
+        if (_userData.value != null) {
+            Log.d("ProfileViewModel", "User already loaded, skipping fetch")
+            return
+        }
+
+        _isLoading.value = true
+        Log.d("ProfileViewModel", "Fetching user data for ${currentUser.uid}")
+
+        currentUserObserver?.let {
+            userRepository.getUserModel(currentUser.uid).removeObserver(it)
+        }
+
+        val observer = Observer<User> { user ->
+            Log.d("ProfileViewModel", "User data received: ${user.name}")
+            _userData.value = user
+            _favoriteVenues.value = user.venuesLiked
+            _isLoading.value = false
+            updateThemeStatus()
+        }
+
+        currentUserObserver = observer
+        userRepository.getUserModel(currentUser.uid).observeForever(observer)
     }
+
 
     fun getCurrentUserId(): String? {
         return userRepository.getCurrentUser()?.uid
@@ -121,37 +145,53 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+
     fun toggleDarkMode() {
-        // Save the flag to prevent activities from recreating improperly
-        val editor = getApplication<Application>().getSharedPreferences("theme_prefs", Context.MODE_PRIVATE).edit()
-        editor.putBoolean("is_theme_changing", true)
-        editor.apply()
+        try {
+            val appContext = getApplication<Application>()
+            val prefs = appContext.getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
 
-        // Get current theme status
-        val newDarkModeValue = !isDarkModeActive()
+            // 1. Marcar que el cambio de tema está en curso
+            prefs.edit().putBoolean("is_theme_changing", true).commit()
 
-        // Change the theme
-        if (newDarkModeValue) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            // 2. Determinar el nuevo modo de tema
+            Log.d("ProfileViewModel", "Toggling dark mode. Current: ${isDarkModeActive()}")
+            val newDarkModeValue = !isDarkModeActive()
+            _isDarkMode.value = newDarkModeValue
+
+            // 3. Aplicar el nuevo tema inmediatamente (NO depende de red ni usuario)
+            val mode = if (newDarkModeValue) AppCompatDelegate.MODE_NIGHT_YES
+            else AppCompatDelegate.MODE_NIGHT_NO
+            AppCompatDelegate.setDefaultNightMode(mode)
+
+            // 4. Guardar la preferencia de forma asíncrona, pero NO bloquear el cambio
+            val userId = userRepository.getCurrentUser()?.uid
+            if (userId != null) {
+                // Usamos apply() porque no necesitamos persistencia inmediata
+                appContext.getSharedPreferences("user_theme_prefs", Context.MODE_PRIVATE)
+                    .edit()
+                    .putBoolean("theme_for_user_$userId", newDarkModeValue)
+                    .apply()
+            }
+
+            // 5. Limpiar el flag de transición después de un tiempo suficiente
+            Handler(Looper.getMainLooper()).postDelayed({
+                prefs.edit().putBoolean("is_theme_changing", false).apply()
+            }, 1500) // Aumentado a 1500ms para evitar problemas si el sistema va lento
+
+        } catch (e: Exception) {
+            Log.e("ProfileViewModel", "Error in toggleDarkMode: ${e.message}")
         }
+    }
 
-        // Update our LiveData
-        _isDarkMode.value = newDarkModeValue
 
-        // Save user preference
-        val userId = userRepository.getCurrentUser()?.uid
-        if (userId != null) {
-            LocalThemeManager.saveUserTheme(getApplication(), userId, newDarkModeValue)
+    fun Context.isThemeChanging(): Boolean {
+        return try {
+            getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+                .getBoolean("is_theme_changing", false)
+        } catch (e: Exception) {
+            false
         }
-
-        // Clear the flag after a short delay to ensure it's processed
-        Handler(Looper.getMainLooper()).postDelayed({
-            val editor = getApplication<Application>().getSharedPreferences("theme_prefs", Context.MODE_PRIVATE).edit()
-            editor.putBoolean("is_theme_changing", false)
-            editor.apply()
-        }, 500)
     }
 
     fun signOut() {
