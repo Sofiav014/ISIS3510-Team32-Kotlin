@@ -3,6 +3,9 @@ package com.example.sporthub.data.repository
 import com.example.sporthub.data.model.Booking
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.tasks.await
 
 class BookingRepository {
 
@@ -10,18 +13,14 @@ class BookingRepository {
     private val bookingsRef = db.collection("bookings")
 
 
-    fun createBooking(
-        booking: Booking,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
+    suspend fun createBooking(
+        booking: Booking) {
         val bookingRef = db.collection("bookings").document(booking.id)
         val userId = booking.users.firstOrNull()
         val venue = booking.venue
 
         if (userId == null || venue == null) {
-            onFailure(IllegalArgumentException("Booking must have a user and venue"))
-            return
+            throw IllegalArgumentException("Booking must have a user and venue")
         }
 
         val userRef = db.collection("users").document(userId)
@@ -54,30 +53,33 @@ class BookingRepository {
             "users" to listOf(userId),
         )
 
-        db.runBatch { batch ->
-            batch.set(bookingRef, bookingData)
-            batch.update(userRef, "bookings", FieldValue.arrayUnion(bookingData))
-            batch.update(venueRef, "bookings", FieldValue.arrayUnion(bookingVenueData))
+        withContext(Dispatchers.IO) {
+            try {
+                db.runBatch { batch ->
+                    batch.set(bookingRef, bookingData)
+                    batch.update(userRef, "bookings", FieldValue.arrayUnion(bookingData))
+                    batch.update(venueRef, "bookings", FieldValue.arrayUnion(bookingVenueData))
 
-            venue.sport?.name?.let { sportName ->
-                batch.update(metadataRef, "sports_bookings.$sportName", FieldValue.increment(1))
+                    venue.sport?.name?.let { sportName ->
+                        batch.update(metadataRef, "sports_bookings.$sportName", FieldValue.increment(1))
+                    }
+
+                    batch.update(metadataRef, "venues_bookings.${venue.id}", FieldValue.increment(1))
+                }.await()  // This will suspend until the batch operation is complete
+            } catch (e: Exception) {
+                throw e  // Rethrow to handle in the calling function (e.g., in ViewModel)
             }
-
-            batch.update(metadataRef, "venues_bookings.${venue.id}", FieldValue.increment(1))
-
-        }.addOnSuccessListener {
-            onSuccess()
-        }.addOnFailureListener { e ->
-            onFailure(e)
         }
     }
 
 
-    fun addBookingToUser(userId: String, booking: Booking, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+    suspend fun addBookingToUser(userId: String, booking: Booking) {
         val userRef = FirebaseFirestore.getInstance().collection("users").document(userId)
-        userRef.update("bookings", FieldValue.arrayUnion(booking))
-            .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { onFailure(it) }
+        try {
+            userRef.update("bookings", FieldValue.arrayUnion(booking)).await()
+        } catch (e: Exception) {
+            throw e  // Rethrow exception to be handled in ViewModel or calling function
+        }
     }
 
 
