@@ -28,8 +28,10 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import java.util.Locale
 import android.widget.TextView
+import androidx.lifecycle.lifecycleScope
 import com.example.sporthub.utils.ConnectivityHelper
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.launch
 
 class VenueListFragment : Fragment() {
 
@@ -202,7 +204,14 @@ class VenueListFragment : Fragment() {
     private fun loadVenues() {
         sportId?.let { id ->
             val hasInternet = ConnectivityHelper.isNetworkAvailable(requireContext())
-            viewModel.fetchVenuesBySport(id, forceFetchFromNetwork = hasInternet)
+            lifecycleScope.launch {
+                viewModel.fetchVenuesBySport(
+                    sportId = id,
+                    forceFetchFromNetwork = hasInternet,
+                    appContext = requireContext().applicationContext
+                )
+            }
+
         }
     }
 

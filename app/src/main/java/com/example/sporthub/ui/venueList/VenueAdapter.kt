@@ -10,6 +10,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.sporthub.R
 import com.example.sporthub.data.model.Venue
+import com.example.sporthub.utils.ImageUrlStore
+import java.io.File
 
 class VenueAdapter(
     private val onVenueClick: (Venue) -> Unit
@@ -61,9 +63,26 @@ class VenueAdapter(
         holder.venueRating.text = String.format("%.1f", venue.rating.toFloat())
 
         // Load image
-        Glide.with(holder.itemView.context)
-            .load(venue.image)
-            .into(holder.venueImage)
+        val imagePath = venue.image
+        val imageFile = File(imagePath)
+
+        val context = holder.itemView.context
+        val glideRequest = Glide.with(context)
+
+        if (imageFile.exists()) {
+            glideRequest
+                .load(imageFile)
+                .placeholder(R.drawable.placeholder_image)
+                .error(R.drawable.placeholder_image)
+                .into(holder.venueImage)
+        } else {
+            val fallbackUrl = ImageUrlStore.getImageUrl(context, venue.id)
+            glideRequest
+                .load(fallbackUrl)
+                .placeholder(R.drawable.placeholder_image)
+                .error(R.drawable.placeholder_image)
+                .into(holder.venueImage)
+        }
 
         //Handle click on venue
         holder.itemView.setOnClickListener {
