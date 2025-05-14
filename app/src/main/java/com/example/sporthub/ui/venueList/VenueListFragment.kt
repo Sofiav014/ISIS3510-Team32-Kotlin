@@ -202,7 +202,7 @@ class VenueListFragment : Fragment() {
     private fun loadVenues() {
         sportId?.let { id ->
             val hasInternet = ConnectivityHelper.isNetworkAvailable(requireContext())
-            viewModel.fetchVenuesBySport(id, forceFetchFromNetwork = hasInternet)
+            viewModel.fetchVenuesBySport(id, forceFetchFromNetwork = hasInternet, appContext = requireContext())
         }
     }
 

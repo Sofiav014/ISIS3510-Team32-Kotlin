@@ -1,13 +1,17 @@
 package com.example.sporthub.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.sporthub.data.model.CachedVenue
 import com.example.sporthub.data.model.Sport
 import com.example.sporthub.data.model.Venue
+import com.example.sporthub.utils.ImageUrlStore
 import com.example.sporthub.utils.LRUCache
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
+import java.io.File
 
 class FindVenuesViewModel : ViewModel() {
 
@@ -16,7 +20,8 @@ class FindVenuesViewModel : ViewModel() {
     private val _venues = MutableLiveData<List<Venue>>()
     val venues: LiveData<List<Venue>> get() = _venues
 
-    val venueCache = LRUCache<String, List<Venue>>(maxSize = 20)
+    val venueCache = LRUCache<String, List<CachedVenue>>(maxSize = 20)
+
 
     // Lista de deportes disponibles
     val sportsList = listOf(
@@ -26,12 +31,48 @@ class FindVenuesViewModel : ViewModel() {
         Sport(id = "tennis", name = "Tennis", logo = "https://firebasestorage.googleapis.com/v0/b/moviles-isis3510.firebasestorage.app/o/icons%2Fsports%2Ftennis-logo.png?alt=media&token=84fde031-9c77-4cc5-b4d3-dd785e203b99")
     )
 
-    fun fetchVenuesBySport(sportId: String, forceFetchFromNetwork: Boolean = false) {
+    private fun saveImageToInternalStorage(context: Context, url: String, filename: String): String? {
+        return try {
+            val input = java.net.URL(url).openStream()
+            val file = File(context.filesDir, filename)
+            file.outputStream().use { input.copyTo(it) }
+            file.absolutePath
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    private fun deleteUnusedVenueImages(context: Context, activeVenueIds: Set<String>) {
+        val filesDir = context.filesDir
+        filesDir.listFiles()?.forEach { file ->
+            if (file.name.startsWith("venue_") && file.name.endsWith(".jpg")) {
+                val id = file.name.removePrefix("venue_").removeSuffix(".jpg")
+                if (id !in activeVenueIds) {
+                    file.delete()
+                }
+            }
+        }
+    }
+
+
+
+    fun fetchVenuesBySport(sportId: String, forceFetchFromNetwork: Boolean = false, appContext: Context) {
         val cachedVenues = venueCache[sportId]
 
         if (!forceFetchFromNetwork && !cachedVenues.isNullOrEmpty()) {
-            // Use a non-null empty list as the default
-            _venues.value = cachedVenues ?: emptyList()
+            _venues.value = cachedVenues.map { cached ->
+                Venue(
+                    id = cached.id,
+                    coords = cached.coords,
+                    image = "", // Placeholder or load from local storage if needed
+                    locationName = cached.locationName,
+                    name = cached.name,
+                    rating = cached.rating,
+                    sport = Sport(id = cached.sportId, name = "", logo = ""), // Or null if not needed
+                    bookings = null // Not needed in cache
+                )
+            }
             return
         }
 
@@ -39,20 +80,61 @@ class FindVenuesViewModel : ViewModel() {
             .whereEqualTo("sport.id", sportId)
             .get()
             .addOnSuccessListener { snapshot: QuerySnapshot ->
-                val venueList = snapshot.documents.mapNotNull { doc ->
+                val rawList = snapshot.documents.mapNotNull { doc ->
                     doc.toObject(Venue::class.java)?.copy(id = doc.id)
                 }
+
+                val venueList = rawList.map { venue ->
+                    val filename = "venue_${venue.id}.jpg"
+                    val imageFile = File(appContext.filesDir, filename)
+
+                    val imagePath = if (imageFile.exists()) {
+                        imageFile.absolutePath
+                    } else {
+                        val path = saveImageToInternalStorage(appContext, venue.image, filename)
+                        ImageUrlStore.saveImageUrl(appContext, venue.id, venue.image)
+                        path ?: ""
+                    }
+
+                    venue.copy(image = imagePath)
+                }
+
+                deleteUnusedVenueImages(appContext, venueList.map { it.id }.toSet())
+
                 _venues.value = venueList
-                venueCache[sportId] = venueList
+
+                val cachedList = venueList.map { venue ->
+                    CachedVenue(
+                        id = venue.id,
+                        coords = venue.coords,
+                        locationName = venue.locationName,
+                        name = venue.name,
+                        rating = venue.rating,
+                        sportId = venue.sport?.id ?: ""
+                    )
+                }
+
+                venueCache[sportId] = cachedList
             }
+
             .addOnFailureListener {
-                // Only fallback if there's a previous cache
                 if (!cachedVenues.isNullOrEmpty()) {
-                    // Use a non-null empty list as the default
-                    _venues.value = cachedVenues ?: emptyList()
+                    _venues.value = cachedVenues.map { cached ->
+                        Venue(
+                            id = cached.id,
+                            coords = cached.coords,
+                            image = "",
+                            locationName = cached.locationName,
+                            name = cached.name,
+                            rating = cached.rating,
+                            sport = Sport(id = cached.sportId, name = "", logo = ""),
+                            bookings = null
+                        )
+                    }
                 } else {
                     _venues.value = emptyList()
                 }
             }
     }
+
 }

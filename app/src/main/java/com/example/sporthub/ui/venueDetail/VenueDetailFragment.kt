@@ -20,6 +20,8 @@ import com.example.sporthub.databinding.FragmentVenueDetailBinding
 import com.example.sporthub.ui.venueDetail.BookingAdapter
 import com.google.android.material.snackbar.Snackbar
 import androidx.navigation.fragment.findNavController
+import com.example.sporthub.data.model.Sport
+import com.example.sporthub.data.model.Venue
 import com.example.sporthub.viewmodel.VenueDetailViewModel
 
 class VenueDetailFragment : Fragment() {
@@ -77,8 +79,23 @@ class VenueDetailFragment : Fragment() {
             .firstOrNull { it.id == args.venue.id }
 
         if (cachedVenue != null) {
-            viewModel.setVenueFromCache(cachedVenue)
-        } else {
+            val reconstructedVenue = Venue(
+                id = cachedVenue.id,
+                coords = cachedVenue.coords,
+                image = "",
+                locationName = cachedVenue.locationName,
+                name = cachedVenue.name,
+                rating = cachedVenue.rating,
+                sport = Sport(
+                    id = cachedVenue.sportId,
+                    name = "", // Name and logo are not available in cache
+                    logo = ""
+                ),
+                bookings = null
+            )
+            viewModel.setVenueFromCache(reconstructedVenue)
+        }
+else {
             viewModel.fetchVenueById(args.venue.id)
         }
 
@@ -100,7 +117,10 @@ class VenueDetailFragment : Fragment() {
                 // Load venue image
                 Glide.with(requireContext())
                     .load(venue.image)
+                    .placeholder(R.drawable.placeholder_image)
+                    .error(R.drawable.placeholder_image)
                     .into(venueImage)
+
 
                 // Log and display bookings
                 Log.d("DEBUG", "Fetched bookings: ${venue.bookings}")
@@ -145,6 +165,8 @@ class VenueDetailFragment : Fragment() {
 
                 Glide.with(binding.root.context)
                     .load(it.image)
+                    .placeholder(R.drawable.placeholder_image)
+                    .error(R.drawable.placeholder_image)
                     .into(binding.venueImageDetail)
 
                 bookingAdapter2.submitList(it.bookings ?: emptyList())
