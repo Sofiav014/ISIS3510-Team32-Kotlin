@@ -6,14 +6,16 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import com.example.sporthub.data.model.Booking
 import com.example.sporthub.ui.home.viewholder.UpcomingBookingViewHolder
+import com.example.sporthub.viewmodel.HomeViewModel
 
-class UpcomingBookingsAdapter : ListAdapter<Booking, UpcomingBookingViewHolder>(DIFF_CALLBACK) {
+class UpcomingBookingsAdapter(private val homeViewModel: HomeViewModel) : ListAdapter<Booking, UpcomingBookingViewHolder>(DIFF_CALLBACK) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UpcomingBookingViewHolder {
         return UpcomingBookingViewHolder.create(parent)
     }
 
     override fun onBindViewHolder(holder: UpcomingBookingViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        val booking = getItem(position)
+        holder.bind(booking, homeViewModel)
     }
 
     companion object {

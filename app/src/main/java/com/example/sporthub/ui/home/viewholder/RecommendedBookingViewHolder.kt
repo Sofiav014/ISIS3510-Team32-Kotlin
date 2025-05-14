@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.sporthub.data.model.Booking
 import com.example.sporthub.databinding.ItemRecommendedBookingBinding
+import com.example.sporthub.viewmodel.HomeViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -13,7 +14,7 @@ import java.util.*
 class RecommendedBookingViewHolder(private val binding: ItemRecommendedBookingBinding) :
     RecyclerView.ViewHolder(binding.root) {
 
-    fun bind(booking: Booking) {
+    fun bind(booking: Booking, homeViewModel: HomeViewModel) {
 
         val startDate = booking.startTime?.toDate()
         val dateFormatter = SimpleDateFormat("MMMM dd", Locale.getDefault())
@@ -34,10 +35,9 @@ class RecommendedBookingViewHolder(private val binding: ItemRecommendedBookingBi
         binding.textTime.text = "$formattedStartTime h ($durationMinutes min)"
 
         binding.textUsers.text = "${booking.users.size} / ${booking.maxUsers}"
+
         val imageUrl = booking.venue?.image ?: ""  // Replace with actual property
-        Glide.with(binding.root.context)
-            .load(imageUrl)
-            .into(binding.imageBackground) // Set to ImageView
+        homeViewModel.loadImageIntoImageView(binding.root.context, imageUrl, binding.imageBackground)
     }
 
     companion object {

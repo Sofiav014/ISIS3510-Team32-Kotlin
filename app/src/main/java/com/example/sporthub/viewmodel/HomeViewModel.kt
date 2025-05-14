@@ -12,6 +12,15 @@ import com.example.sporthub.utils.ConnectivityHelper
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.launch
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
+import android.util.LruCache
+import android.widget.ImageView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
+import com.example.sporthub.R
 
 class HomeViewModel(private val repository: HomeRepository) : ViewModel() {
 
@@ -35,6 +44,7 @@ class HomeViewModel(private val repository: HomeRepository) : ViewModel() {
     private val _isOffline = MutableLiveData<Boolean>()
     val isOffline: LiveData<Boolean> = _isOffline
 
+    private val cache = LruCache<String, String>(10 * 1024 * 1024) // 10MB cache for shared preferences data
 
     fun loadHomeData(context: Context, user: User) {
         viewModelScope.launch {
@@ -52,6 +62,10 @@ class HomeViewModel(private val repository: HomeRepository) : ViewModel() {
                     _popularityReport.value = mapReport(report, user)
 
                     // Save in caché
+                    cache.put("recommended", Gson().toJson(recommended))
+                    cache.put("upcoming", Gson().toJson(upcoming))
+                    cache.put("report", Gson().toJson(_popularityReport.value))
+
                     with(prefs.edit()) {
                         putString("recommended", Gson().toJson(recommended))
                         putString("upcoming", Gson().toJson(upcoming))
@@ -64,21 +78,32 @@ class HomeViewModel(private val repository: HomeRepository) : ViewModel() {
                 }
             } else {
                 Log.w("OfflineMode", "No internet - loading from cache")
-                val recommendedJson = prefs.getString("recommended", null)
-                val upcomingJson = prefs.getString("upcoming", null)
-                val reportJson = prefs.getString("report", null)
+                val recommendedJson = cache.get("recommended")
+                val upcomingJson = cache.get("upcoming")
+                val reportJson = cache.get("report")
 
-                _recommendedBookings.value = recommendedJson?.let {
-                    Gson().fromJson(it, object : TypeToken<List<Booking>>() {}.type)
-                } ?: emptyList()
+                if (recommendedJson != null && upcomingJson != null && reportJson != null) {
+                    _recommendedBookings.value = Gson().fromJson(recommendedJson, object : TypeToken<List<Booking>>() {}.type)
+                    _upcomingBookings.value = Gson().fromJson(upcomingJson, object : TypeToken<List<Booking>>() {}.type)
+                    _popularityReport.value = Gson().fromJson(reportJson, PopularityReportData::class.java)
+                } else {
+                    // Load from SharedPreferences if not found in LRU cache
+                    val recommended = prefs.getString("recommended", null)
+                    val upcoming = prefs.getString("upcoming", null)
+                    val report = prefs.getString("report", null)
 
-                _upcomingBookings.value = upcomingJson?.let {
-                    Gson().fromJson(it, object : TypeToken<List<Booking>>() {}.type)
-                } ?: emptyList()
+                    _recommendedBookings.value = recommended?.let {
+                        Gson().fromJson(it, object : TypeToken<List<Booking>>() {}.type)
+                    } ?: emptyList()
 
-                _popularityReport.value = reportJson?.let {
-                    Gson().fromJson(it, PopularityReportData::class.java)
-                } ?: PopularityReportData(null, Sport("unknown", "No sport", ""), 0, null, 0)
+                    _upcomingBookings.value = upcoming?.let {
+                        Gson().fromJson(it, object : TypeToken<List<Booking>>() {}.type)
+                    } ?: emptyList()
+
+                    _popularityReport.value = report?.let {
+                        Gson().fromJson(it, PopularityReportData::class.java)
+                    } ?: PopularityReportData(null, Sport("unknown", "No sport", ""), 0, null, 0)
+                }
             }
         }
     }
@@ -103,4 +128,14 @@ class HomeViewModel(private val repository: HomeRepository) : ViewModel() {
             mostBookedCount
         )
     }
+
+
+    fun loadImageIntoImageView(context: Context, imageUrl: String, imageView: ImageView) {
+        Glide.with(context)
+            .load(imageUrl)
+            .diskCacheStrategy(DiskCacheStrategy.ALL)
+            .error(R.drawable.placeholder_image)
+            .into(imageView)  // Directly load into ImageView
+    }
+
 }

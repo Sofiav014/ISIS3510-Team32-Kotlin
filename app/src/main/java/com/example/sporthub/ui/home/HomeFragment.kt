@@ -55,7 +55,7 @@ class HomeFragment : Fragment() {
             binding.recyclerPopularity.isNestedScrollingEnabled = false
         }
 
-        upcomingBookingsAdapter = UpcomingBookingsAdapter()
+        upcomingBookingsAdapter = UpcomingBookingsAdapter(homeViewModel)
         binding.recyclerUpcomingBookings.apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
             adapter = upcomingBookingsAdapter
@@ -63,7 +63,7 @@ class HomeFragment : Fragment() {
 
         }
 
-        recommendedBookingsAdapter = RecommendedBookingsAdapter()
+        recommendedBookingsAdapter = RecommendedBookingsAdapter(homeViewModel)
         binding.recyclerRecommendedBookings.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = recommendedBookingsAdapter
