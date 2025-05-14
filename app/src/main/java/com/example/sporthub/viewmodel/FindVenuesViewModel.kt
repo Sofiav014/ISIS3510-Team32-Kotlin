@@ -11,6 +11,9 @@ import com.example.sporthub.utils.ImageUrlStore
 import com.example.sporthub.utils.LRUCache
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.tasks.await
 import java.io.File
 
 class FindVenuesViewModel : ViewModel() {
@@ -57,34 +60,43 @@ class FindVenuesViewModel : ViewModel() {
 
 
 
-    fun fetchVenuesBySport(sportId: String, forceFetchFromNetwork: Boolean = false, appContext: Context) {
+    suspend fun fetchVenuesBySport(
+        sportId: String,
+        forceFetchFromNetwork: Boolean = false,
+        appContext: Context
+    ) {
         val cachedVenues = venueCache[sportId]
 
         if (!forceFetchFromNetwork && !cachedVenues.isNullOrEmpty()) {
-            _venues.value = cachedVenues.map { cached ->
-                Venue(
-                    id = cached.id,
-                    coords = cached.coords,
-                    image = "", // Placeholder or load from local storage if needed
-                    locationName = cached.locationName,
-                    name = cached.name,
-                    rating = cached.rating,
-                    sport = Sport(id = cached.sportId, name = "", logo = ""), // Or null if not needed
-                    bookings = null // Not needed in cache
-                )
+            withContext(Dispatchers.Main) {
+                _venues.value = cachedVenues.map { cached ->
+                    Venue(
+                        id = cached.id,
+                        coords = cached.coords,
+                        image = "",
+                        locationName = cached.locationName,
+                        name = cached.name,
+                        rating = cached.rating,
+                        sport = Sport(id = cached.sportId, name = "", logo = ""),
+                        bookings = null
+                    )
+                }
             }
             return
         }
 
-        db.collection("venues")
-            .whereEqualTo("sport.id", sportId)
-            .get()
-            .addOnSuccessListener { snapshot: QuerySnapshot ->
+        try {
+            val venueList = withContext(Dispatchers.IO) {
+                val snapshot = db.collection("venues")
+                    .whereEqualTo("sport.id", sportId)
+                    .get()
+                    .await()
+
                 val rawList = snapshot.documents.mapNotNull { doc ->
                     doc.toObject(Venue::class.java)?.copy(id = doc.id)
                 }
 
-                val venueList = rawList.map { venue ->
+                val processedList = rawList.map { venue ->
                     val filename = "venue_${venue.id}.jpg"
                     val imageFile = File(appContext.filesDir, filename)
 
@@ -99,8 +111,11 @@ class FindVenuesViewModel : ViewModel() {
                     venue.copy(image = imagePath)
                 }
 
-                deleteUnusedVenueImages(appContext, venueList.map { it.id }.toSet())
+                deleteUnusedVenueImages(appContext, processedList.map { it.id }.toSet())
+                processedList
+            }
 
+            withContext(Dispatchers.Main) {
                 _venues.value = venueList
 
                 val cachedList = venueList.map { venue ->
@@ -117,7 +132,8 @@ class FindVenuesViewModel : ViewModel() {
                 venueCache[sportId] = cachedList
             }
 
-            .addOnFailureListener {
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
                 if (!cachedVenues.isNullOrEmpty()) {
                     _venues.value = cachedVenues.map { cached ->
                         Venue(
@@ -135,6 +151,8 @@ class FindVenuesViewModel : ViewModel() {
                     _venues.value = emptyList()
                 }
             }
+        }
     }
+
 
 }
