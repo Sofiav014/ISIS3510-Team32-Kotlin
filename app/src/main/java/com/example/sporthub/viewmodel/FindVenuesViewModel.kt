@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.sporthub.data.model.Sport
 import com.example.sporthub.data.model.Venue
+import com.example.sporthub.utils.LRUCache
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 
@@ -15,7 +16,7 @@ class FindVenuesViewModel : ViewModel() {
     private val _venues = MutableLiveData<List<Venue>>()
     val venues: LiveData<List<Venue>> get() = _venues
 
-    val venueCache = HashMap<String, List<Venue>>()
+    val venueCache = LRUCache<String, List<Venue>>(maxSize = 20)
 
     // Lista de deportes disponibles
     val sportsList = listOf(
