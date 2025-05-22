@@ -9,7 +9,7 @@ import com.example.sporthub.ui.home.viewholder.RecommendedBookingViewHolder
 import com.example.sporthub.viewmodel.HomeViewModel
 
 
-class RecommendedBookingsAdapter(private val homeViewModel: HomeViewModel) : ListAdapter<Booking, RecommendedBookingViewHolder>(DIFF_CALLBACK) {
+class RecommendedBookingsAdapter(private val homeViewModel: HomeViewModel, private val onBookingClick: (Booking) -> Unit ) : ListAdapter<Booking, RecommendedBookingViewHolder>(DIFF_CALLBACK) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecommendedBookingViewHolder {
         return RecommendedBookingViewHolder.create(parent)
@@ -18,6 +18,10 @@ class RecommendedBookingsAdapter(private val homeViewModel: HomeViewModel) : Lis
     override fun onBindViewHolder(holder: RecommendedBookingViewHolder, position: Int) {
         val booking = getItem(position)
         holder.bind(booking, homeViewModel)
+
+        holder.itemView.setOnClickListener {
+            onBookingClick(booking)  // Trigger the callback when the item is clicked
+        }
     }
 
     companion object {

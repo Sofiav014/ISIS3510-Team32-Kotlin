@@ -16,6 +16,7 @@ import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import androidx.lifecycle.MutableLiveData
+import com.google.firebase.firestore.FieldValue
 
 class UserRepository {
     private val db = FirebaseFirestore.getInstance()
@@ -81,6 +82,29 @@ class UserRepository {
     fun clearUserCache() {
         cachedUserLiveData = null
     }
+
+    fun joinBooking(userId: String, booking: Booking): Task<Void> {
+        val userRef = db.collection("users").document(userId)
+
+        // Use runTransaction to ensure atomicity when updating the user's bookings
+        return db.runTransaction { transaction ->
+            val userSnapshot = transaction.get(userRef)
+
+            // Get the existing list of bookings from the user document
+            val currentBookings = userSnapshot.get("bookings") as? List<Map<String, Any>> ?: emptyList()
+
+            // Add the new booking to the list
+            val updatedBookings = currentBookings.toMutableList().apply {
+                add(mapOf("id" to booking.id))  // Make sure the required fields are included
+            }
+
+            // Update the bookings in Firestore
+            transaction.update(userRef, "bookings", updatedBookings)
+
+            null
+        }
+    }
+
 
     fun getUserModel(userId: String): LiveData<User> {
         // Usar la caché si ya está disponible
