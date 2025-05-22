@@ -1,6 +1,7 @@
 package com.example.sporthub.ui.home
 
 import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.os.Bundle
@@ -194,6 +195,15 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        val isThemeChanging = requireContext()
+            .getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+            .getBoolean("is_theme_changing", false)
+
+        if (isThemeChanging) {
+            Log.d("ThemeAware", "Skipping network operations during theme change")
+            return
+        }
+
         userViewModel.currentUser.value?.let { user ->
             homeViewModel.loadHomeData(requireContext(), user)
         }

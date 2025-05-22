@@ -21,6 +21,8 @@ import com.google.firebase.firestore.FieldValue
 class UserRepository {
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
+    private var cachedUserLiveData: MutableLiveData<User>? = null
+
 
     fun getCurrentUser(): FirebaseUser? = auth.currentUser
 
@@ -77,6 +79,9 @@ class UserRepository {
             null
         }
     }
+    fun clearUserCache() {
+        cachedUserLiveData = null
+    }
 
     fun joinBooking(userId: String, booking: Booking): Task<Void> {
         val userRef = db.collection("users").document(userId)
@@ -90,7 +95,7 @@ class UserRepository {
 
             // Add the new booking to the list
             val updatedBookings = currentBookings.toMutableList().apply {
-                add(mapOf("id" to booking.id))  // Make sure the required fields are included
+                add(mapOf("id" to booking))  // Make sure the required fields are included
             }
 
             // Update the bookings in Firestore
@@ -101,10 +106,12 @@ class UserRepository {
     }
 
 
+    fun getUserModel(userId: String): LiveData<User> {
+        // Usar la caché si ya está disponible
+        cachedUserLiveData?.let { return it }
 
-
-    fun getUserModel(userId:String): LiveData<User>{
         val liveData = MutableLiveData<User>()
+        cachedUserLiveData = liveData
 
         db.collection("users").document(userId).get()
             .addOnSuccessListener { snapshot ->
@@ -187,28 +194,13 @@ class UserRepository {
                     liveData.value = currentUser
 
                 } else {
-                    liveData.value = User( // Default user if document doesn't exist
-                        id = "",
-                        name = "",
-                        gender = "",
-                        birthDate = null,
-                        sportsLiked = emptyList(),
-                        bookings = emptyList(),
-                        venuesLiked = emptyList()
-                    )
+                    liveData.value = User("", "", "", null, emptyList(), emptyList(), emptyList())
                 }
             }
             .addOnFailureListener {
-                liveData.value = User( // Default user on failure
-                    id = "",
-                    name = "",
-                    gender = "",
-                    birthDate = null,
-                    sportsLiked = emptyList(),
-                    bookings = emptyList(),
-                    venuesLiked = emptyList()
-                )
+                liveData.value = User("", "", "", null, emptyList(), emptyList(), emptyList())
             }
+
         return liveData
     }
 }

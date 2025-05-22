@@ -47,7 +47,7 @@ class EditBirthDateActivity : AppCompatActivity() {
             .getBoolean("is_theme_changing", false)
 
         if (isThemeChanging) {
-
+            super.onCreate(savedInstanceState)
             setContentView(R.layout.activity_edit_name)
 
             initViews()

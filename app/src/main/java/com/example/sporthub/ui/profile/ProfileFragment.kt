@@ -1,8 +1,11 @@
 package com.example.sporthub.ui.profile
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -31,6 +34,7 @@ import com.example.sporthub.ui.profile.edit.EditNameActivity
 import com.example.sporthub.ui.profile.edit.EditGenderActivity
 import com.example.sporthub.ui.profile.edit.EditBirthDateActivity
 import com.example.sporthub.ui.profile.edit.EditSportsActivity
+import com.google.android.material.snackbar.Snackbar
 
 class ProfileFragment : Fragment() {
 
@@ -64,6 +68,7 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        preloadThemeResources()
         // Initialize ViewModel
         viewModel = ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().application))
             .get(ProfileViewModel::class.java)
@@ -152,9 +157,21 @@ class ProfileFragment : Fragment() {
             themeSwitch.isChecked = isDarkMode
 
             // Re-attach the listener after setting the state
-            themeSwitch.setOnCheckedChangeListener { _, isChecked ->
+            themeSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
                 if (isChecked != viewModel.isDarkMode.value) {
+                    // Disable the switch briefly to prevent multiple rapid toggles
+                    buttonView.isEnabled = false
+
+                    // Update UI immediately
+                    updateThemeUI(isChecked)
+
+                    // Apply the theme change
                     viewModel.toggleDarkMode()
+
+                    // Re-enable after a delay
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        buttonView.isEnabled = true
+                    }, 1000)
                 }
             }
         }
@@ -175,6 +192,60 @@ class ProfileFragment : Fragment() {
             if (isChecked != viewModel.isDarkMode.value) {
                 viewModel.toggleDarkMode()
             }
+        }
+    }
+
+
+    private fun preloadThemeResources() {
+        // This method preloads essential UI resources for both themes
+        // to reduce rendering time when switching
+        try {
+            // Preload important drawables used in both themes
+            context?.let { ctx ->
+                // Light theme resources
+                ctx.getDrawable(com.example.sporthub.R.drawable.ic_light_mode)
+
+                // Dark theme resources
+                ctx.getDrawable(com.example.sporthub.R.drawable.ic_dark_mode)
+
+                // Navigation icons
+                ctx.getDrawable(com.example.sporthub.R.drawable.ic_home_outline)
+                ctx.getDrawable(com.example.sporthub.R.drawable.ic_profile_outline)
+                ctx.getDrawable(com.example.sporthub.R.drawable.ic_search_outline)
+                ctx.getDrawable(com.example.sporthub.R.drawable.ic_calendar_outline)
+                ctx.getDrawable(com.example.sporthub.R.drawable.ic_create_outline)
+            }
+        } catch (e: Exception) {
+            Log.e("ProfileFragment", "Error preloading resources: ${e.message}")
+        }
+    }
+
+    private fun setupThemeSwitch() {
+        // Set initial state
+        themeSwitch.isChecked = viewModel.isDarkMode.value ?: false
+
+        // Configure listener for responsive feedback
+        themeSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
+            if (isChecked == viewModel.isDarkMode.value) return@setOnCheckedChangeListener
+
+            // Disable switch
+            buttonView.isEnabled = false
+
+            // Show visual feedback to indicate theme is changing
+            val themeChangeText = "Applying ${if(isChecked) "dark" else "light"} theme..."
+            val snackbar = Snackbar.make(requireView(), themeChangeText, Snackbar.LENGTH_SHORT)
+            snackbar.show()
+
+            // Update UI immediately
+            updateThemeUI(isChecked)
+
+            // Apply theme change
+            viewModel.toggleDarkMode()
+
+            // Re-enable switch after delay
+            Handler(Looper.getMainLooper()).postDelayed({
+                buttonView.isEnabled = true
+            }, 1500)
         }
     }
 
@@ -312,7 +383,22 @@ class ProfileFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Reload data when returning to this fragment
-        viewModel.loadUserData()
+
+        val isThemeChanging = requireContext()
+            .getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+            .getBoolean("is_theme_changing", false)
+
+        if (isThemeChanging) {
+            Log.d("ThemeAware", "Skipping network operations during theme change")
+            return
+        }
+
+        if (viewModel.userData.value == null) {
+            Log.d("ProfileFragment", "User data is null, reloading")
+            viewModel.loadUserData()
+        } else {
+            Log.d("ProfileFragment", "User data already loaded, skipping reload")
+        }
     }
+
 }
