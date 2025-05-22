@@ -95,7 +95,7 @@ class UserRepository {
 
             // Add the new booking to the list
             val updatedBookings = currentBookings.toMutableList().apply {
-                add(mapOf("id" to booking.id))  // Make sure the required fields are included
+                add(mapOf("id" to booking))  // Make sure the required fields are included
             }
 
             // Update the bookings in Firestore
@@ -203,5 +203,4 @@ class UserRepository {
 
         return liveData
     }
-
 }
