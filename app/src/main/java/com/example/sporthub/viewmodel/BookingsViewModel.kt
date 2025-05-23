@@ -1,12 +1,14 @@
 package com.example.sporthub.viewmodel
 
+import android.app.Application
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import com.example.sporthub.data.model.Booking
 import com.example.sporthub.data.model.Sport
 import com.example.sporthub.data.model.Venue
+import com.example.sporthub.utils.ConnectivityHelper // Import your helper
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -14,10 +16,13 @@ import com.google.firebase.firestore.ListenerRegistration
 import java.util.Calendar
 import java.util.Date
 
-class BookingsViewModel : ViewModel() {
+class BookingsViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = FirebaseFirestore.getInstance()
     private var bookingsListener: ListenerRegistration? = null
+
+    private val _isNetworkAvailable = MutableLiveData<Boolean>()
+    val isNetworkAvailable: LiveData<Boolean> = _isNetworkAvailable
 
     private val _selectedDate = MutableLiveData<Date>()
     val selectedDate: LiveData<Date> = _selectedDate
@@ -32,7 +37,11 @@ class BookingsViewModel : ViewModel() {
 
     init {
         _selectedDate.value = Calendar.getInstance().time
-        // Start listening for real-time updates
+        // This will now check for network first
+        listenForUserBookings()
+    }
+
+    fun onRetry() {
         listenForUserBookings()
     }
 
@@ -42,6 +51,16 @@ class BookingsViewModel : ViewModel() {
     }
 
     private fun listenForUserBookings() {
+
+        if (!ConnectivityHelper.isNetworkAvailable(getApplication())) {
+            _isNetworkAvailable.postValue(false)
+            // Post empty values to clear screen and stop loading indicators
+            _bookingsForSelectedDate.postValue(emptyList())
+            _isLoading.postValue(false)
+            return // Stop here if no network
+        }
+        _isNetworkAvailable.postValue(true) // Network is available
+
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         if (userId == null) {
             Log.e("BookingsViewModel", "User not logged in.")
@@ -51,7 +70,6 @@ class BookingsViewModel : ViewModel() {
         _isLoading.value = true
         val userDocRef = db.collection("users").document(userId)
 
-        // Use addSnapshotListener for real-time updates
         bookingsListener = userDocRef.addSnapshotListener { snapshot, error ->
             if (error != null) {
                 Log.e("BookingsViewModel", "Listen failed.", error)
@@ -92,12 +110,9 @@ class BookingsViewModel : ViewModel() {
                 } ?: emptyList()
 
                 allUserBookings = bookingsParsed
-                Log.d("BookingsViewModel", "Updated bookings list. Total: ${allUserBookings.size}")
             } else {
-                Log.d("BookingsViewModel", "User document does not exist or is empty.")
                 allUserBookings = emptyList()
             }
-            // After receiving an update, filter for the currently selected date
             filterBookingsForSelectedDate()
         }
     }
@@ -124,10 +139,8 @@ class BookingsViewModel : ViewModel() {
         _isLoading.postValue(false)
     }
 
-    // This is important to prevent memory leaks!
     override fun onCleared() {
         super.onCleared()
-        // Stop listening for updates when the ViewModel is destroyed
         bookingsListener?.remove()
     }
 }

@@ -1,4 +1,4 @@
-package com.example.sporthub.ui.bookings // Your actual fragment package
+package com.example.sporthub.ui.bookings
 
 import BookingAdapter
 import android.app.DatePickerDialog
@@ -11,7 +11,8 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.sporthub.databinding.FragmentBookingsBinding
-import com.example.sporthub.viewmodel.BookingsViewModel // Your ViewModel import
+import com.example.sporthub.viewmodel.BookingsViewModel
+import com.google.android.material.snackbar.Snackbar // Import Snackbar
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -23,10 +24,72 @@ class BookingsFragment : Fragment() {
     private val bookingsViewModel: BookingsViewModel by viewModels()
     private lateinit var bookingAdapter: BookingAdapter
 
-    // Date formatters for the top display
+    private var noConnectionSnackbar: Snackbar? = null
+
+
     private val dayFormatter = SimpleDateFormat("dd", Locale.getDefault())
     private val dayOfWeekFormatter = SimpleDateFormat("EEE", Locale.getDefault())
     private val monthYearFormatter = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
+
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setupRecyclerView()
+        setupObservers()
+        setupEventListeners()
+    }
+
+    private fun setupObservers() {
+        bookingsViewModel.selectedDate.observe(viewLifecycleOwner) { date ->
+            updateDateTextViews(date)
+        }
+
+        bookingsViewModel.bookingsForSelectedDate.observe(viewLifecycleOwner) { bookings ->
+            bookingAdapter.submitList(bookings)
+
+            if (bookings.isEmpty()) {
+                // Only show empty state if network IS available
+                if (bookingsViewModel.isNetworkAvailable.value == true) {
+                    binding.recyclerViewBookings.visibility = View.GONE
+                    binding.textViewEmptyState.visibility = View.VISIBLE
+                }
+            } else {
+                binding.recyclerViewBookings.visibility = View.VISIBLE
+                binding.textViewEmptyState.visibility = View.GONE
+            }
+        }
+
+        bookingsViewModel.isNetworkAvailable.observe(viewLifecycleOwner) { isAvailable ->
+            // Enable/disable button based on network status
+            binding.buttonOpenCalendar.isEnabled = isAvailable
+
+            if (isAvailable) {
+                // If network is back, dismiss the snackbar if it's showing
+                noConnectionSnackbar?.dismiss()
+            } else {
+                // If no network, hide the list/empty-state and show the snackbar
+                binding.recyclerViewBookings.visibility = View.GONE
+                binding.textViewEmptyState.visibility = View.GONE
+                showNoConnectionSnackbar()
+            }
+        }
+
+        bookingsViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            // You might want to enhance this to show a loading indicator
+        }
+    }
+
+
+    private fun showNoConnectionSnackbar() {
+        // Use an indefinite snackbar that stays until dismissed or connection returns
+        noConnectionSnackbar = Snackbar.make(binding.root, "No internet connection", Snackbar.LENGTH_INDEFINITE)
+            .setAction("RETRY") {
+                bookingsViewModel.onRetry()
+            }
+        noConnectionSnackbar?.show()
+    }
+
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -36,50 +99,18 @@ class BookingsFragment : Fragment() {
         return binding.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        setupRecyclerView()
-        setupObservers()
-        setupEventListeners()
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     private fun setupRecyclerView() {
-        // Initialize the adapter (using the version for item_my_booking.xml)
         bookingAdapter = BookingAdapter { booking ->
-            // Handle booking item click
             Toast.makeText(context, "Clicked on ${booking.venue?.name}", Toast.LENGTH_SHORT).show()
         }
         binding.recyclerViewBookings.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = bookingAdapter
-        }
-    }
-    private fun setupObservers() {
-        // This part stays the same
-        bookingsViewModel.selectedDate.observe(viewLifecycleOwner) { date ->
-            updateDateTextViews(date)
-        }
-
-        // This is the observer that changes
-        bookingsViewModel.bookingsForSelectedDate.observe(viewLifecycleOwner) { bookings ->
-            bookingAdapter.submitList(bookings)
-
-            // Check if the list of bookings is empty
-            if (bookings.isEmpty()) {
-                // If it's empty, hide the list and show the "empty state" message
-                binding.recyclerViewBookings.visibility = View.GONE
-                binding.textViewEmptyState.visibility = View.VISIBLE
-            } else {
-                // If it's NOT empty, show the list and hide the message
-                binding.recyclerViewBookings.visibility = View.VISIBLE
-                binding.textViewEmptyState.visibility = View.GONE
-            }
-        }
-
-        // This part stays the same
-        bookingsViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            // e.g., binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         }
     }
 
@@ -90,7 +121,6 @@ class BookingsFragment : Fragment() {
     }
 
     private fun setupEventListeners() {
-        // Set a click listener on the calendar icon to show the date picker
         binding.buttonOpenCalendar.setOnClickListener {
             showDatePicker()
         }
@@ -98,7 +128,6 @@ class BookingsFragment : Fragment() {
 
     private fun showDatePicker() {
         val calendar = Calendar.getInstance()
-        // Start the date picker with the currently selected date from the ViewModel
         bookingsViewModel.selectedDate.value?.let {
             calendar.time = it
         }
@@ -115,16 +144,10 @@ class BookingsFragment : Fragment() {
                     set(Calendar.MONTH, selectedMonth)
                     set(Calendar.DAY_OF_MONTH, selectedDayOfMonth)
                 }.time
-                // When a new date is picked, update it in the ViewModel
                 bookingsViewModel.setSelectedDate(newSelectedDate)
             },
             year, month, day
         )
         datePickerDialog.show()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null // Important for preventing memory leaks
     }
 }
