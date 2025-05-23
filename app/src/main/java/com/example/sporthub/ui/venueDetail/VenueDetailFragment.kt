@@ -1,50 +1,32 @@
 package com.example.sporthub.ui.venueDetail
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.sporthub.R
-import com.example.sporthub.viewmodel.FindVenuesViewModel
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.sporthub.databinding.FragmentVenueDetailBinding
-import com.example.sporthub.ui.venueDetail.BookingAdapter
-import com.google.android.material.snackbar.Snackbar
-import androidx.navigation.fragment.findNavController
-import com.example.sporthub.data.model.Sport
-import com.example.sporthub.data.model.Venue
+import com.example.sporthub.utils.ConnectivityHelper
 import com.example.sporthub.viewmodel.VenueDetailViewModel
+import com.google.android.material.snackbar.Snackbar
 
 class VenueDetailFragment : Fragment() {
 
     private val args: VenueDetailFragmentArgs by navArgs()
     private val viewModel: VenueDetailViewModel by viewModels()
-    private lateinit var bookingsRecyclerView: RecyclerView
-    private lateinit var bookingAdapter: BookingAdapter
-
-    private lateinit var venueImage: ImageView
-    private lateinit var venueName: TextView
-    private lateinit var venueLocation: TextView
-    private lateinit var venueSport: TextView
-    private lateinit var venueRating: TextView
-
-    private val findVenuesViewModel: FindVenuesViewModel by activityViewModels()
 
     private var _binding: FragmentVenueDetailBinding? = null
     private val binding get() = _binding!!
 
-
-    private var _bookingAdapter: BookingAdapter? = null
-    private val bookingAdapter2 get() = _bookingAdapter!!
+    // The adapter is no longer initialized immediately.
+    private var bookingAdapter: BookingAdapter? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -58,139 +40,77 @@ class VenueDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        venueImage = view.findViewById(R.id.venueImageDetail)
-        venueName = view.findViewById(R.id.venueNameDetail)
-        venueLocation = view.findViewById(R.id.venueLocationDetail)
-        venueSport = view.findViewById(R.id.venueSportDetail)
-        venueRating = view.findViewById(R.id.venueRatingDetail)
-
-        bookingsRecyclerView = view.findViewById(R.id.recyclerViewBookings)
-
-        bookingsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        super.onViewCreated(view, savedInstanceState)
-
+        // setupRecyclerView will now ONLY set the layout manager
         setupRecyclerView()
-        setupVenueInfo()
-        observeVenue()
-        setupButton()
+        setupButtonListeners()
+        observeViewModel()
 
-        val cachedVenue = findVenuesViewModel.venueCache.values
-            .flatten()
-            .firstOrNull { it.id == args.venue.id }
+        viewModel.fetchVenueById(args.venue.id)
+    }
 
-        if (cachedVenue != null) {
-            val reconstructedVenue = Venue(
-                id = cachedVenue.id,
-                coords = cachedVenue.coords,
-                image = "",
-                locationName = cachedVenue.locationName,
-                name = cachedVenue.name,
-                rating = cachedVenue.rating,
-                sport = Sport(
-                    id = cachedVenue.sportId,
-                    name = "", // Name and logo are not available in cache
-                    logo = ""
-                ),
-                bookings = null
-            )
-            viewModel.setVenueFromCache(reconstructedVenue)
-        }
-else {
-            viewModel.fetchVenueById(args.venue.id)
+    private fun setupRecyclerView() {
+        // We only prepare the RecyclerView here. The adapter will be set later.
+        binding.recyclerViewBookings.layoutManager = LinearLayoutManager(requireContext())
+    }
+
+    private fun setupButtonListeners() {
+        binding.btnCreateBooking.setOnClickListener {
+            viewModel.venue.value?.let { venue ->
+                val action = VenueDetailFragmentDirections.actionVenueDetailFragmentToNavigationCreate(venue)
+                findNavController().navigate(action)
+            }
         }
 
+        binding.btnFavorite.setOnClickListener {
+            if (ConnectivityHelper.isNetworkAvailable(requireContext())) {
+                viewModel.toggleFavoriteStatus()
+            } else {
+                Snackbar.make(binding.root, "You can't like venues while being offline", Snackbar.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun observeViewModel() {
         viewModel.venue.observe(viewLifecycleOwner) { venue ->
             if (venue != null) {
-                // Initialize adapter with venue name
-                bookingAdapter = BookingAdapter(venue.name)
+                // Update the main venue card UI
+                binding.venueNameDetail.text = venue.name
+                binding.venueLocationDetail.text = venue.locationName
+                binding.venueSportDetail.text = venue.sport?.name ?: "Sport not available"
+                binding.venueRatingDetail.text = String.format("%.1f", venue.rating)
 
-                // Set adapter and layout manager here (moved from earlier)
-                bookingsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-                bookingsRecyclerView.adapter = bookingAdapter
-
-                // Set venue details
-                venueName.text = venue.name
-                venueLocation.text = venue.name
-                venueSport.text = venue.sport?.name ?: "Sport name not available"
-                venueRating.text = String.format("%.1f", venue.rating)
-
-                // Load venue image
                 Glide.with(requireContext())
                     .load(venue.image)
                     .placeholder(R.drawable.placeholder_image)
                     .error(R.drawable.placeholder_image)
-                    .into(venueImage)
-
-
-                // Log and display bookings
-                Log.d("DEBUG", "Fetched bookings: ${venue.bookings}")
-                bookingAdapter.submitList(venue.bookings ?: emptyList())
-            }
-            else {
-                venueName.text = "Venue not available"
-                venueLocation.text = ""
-                venueSport.text = ""
-                venueRating.text = ""
-                venueImage.setImageResource(R.drawable.ic_court_logo) // Optional placeholder image
-
-                bookingAdapter = BookingAdapter("")
-                bookingsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-                bookingsRecyclerView.adapter = bookingAdapter
-                bookingAdapter.submitList(emptyList())
-
-                Snackbar.make(requireView(), "Unable to load venue details. Please check your connection.", Snackbar.LENGTH_LONG).show()
-            }
-        }
-
-    }
-    private fun setupRecyclerView() {
-        _bookingAdapter = BookingAdapter(args.venue.name)
-        binding.recyclerViewBookings.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = bookingAdapter2
-        }
-    }
-
-    private fun setupVenueInfo() {
-        viewModel.setVenue(args.venue)
-    }
-
-    private fun observeVenue() {
-        viewModel.venue.observe(viewLifecycleOwner) { venue ->
-            venue?.let {
-                binding.venueNameDetail.text = it.name
-                binding.venueLocationDetail.text = it.locationName
-                binding.venueSportDetail.text = it.sport?.name ?: "Sport not available"
-                binding.venueRatingDetail.text = String.format("%.1f", it.rating)
-
-                Glide.with(binding.root.context)
-                    .load(it.image)
-                    .placeholder(R.drawable.placeholder_image)
-                    .error(R.drawable.placeholder_image)
                     .into(binding.venueImageDetail)
 
-                bookingAdapter2.submitList(it.bookings ?: emptyList())
 
+                // Now that we have the venue name, we create and set the adapter.
+                bookingAdapter = BookingAdapter(venue.name)
+                binding.recyclerViewBookings.adapter = bookingAdapter
+                bookingAdapter?.submitList(venue.bookings ?: emptyList())
+
+
+            } else {
+                // Handle the case where venue data is null (e.g., error)
+                // Clear the main card details and remove the adapter
+                binding.venueNameDetail.text = "Venue not available"
+                binding.recyclerViewBookings.adapter = null
             }
         }
-    }
 
-    private fun setupButton() {
-        binding.btnCreateBooking.setOnClickListener {
-            viewModel.venue.value?.let { venue ->
-
-                android.util.Log.d("VenueDetailFragment", "Navigating with venue: ${venue.name} (${venue.id})")
-
-                val action = VenueDetailFragmentDirections
-                    .actionVenueDetailFragmentToNavigationCreate(venue)
-                findNavController().navigate(action)
+        viewModel.isFavorite.observe(viewLifecycleOwner) { isFavorite ->
+            if (isFavorite) {
+                binding.btnFavorite.setImageResource(R.drawable.ic_heart_filled)
+            } else {
+                binding.btnFavorite.setImageResource(R.drawable.ic_heart_outline)
             }
         }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _bookingAdapter = null
-        _binding = null // liberar binding para evitar memory leaks
+        _binding = null
     }
 }
