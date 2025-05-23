@@ -8,13 +8,13 @@ import java.text.SimpleDateFormat
 import java.util.*
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import com.example.sporthub.databinding.ItemBookingDetailBinding
+import com.example.sporthub.databinding.FragmentBookingDetailBinding
 
 
 class BookingDetailAdapter(private val bookings: List<Booking>, private val onJoinClick: (Booking) -> Unit) :
     RecyclerView.Adapter<BookingDetailAdapter.BookingDetailViewHolder>() {
     class BookingDetailViewHolder(
-        private val binding: ItemBookingDetailBinding
+        private val binding: FragmentBookingDetailBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
         private val dateFmt = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
@@ -24,7 +24,7 @@ class BookingDetailAdapter(private val bookings: List<Booking>, private val onJo
             // HEADER
             binding.titleText.text = booking.venue?.name.orEmpty()
             binding.sportText.text = booking.venue?.sport?.name.orEmpty()
-            binding.ratingBar.rating = booking.venue?.rating ?: 0f
+            //binding.ratingBar.rating = booking.venue?.rating ?: 0f
             Glide.with(binding.headerImage)
                 .load(booking.venue?.image)
                 .placeholder(R.drawable.placeholder_image)
@@ -51,13 +51,13 @@ class BookingDetailAdapter(private val bookings: List<Booking>, private val onJo
 
             // JOIN BUTTON
             binding.joinButton.setOnClickListener {
-                onJoinClick(booking)
+                //onJoinClick(booking)
             }
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookingDetailViewHolder {
-        val binding = ItemBookingDetailBinding
+        val binding = FragmentBookingDetailBinding
             .inflate(LayoutInflater.from(parent.context), parent, false)
         return BookingDetailViewHolder(binding)
     }

@@ -7,8 +7,8 @@ import com.example.sporthub.databinding.ItemUpcomingBookingBinding
 import java.text.SimpleDateFormat
 import java.util.*
 
-class BookingAdapter(private val bookings: List<Booking>) :
-    RecyclerView.Adapter<BookingAdapter.BookingViewHolder>() {
+class BookingsAdapter(private val bookings: List<Booking>) :
+    RecyclerView.Adapter<BookingsAdapter.BookingViewHolder>() {
 
     class BookingViewHolder(private val binding: ItemUpcomingBookingBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -29,6 +29,10 @@ class BookingAdapter(private val bookings: List<Booking>) :
             Glide.with(binding.root.context)
                 .load(booking.venue?.image)
                 .into(binding.imageBackground)
+
+            binding.root.setOnClickListener {
+                //onBookingClick(booking)
+            }
         }
     }
 

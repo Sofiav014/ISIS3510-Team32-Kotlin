@@ -5,7 +5,6 @@ plugins {
     id("com.google.firebase.crashlytics")
     id("androidx.navigation.safeargs.kotlin")
     id("kotlin-parcelize")
-    // Only use one kapt plugin
     id("kotlin-kapt")
 }
 
@@ -19,6 +18,7 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -31,6 +31,7 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -39,13 +40,11 @@ android {
         jvmTarget = "11"
     }
 
-    // Support for viewBinding and dataBinding
     buildFeatures {
         viewBinding = true
         dataBinding = true
     }
 
-    // Single kapt block with correct config
     kapt {
         correctErrorTypes = true
         useBuildCache = true
@@ -53,28 +52,34 @@ android {
             arg("room.schemaLocation", "$projectDir/schemas")
             arg("room.incremental", "true")
             arg("room.expandProjection", "true")
-            // Removed room.generateKotlin since it requires KSP
         }
     }
 }
 
-// Define versions in one place
 val coroutinesVersion = "1.7.3"
-val roomVersion = "2.6.1"
+val roomVersion       = "2.6.1"
+val lifecycleVersion  = "2.6.1"
 
 dependencies {
-    // Firebase BoM
+    // Lifecycle
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycleVersion")
+
+    // Saved State
+    implementation("androidx.savedstate:savedstate-ktx:1.2.0")
+
+    // Firebase BoM & Play Services
     implementation(platform("com.google.firebase:firebase-bom:32.3.1"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:$coroutinesVersion")
-
-    // Firebase
     implementation("com.google.firebase:firebase-crashlytics")
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-database-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
 
-    // AndroidX Core
+    // AndroidX Core & UI
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.10.0")
@@ -86,23 +91,18 @@ dependencies {
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.5")
     implementation("androidx.navigation:navigation-ui-ktx:2.7.5")
 
-    // Lifecycle
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
-
     // Google Services
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation("com.google.android.gms:play-services-location:21.0.1")
 
-    // Glide
+    // Image loading
     implementation("com.github.bumptech.glide:glide:4.15.1")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate-android:2.9.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.15.1")
 
-    // Gson
+    // JSON
     implementation("com.google.code.gson:gson:2.10.1")
 
-    // Coroutines - use consistent version
+    // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
 

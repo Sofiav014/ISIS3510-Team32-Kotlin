@@ -12,7 +12,8 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.lifecycleScope
+//import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.sporthub.data.model.Booking
 import com.example.sporthub.data.repository.HomeRepository
@@ -32,7 +33,7 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val userViewModel: SharedUserViewModel by activityViewModels()
-    private val homeViewModel by lazy { HomeViewModel(HomeRepository()) }
+    private val homeViewModel: HomeViewModel by activityViewModels()
     private val createBookingViewModel: CreateBookingViewModel by activityViewModels()
     private val userRepository = UserRepository()
 
@@ -73,7 +74,10 @@ class HomeFragment : Fragment() {
         }
 
         recommendedBookingsAdapter = RecommendedBookingsAdapter(homeViewModel) { booking ->
-            joinBooking(booking)
+            val action = HomeFragmentDirections
+                .actionNavigationHomeToBookingDetailFragment(booking, booking.id)
+            println("Selected Booking ID: ${booking.id}")
+            findNavController().navigate(action)
         }
 
         binding.recyclerRecommendedBookings.apply {
@@ -143,7 +147,7 @@ class HomeFragment : Fragment() {
         }
 
     }
-
+    /*
     private fun joinBooking(booking: Booking) {
         // Use the lifecycleScope for running suspend functions in the UI thread
         lifecycleScope.launch {
@@ -167,7 +171,7 @@ class HomeFragment : Fragment() {
             }
         }
     }
-
+    */
 
 
     private fun refreshUpcomingBookings() {

@@ -1,8 +1,13 @@
 package com.example.sporthub.data.repository
 
 import com.example.sporthub.data.model.Booking
+import com.example.sporthub.data.model.Sport
+import com.example.sporthub.data.model.Venue
+import com.google.android.gms.tasks.Task
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.GeoPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.tasks.await
@@ -82,25 +87,56 @@ class BookingRepository {
         }
     }
 
-    suspend fun getBookingDetail(id: String): Booking? =
-        bookingsRef
-            .document(id)
-            .get()
-            .await()
-            .toObject(Booking::class.java)
+    suspend fun getBookingDetail(id: String): Booking? = withContext(Dispatchers.IO) {
+        val snap = bookingsRef.document(id).get().await()
+        if (!snap.exists()) return@withContext null
 
-    suspend fun joinBooking(userId: String, booking: Booking) {
-        val bookingDoc = bookingsRef.document(booking.id)
-        val userDoc    = db.collection("users").document(userId)
+        val tsStart = snap.getTimestamp("start_time")
+        val tsEnd   = snap.getTimestamp("end_time")
+        val max     = (snap.getLong("max_users") ?: 0L).toInt()
+        val users   = snap.get("users") as? List<String> ?: emptyList()
 
-        withContext(Dispatchers.IO) {
-            db.runBatch { batch ->
-                // 1) add the user ID to the booking.users array
-                batch.update(bookingDoc, "users", FieldValue.arrayUnion(userId))
-                // 2) add the booking ID to the user.bookings array
-                batch.update(userDoc,    "bookings", FieldValue.arrayUnion(booking.id))
-            }.await()
-        }
+        val venueMap = snap.get("venue") as? Map<*, *> ?: emptyMap<Any,Any>()
+        val sportMap = venueMap["sport"] as? Map<*, *> ?: emptyMap<Any,Any>()
+        val sport = Sport(
+            id   = sportMap["id"].toString(),
+            name = sportMap["name"].toString(),
+            logo = sportMap["logo"].toString()
+        )
+
+        val venue = Venue(
+            id           = venueMap["id"].toString(),
+            coords       = venueMap["coords"] as GeoPoint,
+            image        = venueMap["image"].toString(),
+            locationName = venueMap["location_name"].toString(),
+            name         = venueMap["name"].toString(),
+            rating       = (venueMap["rating"] as? Number)?.toDouble() ?: 0.0,
+            sport        = sport,
+            bookings     = null
+        )
+
+        Booking(
+            id        = snap.id,
+            startTime = tsStart,
+            endTime   = tsEnd,
+            maxUsers  = max,
+            users     = users,
+            venue     = venue
+        )
     }
+
+
+
+    suspend fun joinBooking(userId: String, booking: Booking): Boolean =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val bookingDoc = bookingsRef.document(booking.id)
+                val userDoc    = db.collection("users").document(userId)
+                db.runBatch { batch ->
+                    batch.update(bookingDoc, "users", FieldValue.arrayUnion(userId))
+                    batch.update(userDoc,    "bookings", FieldValue.arrayUnion(booking))
+                }.await()
+            }.isSuccess
+        }
 
 }
