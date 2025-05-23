@@ -13,7 +13,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.sporthub.R
 import com.example.sporthub.databinding.FragmentVenueDetailBinding
+import com.example.sporthub.utils.ConnectivityHelper
 import com.example.sporthub.viewmodel.VenueDetailViewModel
+import com.google.android.material.snackbar.Snackbar
 
 class VenueDetailFragment : Fragment() {
 
@@ -60,7 +62,11 @@ class VenueDetailFragment : Fragment() {
         }
 
         binding.btnFavorite.setOnClickListener {
-            viewModel.toggleFavoriteStatus()
+            if (ConnectivityHelper.isNetworkAvailable(requireContext())) {
+                viewModel.toggleFavoriteStatus()
+            } else {
+                Snackbar.make(binding.root, "You can't like venues while being offline", Snackbar.LENGTH_LONG).show()
+            }
         }
     }
 
