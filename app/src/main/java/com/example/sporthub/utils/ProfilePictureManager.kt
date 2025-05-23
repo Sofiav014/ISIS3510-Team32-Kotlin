@@ -56,6 +56,11 @@ class ProfilePictureManager(
         ) { result ->
             Log.d(TAG, "Camera result received: ${result.resultCode}")
             if (result.resultCode == Activity.RESULT_OK) {
+                // Check connectivity before processing
+                if (!ConnectivityHelper.isNetworkAvailable(fragment.requireContext())) {
+                    onError("Connection lost during photo capture. Please check your internet connection and try again.")
+                    return@registerForActivityResult
+                }
                 handleCameraResult()
             }
         }
@@ -67,6 +72,11 @@ class ProfilePictureManager(
             Log.d(TAG, "Gallery result received: ${result.resultCode}")
             if (result.resultCode == Activity.RESULT_OK) {
                 result.data?.data?.let { uri ->
+                    // Check connectivity before processing
+                    if (!ConnectivityHelper.isNetworkAvailable(fragment.requireContext())) {
+                        onError("Connection lost during image selection. Please check your internet connection and try again.")
+                        return@registerForActivityResult
+                    }
                     handleGalleryResult(uri)
                 }
             }
@@ -85,15 +95,12 @@ class ProfilePictureManager(
                 permissions[Manifest.permission.READ_EXTERNAL_STORAGE] ?: false
             }
 
-            Log.d(TAG, "Camera granted: $cameraGranted, Storage granted: $storageGranted (Android ${android.os.Build.VERSION.SDK_INT})")
+            Log.d(TAG, "Camera granted: $cameraGranted, Storage granted: $storageGranted")
 
             if (cameraGranted && storageGranted) {
-                Log.d(TAG, "All permissions granted, showing camera/gallery selection")
+                Log.d(TAG, "All permissions granted, showing image source dialog")
                 showImageSourceDialog()
             } else {
-                Log.w(TAG, "Permissions denied - Camera: $cameraGranted, Storage: $storageGranted")
-
-                // Simple error message - user can try again
                 val missingPermissions = mutableListOf<String>()
                 if (!cameraGranted) missingPermissions.add("Camera")
                 if (!storageGranted) missingPermissions.add("Photos/Media")
@@ -104,7 +111,6 @@ class ProfilePictureManager(
                     "${missingPermissions.joinToString(" and ")} permissions are required to change profile picture. Please try again and grant both permissions."
                 }
 
-                Log.d(TAG, "Showing error: $message")
                 onError(message)
             }
         }
@@ -115,13 +121,14 @@ class ProfilePictureManager(
     fun showImagePickerDialog() {
         Log.d(TAG, "showImagePickerDialog called")
 
+        // Note: Connectivity should be checked by the calling code before this method
+        // We trust that the caller has already verified internet connectivity
+
         if (hasRequiredPermissions()) {
-            // Permissions already granted, show camera/gallery selection directly
             Log.d(TAG, "Permissions already granted, showing image source dialog")
             showImageSourceDialog()
         } else {
-            // Permissions not granted, ALWAYS request them with system dialog
-            Log.d(TAG, "Permissions not granted, requesting permissions NOW")
+            Log.d(TAG, "Permissions not granted, requesting permissions")
             requestPermissions()
         }
     }
@@ -130,14 +137,13 @@ class ProfilePictureManager(
         val context = fragment.requireContext()
         val cameraPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
 
-        // For Android 13+ (API 33+), we need READ_MEDIA_IMAGES instead of READ_EXTERNAL_STORAGE
         val storagePermission = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED
         } else {
             ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
         }
 
-        Log.d(TAG, "Checking permissions - Camera: $cameraPermission, Storage: $storagePermission (Android ${android.os.Build.VERSION.SDK_INT})")
+        Log.d(TAG, "Checking permissions - Camera: $cameraPermission, Storage: $storagePermission")
         return cameraPermission && storagePermission
     }
 
@@ -158,7 +164,6 @@ class ProfilePictureManager(
 
             Log.d(TAG, "Requesting permissions: ${permissions.joinToString(", ")}")
             requestPermissionLauncher.launch(permissions)
-            Log.d(TAG, "Permission launcher started successfully")
         } catch (e: Exception) {
             Log.e(TAG, "Error launching permission request", e)
             onError("Error requesting permissions: ${e.message}")
@@ -166,6 +171,7 @@ class ProfilePictureManager(
     }
 
     private fun showImageSourceDialog() {
+        // Removed redundant connectivity check - trust the calling code
         val options = arrayOf("Take Photo", "Choose from Gallery", "Cancel")
 
         AlertDialog.Builder(fragment.requireContext())
@@ -248,13 +254,26 @@ class ProfilePictureManager(
     }
 
     private fun uploadImageToFirebase(bitmap: Bitmap) {
-        // Use fragment's lifecycleScope for proper lifecycle management
+        // Check connectivity before starting upload
+        if (!ConnectivityHelper.isNetworkAvailable(fragment.requireContext())) {
+            onError("Connection lost during upload preparation. Please check your internet connection and try again.")
+            return
+        }
+
         fragment.lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val userId = getCurrentUserId()
                 if (userId.isNullOrEmpty()) {
                     withContext(Dispatchers.Main) {
                         onError("User not authenticated")
+                    }
+                    return@launch
+                }
+
+                // Double-check connectivity before compression
+                if (!ConnectivityHelper.isNetworkAvailable(fragment.requireContext())) {
+                    withContext(Dispatchers.Main) {
+                        onError("Connection lost during image processing. Please check your internet connection and try again.")
                     }
                     return@launch
                 }
@@ -270,7 +289,12 @@ class ProfilePictureManager(
             } catch (e: Exception) {
                 Log.e(TAG, "Error uploading image", e)
                 withContext(Dispatchers.Main) {
-                    onError("Failed to upload image: ${e.message}")
+                    // Check if error is connectivity-related
+                    if (!ConnectivityHelper.isNetworkAvailable(fragment.requireContext())) {
+                        onError("Connection lost during upload. Please check your internet connection and try again.")
+                    } else {
+                        onError("Failed to upload image: ${e.message}")
+                    }
                 }
             }
         }
@@ -279,6 +303,11 @@ class ProfilePictureManager(
     private suspend fun uploadBitmapToStorage(bitmap: Bitmap, userId: String): String {
         return withContext(Dispatchers.IO) {
             Log.d(TAG, "Starting upload for user: $userId")
+
+            // Check connectivity before starting upload
+            if (!ConnectivityHelper.isNetworkAvailable(fragment.requireContext())) {
+                throw Exception("No internet connection available for upload")
+            }
 
             val baos = ByteArrayOutputStream()
             bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos)
@@ -300,11 +329,16 @@ class ProfilePictureManager(
                 downloadUrl.toString()
             } catch (e: Exception) {
                 Log.e(TAG, "Upload failed: ${e.message}")
-                Log.e(TAG, "Upload error details: ", e)
-                throw e
+                // Check if it's a connectivity issue
+                if (!ConnectivityHelper.isNetworkAvailable(fragment.requireContext())) {
+                    throw Exception("Connection lost during upload")
+                } else {
+                    throw e
+                }
             }
         }
     }
+
     private fun compressBitmap(bitmap: Bitmap): Bitmap {
         val maxDimension = 800
         val scale = if (bitmap.width > bitmap.height) {

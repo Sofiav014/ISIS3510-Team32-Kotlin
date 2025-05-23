@@ -140,36 +140,64 @@ class ProfileFragment : Fragment() {
                 updateProfilePicture(downloadUrl)
             },
             onError = { errorMessage ->
-                Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
+                // Show user-friendly error messages
+                showProfilePictureError(errorMessage)
             }
         )
 
         // Set click listener on profile image
         profileImage.setOnClickListener {
+            // Check connectivity before allowing profile picture change
+            if (!ConnectivityHelper.isNetworkAvailable(requireContext())) {
+                showProfilePictureError("No internet connection. Profile picture changes require internet access. Please check your connection and try again.")
+                return@setOnClickListener
+            }
             profilePictureManager.showImagePickerDialog()
         }
 
         // Set click listener on add icon
         addProfilePictureIcon.setOnClickListener {
+            // Check connectivity before allowing profile picture change
+            if (!ConnectivityHelper.isNetworkAvailable(requireContext())) {
+                showProfilePictureError("No internet connection. Profile picture changes require internet access. Please check your connection and try again.")
+                return@setOnClickListener
+            }
             profilePictureManager.showImagePickerDialog()
         }
     }
 
+    private fun showProfilePictureError(errorMessage: String) {
+        // Show error message with appropriate styling
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle("Profile Picture Error")
+            .setMessage(errorMessage)
+            .setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .show()
+    }
+
     private fun updateProfilePicture(downloadUrl: String) {
-        // Save URL to Firebase user document
+        // Check connectivity before updating
+        if (!ConnectivityHelper.isNetworkAvailable(requireContext())) {
+            showProfilePictureError("Connection lost during profile picture update. Please check your internet connection and try again.")
+            return
+        }
+
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         if (userId != null) {
             Log.d("ProfileFragment", "Updating profile picture with URL: $downloadUrl")
 
             viewModel.updateProfilePicture(userId, downloadUrl)
 
-            // Update UI immediately with the new image - IMPORTANT: Use the downloadUrl directly
+            // Update UI immediately with the new image
             loadProfileImage(downloadUrl)
 
             Toast.makeText(requireContext(), "Profile picture updated successfully!", Toast.LENGTH_SHORT).show()
         } else {
             Log.e("ProfileFragment", "User ID is null, cannot update profile picture")
-            Toast.makeText(requireContext(), "Error: User not found", Toast.LENGTH_SHORT).show()
+            showProfilePictureError("User authentication error. Please try signing in again.")
         }
     }
 
@@ -177,18 +205,33 @@ class ProfileFragment : Fragment() {
         Log.d("ProfileFragment", "Loading profile image: $imageUrl")
 
         if (!imageUrl.isNullOrEmpty()) {
-            // Load the profile picture with proper error handling and circular crop
-            Glide.with(this)
-                .load(imageUrl)
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .placeholder(R.drawable.ic_profile_outline)
-                .error(R.drawable.ic_profile_outline)
-                .circleCrop() // This ensures the image is circular
-                .into(profileImage)
+            // Check if we have connectivity for loading image
+            if (ConnectivityHelper.isNetworkAvailable(requireContext())) {
+                // Load the profile picture with circular crop and border
+                Glide.with(this)
+                    .load(imageUrl)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .placeholder(R.drawable.ic_profile_outline)
+                    .error(R.drawable.ic_profile_outline)
+                    .circleCrop()
+                    .into(profileImage)
 
-            // Hide the add icon
-            addProfilePictureIcon.visibility = View.VISIBLE // Keep it visible for editing
-            Log.d("ProfileFragment", "Profile image loaded successfully")
+                addProfilePictureIcon.visibility = View.VISIBLE
+                Log.d("ProfileFragment", "Profile image loaded successfully")
+            } else {
+                // No connectivity - show cached image if available, otherwise default
+                Glide.with(this)
+                    .load(imageUrl)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .onlyRetrieveFromCache(true) // Only load from cache when offline
+                    .placeholder(R.drawable.ic_profile_outline)
+                    .error(R.drawable.ic_profile_outline)
+                    .circleCrop()
+                    .into(profileImage)
+
+                addProfilePictureIcon.visibility = View.VISIBLE
+                Log.d("ProfileFragment", "Loading profile image from cache (offline)")
+            }
         } else {
             // Show default profile picture
             Glide.with(this)
@@ -198,6 +241,31 @@ class ProfileFragment : Fragment() {
 
             addProfilePictureIcon.visibility = View.VISIBLE
             Log.d("ProfileFragment", "Showing default profile image")
+        }
+    }
+
+    private fun updateProfilePictureUI() {
+        val isOnline = ConnectivityHelper.isNetworkAvailable(requireContext())
+
+        if (!isOnline) {
+            // Show offline indicator
+            addProfilePictureIcon.alpha = 0.5f // Dim the add icon
+
+            // Add long click listener to explain why it's disabled
+            profileImage.setOnLongClickListener {
+                showProfilePictureError("Profile picture changes are disabled while offline. Please connect to the internet to change your profile picture.")
+                true
+            }
+
+            addProfilePictureIcon.setOnLongClickListener {
+                showProfilePictureError("Profile picture changes are disabled while offline. Please connect to the internet to change your profile picture.")
+                true
+            }
+        } else {
+            // Normal online state
+            addProfilePictureIcon.alpha = 1.0f
+            profileImage.setOnLongClickListener(null)
+            addProfilePictureIcon.setOnLongClickListener(null)
         }
     }
 
@@ -301,37 +369,16 @@ class ProfileFragment : Fragment() {
     private fun preloadThemeResources() {
         try {
             context?.let { ctx ->
-                ctx.getDrawable(com.example.sporthub.R.drawable.ic_light_mode)
-                ctx.getDrawable(com.example.sporthub.R.drawable.ic_dark_mode)
-                ctx.getDrawable(com.example.sporthub.R.drawable.ic_home_outline)
-                ctx.getDrawable(com.example.sporthub.R.drawable.ic_profile_outline)
-                ctx.getDrawable(com.example.sporthub.R.drawable.ic_search_outline)
-                ctx.getDrawable(com.example.sporthub.R.drawable.ic_calendar_outline)
-                ctx.getDrawable(com.example.sporthub.R.drawable.ic_create_outline)
+                ctx.getDrawable(R.drawable.ic_light_mode)
+                ctx.getDrawable(R.drawable.ic_dark_mode)
+                ctx.getDrawable(R.drawable.ic_home_outline)
+                ctx.getDrawable(R.drawable.ic_profile_outline)
+                ctx.getDrawable(R.drawable.ic_search_outline)
+                ctx.getDrawable(R.drawable.ic_calendar_outline)
+                ctx.getDrawable(R.drawable.ic_create_outline)
             }
         } catch (e: Exception) {
             Log.e("ProfileFragment", "Error preloading resources: ${e.message}")
-        }
-    }
-
-    private fun setupThemeSwitch() {
-        themeSwitch.isChecked = viewModel.isDarkMode.value ?: false
-
-        themeSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
-            if (isChecked == viewModel.isDarkMode.value) return@setOnCheckedChangeListener
-
-            buttonView.isEnabled = false
-
-            val themeChangeText = "Applying ${if(isChecked) "dark" else "light"} theme..."
-            val snackbar = Snackbar.make(requireView(), themeChangeText, Snackbar.LENGTH_SHORT)
-            snackbar.show()
-
-            updateThemeUI(isChecked)
-            viewModel.toggleDarkMode()
-
-            Handler(Looper.getMainLooper()).postDelayed({
-                buttonView.isEnabled = true
-            }, 1500)
         }
     }
 
@@ -442,16 +489,32 @@ class ProfileFragment : Fragment() {
                 startActivity(intent)
             }
         } catch (e: Exception) {
-            android.util.Log.e("ProfileFragment", "Error signing out: ${e.message}")
+            Log.e("ProfileFragment", "Error signing out: ${e.message}")
         }
     }
 
     override fun onStart() {
         super.onStart()
 
+        // Register network callback for real-time connectivity changes
         networkCallback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
-                favoriteVenuesViewModel.syncWithRemote()
+                activity?.runOnUiThread {
+                    Log.d("ProfileFragment", "Network available - enabling profile picture features")
+                    updateProfilePictureUI()
+                }
+            }
+
+            override fun onLost(network: Network) {
+                activity?.runOnUiThread {
+                    Log.d("ProfileFragment", "Network lost - disabling profile picture features")
+                    updateProfilePictureUI()
+
+                    // Show a brief message about offline state
+                    Toast.makeText(requireContext(),
+                        "Connection lost. Profile picture changes disabled until reconnected.",
+                        Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
@@ -463,6 +526,11 @@ class ProfileFragment : Fragment() {
         } else {
             val request = NetworkRequest.Builder().build()
             connectivityManager.registerNetworkCallback(request, networkCallback!!)
+        }
+
+        // Sync favorite venues when connectivity is available
+        if (ConnectivityHelper.isNetworkAvailable(requireContext())) {
+            favoriteVenuesViewModel.syncWithRemote()
         }
     }
 
@@ -488,15 +556,14 @@ class ProfileFragment : Fragment() {
             return
         }
 
-        // Always refresh user data when returning to profile
-        Log.d("ProfileFragment", "onResume - refreshing user data")
+        // Update profile picture UI based on connectivity
+        updateProfilePictureUI()
 
-        // Clear any cached data in the repository
+        // Force refresh through SharedUserViewModel
+        sharedUserViewModel.refreshCurrentUser()
+
+        // Also refresh profile picture if we have a user
         sharedUserViewModel.currentUser.value?.let { user ->
-            // Force refresh the user data
-            viewModel.refreshUserData()
-
-            // Also refresh profile picture
             viewModel.loadProfilePicture(user.id)
         }
 
@@ -505,5 +572,4 @@ class ProfileFragment : Fragment() {
             favoriteVenuesViewModel.syncWithRemote()
         }
     }
-
 }

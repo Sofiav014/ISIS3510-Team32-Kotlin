@@ -17,6 +17,7 @@ import com.example.sporthub.data.model.User
 import com.example.sporthub.data.model.Venue
 import com.example.sporthub.data.repository.UserRepository
 import com.example.sporthub.ui.login.SignInActivity
+import com.example.sporthub.utils.ConnectivityHelper
 import com.example.sporthub.utils.LocalThemeManager
 import com.example.sporthub.utils.ThemeManager
 import com.google.firebase.Timestamp
@@ -95,6 +96,16 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             try {
                 withContext(Dispatchers.IO) {
+                    // Check connectivity before attempting to load from Firebase
+                    if (!ConnectivityHelper.isNetworkAvailable(getApplication())) {
+                        // Try to load from cache or show default
+                        withContext(Dispatchers.Main) {
+                            Log.d("ProfileViewModel", "No internet connection - cannot load fresh profile picture")
+                            _profilePictureUrl.value = null // Will show default/cached image
+                        }
+                        return@withContext
+                    }
+
                     val userDoc = firestore.collection("users").document(userId).get().await()
                     val profilePictureUrl = userDoc.getString("profile_picture_url")
 
@@ -106,6 +117,12 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             } catch (e: Exception) {
                 Log.e("ProfileViewModel", "Error loading profile picture: ${e.message}")
                 withContext(Dispatchers.Main) {
+                    // Check if it's a connectivity issue
+                    if (!ConnectivityHelper.isNetworkAvailable(getApplication())) {
+                        Log.d("ProfileViewModel", "Failed to load profile picture due to no internet connection")
+                    } else {
+                        _errorMessage.value = "Failed to load profile picture"
+                    }
                     _profilePictureUrl.value = null
                 }
             }
@@ -115,6 +132,14 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     fun updateProfilePicture(userId: String, imageUrl: String) {
         viewModelScope.launch {
             try {
+                // Check connectivity before attempting update
+                if (!ConnectivityHelper.isNetworkAvailable(getApplication())) {
+                    withContext(Dispatchers.Main) {
+                        _errorMessage.value = "No internet connection. Cannot update profile picture."
+                    }
+                    return@launch
+                }
+
                 withContext(Dispatchers.IO) {
                     firestore.collection("users")
                         .document(userId)
@@ -130,7 +155,12 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             } catch (e: Exception) {
                 Log.e("ProfileViewModel", "Error updating profile picture: ${e.message}")
                 withContext(Dispatchers.Main) {
-                    _errorMessage.value = "Failed to update profile picture: ${e.message}"
+                    // Check if it's a connectivity issue
+                    if (!ConnectivityHelper.isNetworkAvailable(getApplication())) {
+                        _errorMessage.value = "Connection lost during profile picture update. Please try again when you have internet access."
+                    } else {
+                        _errorMessage.value = "Failed to update profile picture: ${e.message}"
+                    }
                 }
             }
         }
