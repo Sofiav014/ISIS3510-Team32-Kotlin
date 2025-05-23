@@ -27,11 +27,14 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.sporthub.R
 import com.example.sporthub.data.model.Sport
 import com.example.sporthub.data.model.User
 import com.example.sporthub.ui.login.SignInActivity
 import com.example.sporthub.utils.ConnectivityHelper
+import com.example.sporthub.utils.ProfilePictureManager
 import com.example.sporthub.viewmodel.SharedUserViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -57,6 +60,8 @@ class ProfileFragment : Fragment() {
     private lateinit var noFavoriteVenuesText: TextView
     private lateinit var settingsButton: Button
     private lateinit var logoutButton: Button
+    private lateinit var profileImage: ImageView
+    private lateinit var addProfilePictureIcon: ImageView
 
     // Theme mode UI elements
     private lateinit var themeIcon: ImageView
@@ -64,6 +69,7 @@ class ProfileFragment : Fragment() {
     private lateinit var themeSwitch: SwitchCompat
 
     private lateinit var favoriteVenueAdapter: FavoriteVenueAdapter
+    private lateinit var profilePictureManager: ProfilePictureManager
 
     // Network callback for syncing when connection is restored
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
@@ -87,6 +93,9 @@ class ProfileFragment : Fragment() {
         // Initialize views
         initViews(view)
 
+        // Initialize ProfilePictureManager
+        initProfilePictureManager()
+
         // Setup RecyclerView
         setupRecyclerView()
 
@@ -95,9 +104,6 @@ class ProfileFragment : Fragment() {
 
         // Setup button listeners
         setupButtons()
-
-        // Initialize theme switch - Important: defer until we observe isDarkMode LiveData
-        // DO NOT call initThemeSwitch() here
 
         // Load data
         viewModel.loadUserData()
@@ -117,11 +123,150 @@ class ProfileFragment : Fragment() {
         noFavoriteVenuesText = view.findViewById(R.id.noFavoriteVenuesText)
         settingsButton = view.findViewById(R.id.buttonSettings)
         logoutButton = view.findViewById(R.id.button_logout)
+        profileImage = view.findViewById(R.id.profileImage)
+        addProfilePictureIcon = view.findViewById(R.id.addProfilePictureIcon)
 
-        // Theme mode UI elements - make sure these IDs match what's in your layout
+        // Theme mode UI elements
         themeIcon = view.findViewById(R.id.themeIcon)
         themeLabel = view.findViewById(R.id.themeLabel)
         themeSwitch = view.findViewById(R.id.themeSwitch)
+    }
+
+    private fun initProfilePictureManager() {
+        profilePictureManager = ProfilePictureManager(
+            fragment = this,
+            onImageSelected = { downloadUrl ->
+                // Update profile picture in Firebase and UI
+                updateProfilePicture(downloadUrl)
+            },
+            onError = { errorMessage ->
+                // Show user-friendly error messages
+                showProfilePictureError(errorMessage)
+            }
+        )
+
+        // Set click listener on profile image
+        profileImage.setOnClickListener {
+            // Check connectivity before allowing profile picture change
+            if (!ConnectivityHelper.isNetworkAvailable(requireContext())) {
+                showProfilePictureError("No internet connection. Profile picture changes require internet access. Please check your connection and try again.")
+                return@setOnClickListener
+            }
+            profilePictureManager.showImagePickerDialog()
+        }
+
+        // Set click listener on add icon
+        addProfilePictureIcon.setOnClickListener {
+            // Check connectivity before allowing profile picture change
+            if (!ConnectivityHelper.isNetworkAvailable(requireContext())) {
+                showProfilePictureError("No internet connection. Profile picture changes require internet access. Please check your connection and try again.")
+                return@setOnClickListener
+            }
+            profilePictureManager.showImagePickerDialog()
+        }
+    }
+
+    private fun showProfilePictureError(errorMessage: String) {
+        // Show error message with appropriate styling
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle("Profile Picture Error")
+            .setMessage(errorMessage)
+            .setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .show()
+    }
+
+    private fun updateProfilePicture(downloadUrl: String) {
+        // Check connectivity before updating
+        if (!ConnectivityHelper.isNetworkAvailable(requireContext())) {
+            showProfilePictureError("Connection lost during profile picture update. Please check your internet connection and try again.")
+            return
+        }
+
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        if (userId != null) {
+            Log.d("ProfileFragment", "Updating profile picture with URL: $downloadUrl")
+
+            viewModel.updateProfilePicture(userId, downloadUrl)
+
+            // Update UI immediately with the new image
+            loadProfileImage(downloadUrl)
+
+            Toast.makeText(requireContext(), "Profile picture updated successfully!", Toast.LENGTH_SHORT).show()
+        } else {
+            Log.e("ProfileFragment", "User ID is null, cannot update profile picture")
+            showProfilePictureError("User authentication error. Please try signing in again.")
+        }
+    }
+
+    private fun loadProfileImage(imageUrl: String?) {
+        Log.d("ProfileFragment", "Loading profile image: $imageUrl")
+
+        if (!imageUrl.isNullOrEmpty()) {
+            // Check if we have connectivity for loading image
+            if (ConnectivityHelper.isNetworkAvailable(requireContext())) {
+                // Load the profile picture with circular crop and border
+                Glide.with(this)
+                    .load(imageUrl)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .placeholder(R.drawable.ic_profile_outline)
+                    .error(R.drawable.ic_profile_outline)
+                    .circleCrop()
+                    .into(profileImage)
+
+                addProfilePictureIcon.visibility = View.VISIBLE
+                Log.d("ProfileFragment", "Profile image loaded successfully")
+            } else {
+                // No connectivity - show cached image if available, otherwise default
+                Glide.with(this)
+                    .load(imageUrl)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .onlyRetrieveFromCache(true) // Only load from cache when offline
+                    .placeholder(R.drawable.ic_profile_outline)
+                    .error(R.drawable.ic_profile_outline)
+                    .circleCrop()
+                    .into(profileImage)
+
+                addProfilePictureIcon.visibility = View.VISIBLE
+                Log.d("ProfileFragment", "Loading profile image from cache (offline)")
+            }
+        } else {
+            // Show default profile picture
+            Glide.with(this)
+                .load(R.drawable.ic_profile_outline)
+                .circleCrop()
+                .into(profileImage)
+
+            addProfilePictureIcon.visibility = View.VISIBLE
+            Log.d("ProfileFragment", "Showing default profile image")
+        }
+    }
+
+    private fun updateProfilePictureUI() {
+        val isOnline = ConnectivityHelper.isNetworkAvailable(requireContext())
+
+        if (!isOnline) {
+            // Show offline indicator
+            addProfilePictureIcon.alpha = 0.5f // Dim the add icon
+
+            // Add long click listener to explain why it's disabled
+            profileImage.setOnLongClickListener {
+                showProfilePictureError("Profile picture changes are disabled while offline. Please connect to the internet to change your profile picture.")
+                true
+            }
+
+            addProfilePictureIcon.setOnLongClickListener {
+                showProfilePictureError("Profile picture changes are disabled while offline. Please connect to the internet to change your profile picture.")
+                true
+            }
+        } else {
+            // Normal online state
+            addProfilePictureIcon.alpha = 1.0f
+            profileImage.setOnLongClickListener(null)
+            addProfilePictureIcon.setOnLongClickListener(null)
+        }
     }
 
     private fun setupRecyclerView() {
@@ -136,13 +281,23 @@ class ProfileFragment : Fragment() {
         // Get user data from shared view model if available
         sharedUserViewModel.currentUser.observe(viewLifecycleOwner) { user ->
             if (user != null) {
+                Log.d("ProfileFragment", "User data from shared viewmodel: ${user.name}")
                 updateUI(user)
             }
         }
 
         // Otherwise use the profile view model
         viewModel.userData.observe(viewLifecycleOwner) { user ->
-            updateUI(user)
+            if (user != null) {
+                Log.d("ProfileFragment", "User data from profile viewmodel: ${user.name}")
+                updateUI(user)
+            }
+        }
+
+        // Observe profile picture updates
+        viewModel.profilePictureUrl.observe(viewLifecycleOwner) { imageUrl ->
+            Log.d("ProfileFragment", "Profile picture URL updated: $imageUrl")
+            loadProfileImage(imageUrl)
         }
 
         // Observe favorite venues from Room database instead of Firebase
@@ -166,7 +321,6 @@ class ProfileFragment : Fragment() {
         // Observe dark mode changes
         viewModel.isDarkMode.observe(viewLifecycleOwner) { isDarkMode ->
             Log.d("ProfileFragment", "Theme changed. isDarkMode=$isDarkMode")
-            // This is important - first update UI, THEN initialize the switch
             updateThemeUI(isDarkMode)
 
             // Set the switch state without triggering the listener
@@ -213,63 +367,24 @@ class ProfileFragment : Fragment() {
     }
 
     private fun preloadThemeResources() {
-        // This method preloads essential UI resources for both themes
-        // to reduce rendering time when switching
         try {
-            // Preload important drawables used in both themes
             context?.let { ctx ->
-                // Light theme resources
-                ctx.getDrawable(com.example.sporthub.R.drawable.ic_light_mode)
-
-                // Dark theme resources
-                ctx.getDrawable(com.example.sporthub.R.drawable.ic_dark_mode)
-
-                // Navigation icons
-                ctx.getDrawable(com.example.sporthub.R.drawable.ic_home_outline)
-                ctx.getDrawable(com.example.sporthub.R.drawable.ic_profile_outline)
-                ctx.getDrawable(com.example.sporthub.R.drawable.ic_search_outline)
-                ctx.getDrawable(com.example.sporthub.R.drawable.ic_calendar_outline)
-                ctx.getDrawable(com.example.sporthub.R.drawable.ic_create_outline)
+                ctx.getDrawable(R.drawable.ic_light_mode)
+                ctx.getDrawable(R.drawable.ic_dark_mode)
+                ctx.getDrawable(R.drawable.ic_home_outline)
+                ctx.getDrawable(R.drawable.ic_profile_outline)
+                ctx.getDrawable(R.drawable.ic_search_outline)
+                ctx.getDrawable(R.drawable.ic_calendar_outline)
+                ctx.getDrawable(R.drawable.ic_create_outline)
             }
         } catch (e: Exception) {
             Log.e("ProfileFragment", "Error preloading resources: ${e.message}")
         }
     }
 
-    private fun setupThemeSwitch() {
-        // Set initial state
-        themeSwitch.isChecked = viewModel.isDarkMode.value ?: false
-
-        // Configure listener for responsive feedback
-        themeSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
-            if (isChecked == viewModel.isDarkMode.value) return@setOnCheckedChangeListener
-
-            // Disable switch
-            buttonView.isEnabled = false
-
-            // Show visual feedback to indicate theme is changing
-            val themeChangeText = "Applying ${if(isChecked) "dark" else "light"} theme..."
-            val snackbar = Snackbar.make(requireView(), themeChangeText, Snackbar.LENGTH_SHORT)
-            snackbar.show()
-
-            // Update UI immediately
-            updateThemeUI(isChecked)
-
-            // Apply theme change
-            viewModel.toggleDarkMode()
-
-            // Re-enable switch after delay
-            Handler(Looper.getMainLooper()).postDelayed({
-                buttonView.isEnabled = true
-            }, 1500)
-        }
-    }
-
     private fun updateThemeUI(isDarkMode: Boolean) {
-        // Update theme label
         themeLabel.text = if (isDarkMode) "Dark Mode" else "Light Mode"
 
-        // Ensure we set the correct icon
         try {
             val iconResource = if (isDarkMode) {
                 R.drawable.ic_dark_mode
@@ -278,26 +393,19 @@ class ProfileFragment : Fragment() {
             }
             themeIcon.setImageResource(iconResource)
         } catch (e: Exception) {
-            // Log error but don't crash
             Log.e("ProfileFragment", "Error setting theme icon: ${e.message}")
         }
     }
 
     private fun updateUI(user: User) {
-        // Update profile name
         profileName.text = user.name.ifEmpty { "Current User" }
-
-        // Update gender
         genderValue.text = user.gender.ifEmpty { "Not specified" }
-
-        // Update birth date
         birthDateValue.text = viewModel.formatBirthDate(user.birthDate)
-
-        // Update favorite sports
         updateFavoriteSports(user.sportsLiked)
 
-        // We don't need to update favorite venues here anymore since they're observed from Room
-        // This ensures offline availability
+        // Load profile picture if available
+        Log.d("ProfileFragment", "Loading profile picture for user: ${user.id}")
+        viewModel.loadProfilePicture(user.id)
     }
 
     private fun updateFavoriteSports(sports: List<Sport>) {
@@ -323,7 +431,6 @@ class ProfileFragment : Fragment() {
             sportIcon.background = ContextCompat.getDrawable(requireContext(), R.drawable.circle_purple_background)
             sportIcon.setPadding(8, 8, 8, 8)
 
-            // Set the appropriate icon based on sport type
             val sportDrawable: Drawable? = when (sport.name.toLowerCase()) {
                 "basketball" -> ContextCompat.getDrawable(requireContext(), R.drawable.ic_basketball_logo)
                 "football" -> ContextCompat.getDrawable(requireContext(), R.drawable.ic_football_logo)
@@ -338,7 +445,6 @@ class ProfileFragment : Fragment() {
     }
 
     private fun showSettingsDialog() {
-        // Create the options
         val options = arrayOf(
             "Edit Profile Name",
             "Change Gender",
@@ -346,7 +452,6 @@ class ProfileFragment : Fragment() {
             "Update Favorite Sports"
         )
 
-        // Create and show the dialog
         android.app.AlertDialog.Builder(requireContext())
             .setTitle("Settings")
             .setItems(options) { _, which ->
@@ -363,7 +468,7 @@ class ProfileFragment : Fragment() {
 
     private fun <T> startEditActivity(activityClass: Class<T>) {
         val intent = Intent(requireContext(), activityClass)
-        intent.putExtra("EDIT_MODE", true) // Flag to indicate edit mode vs new user registration
+        intent.putExtra("EDIT_MODE", true)
         viewModel.getCurrentUserId()?.let { userId ->
             intent.putExtra("USER_ID", userId)
         }
@@ -384,22 +489,35 @@ class ProfileFragment : Fragment() {
                 startActivity(intent)
             }
         } catch (e: Exception) {
-            android.util.Log.e("ProfileFragment", "Error signing out: ${e.message}")
+            Log.e("ProfileFragment", "Error signing out: ${e.message}")
         }
     }
 
     override fun onStart() {
         super.onStart()
 
-        // Set up network callback to sync when connectivity is restored
+        // Register network callback for real-time connectivity changes
         networkCallback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
-                // Sync with remote when connection is restored
-                favoriteVenuesViewModel.syncWithRemote()
+                activity?.runOnUiThread {
+                    Log.d("ProfileFragment", "Network available - enabling profile picture features")
+                    updateProfilePictureUI()
+                }
+            }
+
+            override fun onLost(network: Network) {
+                activity?.runOnUiThread {
+                    Log.d("ProfileFragment", "Network lost - disabling profile picture features")
+                    updateProfilePictureUI()
+
+                    // Show a brief message about offline state
+                    Toast.makeText(requireContext(),
+                        "Connection lost. Profile picture changes disabled until reconnected.",
+                        Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
-        // Register the network callback
         val connectivityManager =
             requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
@@ -409,12 +527,16 @@ class ProfileFragment : Fragment() {
             val request = NetworkRequest.Builder().build()
             connectivityManager.registerNetworkCallback(request, networkCallback!!)
         }
+
+        // Sync favorite venues when connectivity is available
+        if (ConnectivityHelper.isNetworkAvailable(requireContext())) {
+            favoriteVenuesViewModel.syncWithRemote()
+        }
     }
 
     override fun onStop() {
         super.onStop()
 
-        // Unregister the network callback to prevent leaks
         networkCallback?.let {
             val connectivityManager =
                 requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -434,11 +556,20 @@ class ProfileFragment : Fragment() {
             return
         }
 
-        if (viewModel.userData.value == null) {
-            Log.d("ProfileFragment", "User data is null, reloading")
-            viewModel.loadUserData()
-        } else {
-            Log.d("ProfileFragment", "User data already loaded, skipping reload")
+        // Update profile picture UI based on connectivity
+        updateProfilePictureUI()
+
+        // Force refresh through SharedUserViewModel
+        sharedUserViewModel.refreshCurrentUser()
+
+        // Also refresh profile picture if we have a user
+        sharedUserViewModel.currentUser.value?.let { user ->
+            viewModel.loadProfilePicture(user.id)
+        }
+
+        // Sync favorite venues
+        if (ConnectivityHelper.isNetworkAvailable(requireContext())) {
+            favoriteVenuesViewModel.syncWithRemote()
         }
     }
 }
