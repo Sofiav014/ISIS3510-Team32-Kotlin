@@ -229,7 +229,6 @@ class ProfileFragment : Fragment() {
                 ctx.getDrawable(com.example.sporthub.R.drawable.ic_profile_outline)
                 ctx.getDrawable(com.example.sporthub.R.drawable.ic_search_outline)
                 ctx.getDrawable(com.example.sporthub.R.drawable.ic_calendar_outline)
-                ctx.getDrawable(com.example.sporthub.R.drawable.ic_create_outline)
             }
         } catch (e: Exception) {
             Log.e("ProfileFragment", "Error preloading resources: ${e.message}")
