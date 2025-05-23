@@ -55,20 +55,29 @@ class BookingsFragment : Fragment() {
             adapter = bookingAdapter
         }
     }
-
     private fun setupObservers() {
-        // Observe the selected date and update the text views at the top
+        // This part stays the same
         bookingsViewModel.selectedDate.observe(viewLifecycleOwner) { date ->
             updateDateTextViews(date)
         }
 
-        // Observe the list of bookings and submit it to the adapter
+        // This is the observer that changes
         bookingsViewModel.bookingsForSelectedDate.observe(viewLifecycleOwner) { bookings ->
             bookingAdapter.submitList(bookings)
-            // Here you could add logic to show a "No bookings found" message if the list is empty
+
+            // Check if the list of bookings is empty
+            if (bookings.isEmpty()) {
+                // If it's empty, hide the list and show the "empty state" message
+                binding.recyclerViewBookings.visibility = View.GONE
+                binding.textViewEmptyState.visibility = View.VISIBLE
+            } else {
+                // If it's NOT empty, show the list and hide the message
+                binding.recyclerViewBookings.visibility = View.VISIBLE
+                binding.textViewEmptyState.visibility = View.GONE
+            }
         }
 
-        // Observe the loading state to show/hide a progress bar (optional)
+        // This part stays the same
         bookingsViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
             // e.g., binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         }
