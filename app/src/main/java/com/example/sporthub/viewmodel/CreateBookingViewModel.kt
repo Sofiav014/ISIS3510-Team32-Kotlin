@@ -75,6 +75,10 @@ class CreateBookingViewModel : ViewModel() {
         repository.addBookingToUser(userId, booking)
     }
 
+    suspend fun removeBookingFromUser(userId: String, booking: Booking) {
+        repository.removeBookingFromUser(userId, booking)
+    }
+
 
 
 }

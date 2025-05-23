@@ -11,6 +11,7 @@ import com.google.firebase.firestore.GeoPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.tasks.await
+import android.util.Log
 
 class BookingRepository {
 
@@ -138,5 +139,72 @@ class BookingRepository {
                 }.await()
             }.isSuccess
         }
+    suspend fun cancelBooking(userId: String, booking: Booking): Boolean {
+        return try {
+            val firestore = FirebaseFirestore.getInstance()
 
+            // Start a batch operation to ensure all operations succeed or fail together
+            val batch = firestore.batch()
+
+            // 1. Remove user from booking's users list
+            val bookingRef = firestore.collection("bookings").document(booking.id)
+            batch.update(bookingRef, "users", FieldValue.arrayRemove(userId))
+
+            // 2. Remove booking from user's bookings list
+            val userRef = firestore.collection("users").document(userId)
+            batch.update(userRef, "bookings", FieldValue.arrayRemove(booking.id))
+
+            // 3. If the booking has a venue, remove user from venue's booking participants
+            booking.venue?.id?.let { venueId ->
+                val venueRef = firestore.collection("venues").document(venueId)
+
+                // Create the booking data structure that matches what's stored in venue
+                val bookingVenueData = hashMapOf(
+                    "id" to booking.id,
+                    "end_time" to booking.endTime,
+                    "max_users" to booking.maxUsers,
+                    "start_time" to booking.startTime,
+                    "users" to booking.users.filter { it != userId }, // Remove the user from the list
+                )
+
+                // Remove the old booking data and add the updated one
+                val oldBookingVenueData = hashMapOf(
+                    "id" to booking.id,
+                    "end_time" to booking.endTime,
+                    "max_users" to booking.maxUsers,
+                    "start_time" to booking.startTime,
+                    "users" to booking.users,
+                )
+
+                batch.update(venueRef, "bookings", FieldValue.arrayRemove(oldBookingVenueData))
+
+                // Only add back if there are still users in the booking
+                if (booking.users.size > 1) {
+                    batch.update(venueRef, "bookings", FieldValue.arrayUnion(bookingVenueData))
+                }
+            }
+
+            // Execute all operations
+            batch.commit().await()
+            true
+
+        } catch (e: Exception) {
+            Log.e("BookingRepository", "Error canceling booking: ${e.message}")
+            false
+        }
+    }
+
+
+    suspend fun removeBookingFromUser(userId: String, booking: Booking) {
+        try {
+            val firestore = FirebaseFirestore.getInstance()
+            val userRef = firestore.collection("users").document(userId)
+
+            // Remove booking ID from user's bookings array
+            userRef.update("bookings", FieldValue.arrayRemove(booking.id)).await()
+
+        } catch (e: Exception) {
+            Log.e("CreateBookingViewModel", "Error removing booking from user: ${e.message}")
+        }
+    }
 }

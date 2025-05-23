@@ -66,7 +66,12 @@ class HomeFragment : Fragment() {
             binding.recyclerPopularity.isNestedScrollingEnabled = false
         }
 
-        upcomingBookingsAdapter = UpcomingBookingsAdapter(homeViewModel)
+        upcomingBookingsAdapter = UpcomingBookingsAdapter(homeViewModel) { booking ->
+            val action = HomeFragmentDirections
+                .actionNavigationHomeToBookingDetailFragment(booking, booking.id)
+            println("Selected Booking ID: ${booking.id}")
+            findNavController().navigate(action)
+        }
         binding.recyclerUpcomingBookings.apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
             adapter = upcomingBookingsAdapter
@@ -79,7 +84,6 @@ class HomeFragment : Fragment() {
             println("Selected Booking ID: ${booking.id}")
             findNavController().navigate(action)
         }
-
         binding.recyclerRecommendedBookings.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = recommendedBookingsAdapter

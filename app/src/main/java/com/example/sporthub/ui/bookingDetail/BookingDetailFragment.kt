@@ -24,6 +24,7 @@ import com.example.sporthub.viewmodel.CreateBookingViewModel
 import com.example.sporthub.viewmodel.HomeViewModel
 import com.example.sporthub.viewmodel.SharedUserViewModel
 import kotlinx.coroutines.launch
+import androidx.core.content.ContextCompat
 
 class BookingDetailFragment : Fragment() {
 
@@ -58,22 +59,27 @@ class BookingDetailFragment : Fragment() {
         viewModel.booking.observe(viewLifecycleOwner) { booking ->
             Log.d("BookingDetail", "CurrentBooking: $booking")}
 
-        binding.joinButton.setOnClickListener {
-            FirebaseAuth.getInstance().currentUser?.uid
-                ?.let { viewModel.joinCurrentBooking(it) }
+        // Observer for connectivity status
+        viewModel.isOffline.observe(viewLifecycleOwner) { isOffline ->
+            if (isOffline) {
+                Toast.makeText(requireContext(),
+                    "There is no internet connection",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
 
         viewModel.joinResult.observe(viewLifecycleOwner) { result ->
             when (result) {
                 is BookingDetailViewModel.JoinResult.Success -> {
-                    // exactly your old code:
+
                     val booking = viewModel.booking.value!!
                     val user    = userViewModel.currentUser.value!!
                     lifecycleScope.launch {
-                        // 2) call the suspend function
+
                         createBookingVM.addBookingToUser(user.id, booking)
 
-                        // 3) now update the other VMs
+
                         val updatedUser = user.copy(bookings = user.bookings + booking)
                         userViewModel.updateCurrentUser(updatedUser)
                         homeViewModel.loadHomeData(requireContext(), updatedUser)
@@ -91,7 +97,37 @@ class BookingDetailFragment : Fragment() {
                 }
             }
         }
+        viewModel.cancelResult.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is BookingDetailViewModel.CancelResult.Success -> {
+                    val booking = viewModel.booking.value!!
+                    val user = userViewModel.currentUser.value!!
+                    lifecycleScope.launch {
+                        // Remove booking from user
+                        createBookingVM.removeBookingFromUser(user.id, booking)
+
+                        // Update user and reload home data
+                        val updatedUser = user.copy(bookings = user.bookings.filter { it.id != booking.id })
+                        userViewModel.updateCurrentUser(updatedUser)
+                        homeViewModel.loadHomeData(requireContext(), updatedUser)
+                    }
+                    Toast.makeText(requireContext(),
+                        "Booking canceled successfully",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                is BookingDetailViewModel.CancelResult.Failure -> {
+                    Toast.makeText(requireContext(),
+                        "Failed to cancel booking: ${result.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
     }
+
+
+
 
     private fun setupObservers() {
         viewModel.booking.observe(viewLifecycleOwner) { booking ->
@@ -143,9 +179,30 @@ class BookingDetailFragment : Fragment() {
     private fun setupClickListeners() {
         binding.apply {
             joinButton.setOnClickListener {
+                // Check connectivity first and show immediate toast if offline
+                viewModel.checkConnectivity(requireContext())
+                if (viewModel.isOffline.value == true) {
+                    Toast.makeText(requireContext(),
+                        "There is no internet connection",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@setOnClickListener
+                }
+
                 val userId = FirebaseAuth.getInstance().currentUser?.uid
-                if (userId != null) {
-                    viewModel.joinCurrentBooking(userId)
+                val booking = viewModel.booking.value
+                if (userId != null && booking != null) {
+                    val isUserAlreadyJoined = booking.users.contains(userId)
+
+                    if (isUserAlreadyJoined) {
+                        // Cancel booking - pass context for connectivity check
+                        Log.d("BookingDetail", "Attempting to cancel booking for user: $userId")
+                        viewModel.cancelCurrentBooking(userId, requireContext())
+                    } else {
+                        // Join booking - pass context for connectivity check
+                        Log.d("BookingDetail", "Attempting to join booking for user: $userId")
+                        viewModel.joinCurrentBooking(userId, requireContext())
+                    }
                 }
             }
         }
@@ -158,23 +215,29 @@ class BookingDetailFragment : Fragment() {
         val now = Date()
         val isBookingActive = booking.startTime?.toDate()?.let { now.before(it) } ?: false
 
+        Log.d("BookingDetail", "UpdateJoinButtonState - UserId: $currentUserId, IsJoined: $isUserAlreadyJoined, IsFull: $isBookingFull, IsActive: $isBookingActive")
+
         binding.joinButton.apply {
             when {
                 isUserAlreadyJoined -> {
-                    text = "Already Joined"
-                    isEnabled = false
+                    text = "Cancel Booking"
+                    isEnabled = isBookingActive // Only allow canceling if booking hasn't started
+                    backgroundTintList = ContextCompat.getColorStateList(requireContext(), R.color.red)
                 }
                 isBookingFull -> {
                     text = "Booking Full"
                     isEnabled = false
+                    backgroundTintList = ContextCompat.getColorStateList(requireContext(), R.color.green)
                 }
                 !isBookingActive -> {
                     text = "Booking Ended"
                     isEnabled = false
+                    backgroundTintList = ContextCompat.getColorStateList(requireContext(), R.color.green)
                 }
                 else -> {
                     text = "Join Booking"
                     isEnabled = true
+                    backgroundTintList = ContextCompat.getColorStateList(requireContext(), R.color.green)
                 }
             }
         }
