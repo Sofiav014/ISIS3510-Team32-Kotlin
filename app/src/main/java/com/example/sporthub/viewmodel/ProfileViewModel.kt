@@ -71,15 +71,10 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             return
         }
 
-        // Si ya tenemos datos, no recargar (salvo que quieras forzar recarga)
-        if (_userData.value != null) {
-            Log.d("ProfileViewModel", "User already loaded, skipping fetch")
-            return
-        }
-
         _isLoading.value = true
-        Log.d("ProfileViewModel", "Fetching user data for ${currentUser.uid}")
+        Log.d("ProfileViewModel", "Loading user data for ${currentUser.uid}")
 
+        // Remove any existing observer to avoid duplicates
         currentUserObserver?.let {
             userRepository.getUserModel(currentUser.uid).removeObserver(it)
         }
@@ -246,4 +241,29 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         userRepository.signOut()
         SignInActivity.preferencesAlreadyChecked = false
     }
+
+    fun refreshUserData() {
+        val currentUser = userRepository.getCurrentUser()
+        if (currentUser != null) {
+            Log.d("ProfileViewModel", "Refreshing user data for ${currentUser.uid}")
+
+            // Clear any cached data
+            userRepository.clearUserCache()
+
+            // Force reload user data
+            loadUserData()
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        currentUserObserver?.let { observer ->
+            val currentUser = userRepository.getCurrentUser()
+            if (currentUser != null) {
+                userRepository.getUserModel(currentUser.uid).removeObserver(observer)
+            }
+        }
+    }
+
+
 }

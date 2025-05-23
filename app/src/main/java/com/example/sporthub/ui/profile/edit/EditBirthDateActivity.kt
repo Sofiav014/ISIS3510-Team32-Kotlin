@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
@@ -16,17 +17,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.sporthub.R
 import com.example.sporthub.data.repository.UserRepository
+import com.example.sporthub.ui.login.FavoriteSportsSelectionActivity
+import com.example.sporthub.utils.ConnectivityHelper
+import com.example.sporthub.utils.ConnectivityHelperExt
 import com.example.sporthub.viewmodel.BirthDateViewModel
-import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
-
-
-import android.graphics.Color
-import androidx.appcompat.app.AppCompatDelegate
-
 
 class EditBirthDateActivity : AppCompatActivity() {
 
@@ -37,33 +34,24 @@ class EditBirthDateActivity : AppCompatActivity() {
     private lateinit var titleText: TextView
     private lateinit var subtitleText: TextView
     private lateinit var backButton: ImageButton
+    private lateinit var networkMessageText: TextView
+    private lateinit var rootView: View
     private val calendar = Calendar.getInstance()
     private var isEditMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
-
         val isThemeChanging = getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
             .getBoolean("is_theme_changing", false)
 
         if (isThemeChanging) {
             super.onCreate(savedInstanceState)
-            setContentView(R.layout.activity_edit_name)
-
+            setContentView(R.layout.activity_edit_birth_date)
             initViews()
             return
         }
 
-
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_birth_date)
-
-        // Initialize views
-        datePickerEditText = findViewById(R.id.date_picker_edit_text)
-        saveButton = findViewById(R.id.button_continue)
-        titleText = findViewById(R.id.textview_title)
-        subtitleText = findViewById(R.id.textview_subtitle)
-        backButton = findViewById(R.id.button_back_birth)
 
         // Get edit mode from intent
         isEditMode = intent.getBooleanExtra("EDIT_MODE", false)
@@ -80,6 +68,9 @@ class EditBirthDateActivity : AppCompatActivity() {
         // Initialize views
         initViews()
 
+        // Check connectivity initially
+        checkConnectivity()
+
         // Set up observers
         setupObservers()
 
@@ -94,8 +85,15 @@ class EditBirthDateActivity : AppCompatActivity() {
 
         // Set up save button
         saveButton.setOnClickListener {
+            // Check connectivity before proceeding
+            if (!ConnectivityHelper.isNetworkAvailable(this)) {
+                ConnectivityHelperExt.checkNetworkAndNotify(this, rootView)
+                return@setOnClickListener
+            }
+
             val birthDate = datePickerEditText.text.toString()
             if (birthDate.isNotEmpty() && birthDate != "01 / 01 / 2025") {
+                saveButton.isEnabled = false
                 saveBirthDate(birthDate)
             } else {
                 Toast.makeText(this, "Please select your birth date", Toast.LENGTH_SHORT).show()
@@ -103,7 +101,24 @@ class EditBirthDateActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        saveButton.isEnabled = true // Enable the Save button again
+        // Check connectivity when resuming
+        checkConnectivity()
+    }
+
+    private fun checkConnectivity() {
+        if (!ConnectivityHelper.isNetworkAvailable(this)) {
+            networkMessageText.visibility = View.VISIBLE
+        } else {
+            networkMessageText.visibility = View.GONE
+        }
+    }
+
     private fun initViews() {
+        rootView = findViewById(R.id.rootViewBirthDate)
+        networkMessageText = findViewById(R.id.networkMessageText)
         datePickerEditText = findViewById(R.id.date_picker_edit_text)
         saveButton = findViewById(R.id.button_continue)
         titleText = findViewById(R.id.textview_title)
@@ -127,6 +142,14 @@ class EditBirthDateActivity : AppCompatActivity() {
 
         viewModel.errorEvent.observe(this) { errorMessage ->
             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
+            saveButton.isEnabled = true
+        }
+
+        viewModel.userNotAuthenticatedEvent.observe(this) { notAuthenticated ->
+            if (notAuthenticated) {
+                Toast.makeText(this, "Error: User not authenticated", Toast.LENGTH_SHORT).show()
+                finish()
+            }
         }
     }
 
@@ -204,8 +227,6 @@ class EditBirthDateActivity : AppCompatActivity() {
         }
     }
 
-    // Add this code to EditBirthDateActivity.kt in the showDatePicker() method
-
     private fun showDatePicker() {
         val datePickerTheme = if (isNightMode()) R.style.DatePickerTheme_Dark else R.style.DatePickerTheme
 
@@ -232,11 +253,6 @@ class EditBirthDateActivity : AppCompatActivity() {
         minDate.add(Calendar.YEAR, -100)
         datePickerDialog.datePicker.minDate = minDate.timeInMillis
 
-        // Additional styling for visibility in dark mode if needed
-        if (isNightMode()) {
-            // You can set additional properties here if needed
-        }
-
         datePickerDialog.show()
     }
 
@@ -260,16 +276,18 @@ class EditBirthDateActivity : AppCompatActivity() {
                 viewModel.saveBirthDate(birthDate)
             } else {
                 Toast.makeText(this, "Invalid date format", Toast.LENGTH_SHORT).show()
+                saveButton.isEnabled = true
             }
         } catch (e: Exception) {
             Toast.makeText(this, "Unexpected error", Toast.LENGTH_SHORT).show()
+            saveButton.isEnabled = true
         }
     }
 
     private fun navigateToSportsSelection() {
         // Only navigate to sports selection in registration flow (non-edit mode)
         if (!isEditMode) {
-            val intent = Intent(this, com.example.sporthub.ui.login.FavoriteSportsSelectionActivity::class.java)
+            val intent = Intent(this, FavoriteSportsSelectionActivity::class.java)
             startActivity(intent)
         }
         finish()

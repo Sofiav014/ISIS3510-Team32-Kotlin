@@ -80,7 +80,12 @@ class UserRepository {
         }
     }
     fun clearUserCache() {
+        cachedUserLiveData?.let { liveData ->
+            // Remove all observers to force fresh data fetch
+            liveData.removeObserver { }
+        }
         cachedUserLiveData = null
+        Log.d("UserRepository", "User cache cleared")
     }
 
     fun joinBooking(userId: String, booking: Booking): Task<Void> {
@@ -107,15 +112,27 @@ class UserRepository {
 
 
     fun getUserModel(userId: String): LiveData<User> {
-        // Usar la caché si ya está disponible
-        cachedUserLiveData?.let { return it }
+        // If cache was cleared, create new LiveData
+        if (cachedUserLiveData == null) {
+            val liveData = MutableLiveData<User>()
+            cachedUserLiveData = liveData
 
-        val liveData = MutableLiveData<User>()
-        cachedUserLiveData = liveData
+            // Force fresh fetch from Firestore
+            fetchUserFromFirestore(userId, liveData)
+
+            return liveData
+        }
+
+        return cachedUserLiveData!!
+    }
+
+    private fun fetchUserFromFirestore(userId: String, liveData: MutableLiveData<User>) {
+        Log.d("UserRepository", "Fetching fresh user data from Firestore for $userId")
 
         db.collection("users").document(userId).get()
             .addOnSuccessListener { snapshot ->
                 if (snapshot.exists()) {
+                    // Your existing user parsing logic here...
                     val sportsListAny = snapshot.get("sports_liked")
 
                     val sportsLiked = if (sportsListAny is List<*>) {
@@ -192,16 +209,16 @@ class UserRepository {
                     )
 
                     liveData.value = currentUser
+                    Log.d("UserRepository", "Fresh user data loaded: ${currentUser.name}")
 
                 } else {
                     liveData.value = User("", "", "", null, emptyList(), emptyList(), emptyList())
                 }
             }
-            .addOnFailureListener {
+            .addOnFailureListener { e ->
+                Log.e("UserRepository", "Error fetching user data: ${e.message}")
                 liveData.value = User("", "", "", null, emptyList(), emptyList(), emptyList())
             }
-
-        return liveData
     }
 
 

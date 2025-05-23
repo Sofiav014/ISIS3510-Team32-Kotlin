@@ -488,16 +488,22 @@ class ProfileFragment : Fragment() {
             return
         }
 
-        if (viewModel.userData.value == null) {
-            Log.d("ProfileFragment", "User data is null, reloading")
-            viewModel.loadUserData()
-        } else {
-            Log.d("ProfileFragment", "User data already loaded, checking profile picture")
-            // Always try to load the latest profile picture
-            val userId = FirebaseAuth.getInstance().currentUser?.uid
-            if (userId != null) {
-                viewModel.loadProfilePicture(userId)
-            }
+        // Always refresh user data when returning to profile
+        Log.d("ProfileFragment", "onResume - refreshing user data")
+
+        // Clear any cached data in the repository
+        sharedUserViewModel.currentUser.value?.let { user ->
+            // Force refresh the user data
+            viewModel.refreshUserData()
+
+            // Also refresh profile picture
+            viewModel.loadProfilePicture(user.id)
+        }
+
+        // Sync favorite venues
+        if (ConnectivityHelper.isNetworkAvailable(requireContext())) {
+            favoriteVenuesViewModel.syncWithRemote()
         }
     }
+
 }
