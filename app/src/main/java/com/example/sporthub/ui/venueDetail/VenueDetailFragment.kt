@@ -23,7 +23,8 @@ class VenueDetailFragment : Fragment() {
     private var _binding: FragmentVenueDetailBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var bookingAdapter: BookingAdapter
+    // The adapter is no longer initialized immediately.
+    private var bookingAdapter: BookingAdapter? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,6 +38,7 @@ class VenueDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // setupRecyclerView will now ONLY set the layout manager
         setupRecyclerView()
         setupButtonListeners()
         observeViewModel()
@@ -45,11 +47,8 @@ class VenueDetailFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        bookingAdapter = BookingAdapter("")
-        binding.recyclerViewBookings.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = bookingAdapter
-        }
+        // We only prepare the RecyclerView here. The adapter will be set later.
+        binding.recyclerViewBookings.layoutManager = LinearLayoutManager(requireContext())
     }
 
     private fun setupButtonListeners() {
@@ -61,30 +60,40 @@ class VenueDetailFragment : Fragment() {
         }
 
         binding.btnFavorite.setOnClickListener {
-            // ViewModel handles all the logic
             viewModel.toggleFavoriteStatus()
         }
     }
 
     private fun observeViewModel() {
         viewModel.venue.observe(viewLifecycleOwner) { venue ->
-            venue?.let {
-                binding.venueNameDetail.text = it.name
-                binding.venueLocationDetail.text = it.locationName
-                binding.venueSportDetail.text = it.sport?.name ?: "Sport not available"
-                binding.venueRatingDetail.text = String.format("%.1f", it.rating)
+            if (venue != null) {
+                // Update the main venue card UI
+                binding.venueNameDetail.text = venue.name
+                binding.venueLocationDetail.text = venue.locationName
+                binding.venueSportDetail.text = venue.sport?.name ?: "Sport not available"
+                binding.venueRatingDetail.text = String.format("%.1f", venue.rating)
 
                 Glide.with(requireContext())
-                    .load(it.image)
+                    .load(venue.image)
                     .placeholder(R.drawable.placeholder_image)
                     .error(R.drawable.placeholder_image)
                     .into(binding.venueImageDetail)
 
-                bookingAdapter.submitList(it.bookings ?: emptyList())
+
+                // Now that we have the venue name, we create and set the adapter.
+                bookingAdapter = BookingAdapter(venue.name)
+                binding.recyclerViewBookings.adapter = bookingAdapter
+                bookingAdapter?.submitList(venue.bookings ?: emptyList())
+
+
+            } else {
+                // Handle the case where venue data is null (e.g., error)
+                // Clear the main card details and remove the adapter
+                binding.venueNameDetail.text = "Venue not available"
+                binding.recyclerViewBookings.adapter = null
             }
         }
 
-        // Observer for the favorite status
         viewModel.isFavorite.observe(viewLifecycleOwner) { isFavorite ->
             if (isFavorite) {
                 binding.btnFavorite.setImageResource(R.drawable.ic_heart_filled)
