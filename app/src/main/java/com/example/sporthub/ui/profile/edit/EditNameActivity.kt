@@ -3,49 +3,46 @@ package com.example.sporthub.ui.profile.edit
 import android.content.Context
 import android.os.Bundle
 import android.text.InputFilter
+import android.view.View
 import android.widget.Button
+import android.widget.ImageButton
+import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.sporthub.R
 import com.example.sporthub.data.repository.UserRepository
+import com.example.sporthub.utils.ConnectivityHelper
+import com.example.sporthub.utils.ConnectivityHelperExt
 import com.example.sporthub.viewmodel.NameSelectionViewModel
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import com.example.sporthub.utils.RegistrationTimerManager
 
 class EditNameActivity : AppCompatActivity() {
 
     private lateinit var viewModel: NameSelectionViewModel
     private lateinit var nameEditText: TextInputEditText
     private lateinit var saveButton: Button
-    private lateinit var cancelButton: Button
-    private lateinit var titleText: androidx.appcompat.widget.AppCompatTextView
+    private lateinit var titleText: TextView
+    private lateinit var backButton: ImageButton
+    private lateinit var networkMessageText: TextView
+    private lateinit var rootView: View
     private var isEditMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
         val isThemeChanging = getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
             .getBoolean("is_theme_changing", false)
 
         if (isThemeChanging) {
             super.onCreate(savedInstanceState)
             setContentView(R.layout.activity_edit_name)
-
             initViews()
             return
         }
 
         super.onCreate(savedInstanceState)
-        if (!isEditMode) {
-            // Only start timer if this is part of initial registration (not profile edit)
-            RegistrationTimerManager.startTimer()
-        }
         setContentView(R.layout.activity_edit_name)
-
-        // Initialize views
-        nameEditText = findViewById(R.id.edit_text_name)
-        saveButton = findViewById(R.id.button_continue)
 
         // Get edit mode from intent
         isEditMode = intent.getBooleanExtra("EDIT_MODE", false)
@@ -62,19 +59,41 @@ class EditNameActivity : AppCompatActivity() {
         // Initialize views
         initViews()
 
+        // Check connectivity initially
+        checkConnectivity()
+
         // Set up observers
         setupObservers()
 
         // Configure the UI for edit mode
         setupEditMode()
+
+        // Setup back button
+        setupBackButton()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        saveButton.isEnabled = true // Enable the Save button again
+        // Check connectivity when resuming
+        checkConnectivity()
+    }
+
+    private fun checkConnectivity() {
+        if (!ConnectivityHelper.isNetworkAvailable(this)) {
+            networkMessageText.visibility = View.VISIBLE
+        } else {
+            networkMessageText.visibility = View.GONE
+        }
     }
 
     private fun initViews() {
+        rootView = findViewById(R.id.rootViewNameSelection)
+        networkMessageText = findViewById(R.id.networkMessageText)
         nameEditText = findViewById(R.id.edit_text_name)
         saveButton = findViewById(R.id.button_continue)
-
-        // Try to find title text view and update it for edit mode
         titleText = findViewById(R.id.textview_title)
+        backButton = findViewById(R.id.button_back_name)
 
         // Set up letter filter for the name input
         setupLettersOnlyFilter()
@@ -90,6 +109,14 @@ class EditNameActivity : AppCompatActivity() {
 
         viewModel.errorEvent.observe(this) { errorMessage ->
             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
+            saveButton.isEnabled = true
+        }
+
+        viewModel.userNotAuthenticatedEvent.observe(this) { notAuthenticated ->
+            if (notAuthenticated) {
+                Toast.makeText(this, "Error: User not authenticated", Toast.LENGTH_SHORT).show()
+                finish()
+            }
         }
     }
 
@@ -99,9 +126,8 @@ class EditNameActivity : AppCompatActivity() {
             saveButton.text = "Save"
             titleText.text = "Edit Your Name"
 
-            // Add a back button or allow user to cancel
+            // Try to get the current user name to display in the edit text
             try {
-                // Try to get the current user name to display in the edit text
                 val repository = UserRepository()
                 val currentUser = repository.getCurrentUser()
                 if (currentUser != null) {
@@ -116,20 +142,31 @@ class EditNameActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupBackButton() {
+        backButton.setOnClickListener {
+            finish()
+        }
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                finish()
+            }
+        })
+    }
+
     private fun setupLettersOnlyFilter() {
         // Filter to allow only letters, spaces and some special characters for compound names
         val lettersFilter = InputFilter { source, start, end, dest, dstart, dend ->
             val regex = Regex("^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ '-]+$")
             for (i in start until end) {
                 if (!regex.matches(source[i].toString())) {
-                    // If it doesn't match the pattern, don't allow the input
                     return@InputFilter ""
                 }
             }
             null // Allow the input
         }
 
-        // Length filter - limit to 30 characters
+        // Length filter - limit to 35 characters
         val lengthFilter = InputFilter.LengthFilter(35)
 
         // Apply both filters
@@ -153,12 +190,19 @@ class EditNameActivity : AppCompatActivity() {
 
         // Set up the save button
         saveButton.setOnClickListener {
+            // Check connectivity before proceeding
+            if (!ConnectivityHelper.isNetworkAvailable(this)) {
+                ConnectivityHelperExt.checkNetworkAndNotify(this, rootView)
+                return@setOnClickListener
+            }
+
             val name = nameEditText.text.toString().trim()
             if (name.isEmpty()) {
                 Toast.makeText(this, "Please enter your name", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
+            saveButton.isEnabled = false
             viewModel.saveName(name)
         }
     }
