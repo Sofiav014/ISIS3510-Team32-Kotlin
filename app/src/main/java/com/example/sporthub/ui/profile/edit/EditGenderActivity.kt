@@ -3,6 +3,7 @@ package com.example.sporthub.ui.profile.edit
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
@@ -12,6 +13,8 @@ import androidx.cardview.widget.CardView
 import androidx.lifecycle.ViewModelProvider
 import com.example.sporthub.R
 import com.example.sporthub.data.repository.UserRepository
+import com.example.sporthub.utils.ConnectivityHelper
+import com.example.sporthub.utils.ConnectivityHelperExt
 import com.example.sporthub.viewmodel.GenderSelectionViewModel
 
 class EditGenderActivity : AppCompatActivity() {
@@ -22,16 +25,17 @@ class EditGenderActivity : AppCompatActivity() {
     private lateinit var titleText: TextView
     private lateinit var subtitleText: TextView
     private lateinit var backButton: ImageButton
+    private lateinit var networkMessageText: TextView
+    private lateinit var rootView: View
+    private var isCardClicked = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
         val isThemeChanging = getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
             .getBoolean("is_theme_changing", false)
 
         if (isThemeChanging) {
             super.onCreate(savedInstanceState)
-            setContentView(R.layout.activity_edit_name)
-
+            setContentView(R.layout.activity_edit_gender)
             initViews()
             return
         }
@@ -39,13 +43,8 @@ class EditGenderActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_gender)
 
-        // Initialize views
-        titleText = findViewById(R.id.textview_title)
-        subtitleText = findViewById(R.id.textview_subtitle)
-        backButton = findViewById(R.id.button_back_gender)
-
         // Get edit mode from intent
-        isEditMode = intent.getBooleanExtra("EDIT_MODE", false)
+        isEditMode = intent.getBooleanExtra("EDIT_MODE", true)
 
         // Initialize the ViewModel
         viewModel = ViewModelProvider(this).get(GenderSelectionViewModel::class.java)
@@ -58,6 +57,9 @@ class EditGenderActivity : AppCompatActivity() {
 
         // Initialize views
         initViews()
+
+        // Check connectivity initially
+        checkConnectivity()
 
         // Set up observers
         setupObservers()
@@ -75,22 +77,60 @@ class EditGenderActivity : AppCompatActivity() {
             val buttonOther = findViewById<CardView>(R.id.button_other)
 
             buttonMale.setOnClickListener {
-                viewModel.saveGender("Male")
+                if (checkNetworkBeforeAction()) {
+                    handleGenderSelected("Male")
+                }
             }
 
             buttonFemale.setOnClickListener {
-                viewModel.saveGender("Female")
+                if (checkNetworkBeforeAction()) {
+                    handleGenderSelected("Female")
+                }
             }
 
             buttonOther.setOnClickListener {
-                viewModel.saveGender("Other")
+                if (checkNetworkBeforeAction()) {
+                    handleGenderSelected("Other")
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error setting up gender selection: ${e.message}")
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        isCardClicked = false // Allow clicking cards again
+        // Check connectivity when resuming
+        checkConnectivity()
+    }
+
+    private fun checkConnectivity() {
+        if (!ConnectivityHelper.isNetworkAvailable(this)) {
+            networkMessageText.visibility = View.VISIBLE
+        } else {
+            networkMessageText.visibility = View.GONE
+        }
+    }
+
+    private fun checkNetworkBeforeAction(): Boolean {
+        if (!ConnectivityHelper.isNetworkAvailable(this)) {
+            ConnectivityHelperExt.checkNetworkAndNotify(this, rootView)
+            return false
+        }
+        return true
+    }
+
+    private fun handleGenderSelected(gender: String) {
+        if (isCardClicked) return // Prevent multiple clicks
+        isCardClicked = true
+
+        viewModel.saveGender(gender)
+    }
+
     private fun initViews() {
+        rootView = findViewById(R.id.rootViewGenderSelection)
+        networkMessageText = findViewById(R.id.networkMessageText)
         titleText = findViewById(R.id.textview_title)
         subtitleText = findViewById(R.id.textview_subtitle)
         backButton = findViewById(R.id.button_back_gender)
@@ -99,19 +139,21 @@ class EditGenderActivity : AppCompatActivity() {
     private fun setupObservers() {
         viewModel.saveSuccessEvent.observe(this) { success ->
             if (success) {
-                if (isEditMode) {
-                    Toast.makeText(this, "Gender updated successfully!", Toast.LENGTH_SHORT).show()
-                    finish() // Return to profile in edit mode
-                } else {
-                    // Continue with registration flow for new users
-                    Toast.makeText(this, "Gender selected successfully!", Toast.LENGTH_SHORT).show()
-                    navigateToBirthDateSelection()
-                }
+                Toast.makeText(this, "Gender updated successfully!", Toast.LENGTH_SHORT).show()
+                finish() // Return to profile in edit mode
             }
         }
 
         viewModel.errorEvent.observe(this) { errorMessage ->
             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
+            isCardClicked = false // Reset flag to allow retrying
+        }
+
+        viewModel.userNotAuthenticatedEvent.observe(this) { notAuthenticated ->
+            if (notAuthenticated) {
+                Toast.makeText(this, "Error: User not authenticated", Toast.LENGTH_SHORT).show()
+                finish()
+            }
         }
     }
 
@@ -129,7 +171,6 @@ class EditGenderActivity : AppCompatActivity() {
                     repository.getUserData(userId).addOnSuccessListener { document ->
                         if (document.exists() && document.contains("gender")) {
                             val currentGender = document.getString("gender") ?: ""
-                            // We could highlight the current selection if needed
                             Log.d(TAG, "Current gender: $currentGender")
                         }
                     }
@@ -150,14 +191,5 @@ class EditGenderActivity : AppCompatActivity() {
                 finish()
             }
         })
-    }
-
-    private fun navigateToBirthDateSelection() {
-        // Only navigate to birth date selection in registration flow (non-edit mode)
-        if (!isEditMode) {
-            val intent = android.content.Intent(this, com.example.sporthub.ui.login.BirthDateSelectionActivity::class.java)
-            startActivity(intent)
-        }
-        finish()
     }
 }
