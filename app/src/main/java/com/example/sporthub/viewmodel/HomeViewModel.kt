@@ -44,6 +44,8 @@ class HomeViewModel(private val repository: HomeRepository) : ViewModel() {
     private val _isOffline = MutableLiveData<Boolean>()
     val isOffline: LiveData<Boolean> = _isOffline
 
+
+
     private val cache = LruCache<String, String>(10 * 1024 * 1024) // 10MB cache for shared preferences data
 
     fun loadHomeData(context: Context, user: User) {
@@ -61,7 +63,9 @@ class HomeViewModel(private val repository: HomeRepository) : ViewModel() {
                     _upcomingBookings.value = upcoming
                     _popularityReport.value = mapReport(report, user)
 
-                    // Save in caché
+                    Log.d("HomeViewModel", "Upcoming Bookings fetched: $upcoming")
+
+                    // Save in cache
                     cache.put("recommended", Gson().toJson(recommended))
                     cache.put("upcoming", Gson().toJson(upcoming))
                     cache.put("report", Gson().toJson(_popularityReport.value))
@@ -129,13 +133,32 @@ class HomeViewModel(private val repository: HomeRepository) : ViewModel() {
         )
     }
 
-
     fun loadImageIntoImageView(context: Context, imageUrl: String, imageView: ImageView) {
         Glide.with(context)
             .load(imageUrl)
             .diskCacheStrategy(DiskCacheStrategy.ALL)
             .error(R.drawable.placeholder_image)
-            .into(imageView)  // Directly load into ImageView
+            .into(imageView)
+    }
+
+    fun refreshBookings(user: User) {
+        viewModelScope.launch {
+            val recommended = repository.getRecommendedBookings(user)
+            val upcoming = repository.getUpcomingBookings(user)
+            _recommendedBookings.value = recommended
+            _upcomingBookings.value = upcoming
+        }
+    }
+
+    fun getUpcomingBookings(user: User) {
+        viewModelScope.launch {
+            try {
+                val upcomingBookings = repository.getUpcomingBookings(user)
+                _upcomingBookings.value = upcomingBookings
+            } catch (e: Exception) {
+                Log.e("HomeViewModel", "Error fetching upcoming bookings", e)
+            }
+        }
     }
 
 }

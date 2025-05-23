@@ -27,6 +27,10 @@ class CreateBookingViewModel : ViewModel() {
     private val _isOffline = MutableLiveData<Boolean>()
     val isOffline: LiveData<Boolean> get() = _isOffline
 
+    private val _bookingCreatedEvent = MutableLiveData<Unit>()
+    val bookingCreatedEvent: LiveData<Unit> get() = _bookingCreatedEvent
+
+
     fun createReservation(date: String, timeSlot: String, players: Int, userId: String, venue: Venue) {
         val (startStr, endStr) = timeSlot.split(" - ").map { it.trim() }
         val format = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
@@ -53,6 +57,8 @@ class CreateBookingViewModel : ViewModel() {
 
                 _reservationResult.postValue(true)
                 _bookingCreated.postValue(true)
+
+                _bookingCreatedEvent.postValue(Unit)
             } catch (e: Exception) {
                 _reservationResult.postValue(false)
             }

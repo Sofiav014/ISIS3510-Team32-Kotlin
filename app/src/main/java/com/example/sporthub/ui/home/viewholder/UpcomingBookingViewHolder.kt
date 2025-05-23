@@ -1,5 +1,6 @@
 package com.example.sporthub.ui.home.viewholder
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -14,6 +15,7 @@ class UpcomingBookingViewHolder(private val binding: ItemUpcomingBookingBinding)
     RecyclerView.ViewHolder(binding.root) {
 
     fun bind(booking: Booking, homeViewModel: HomeViewModel) {
+        Log.d("UpcomingBooking:bind", "Binding booking: $booking")
         binding.textVenueName.text = booking.venue?.name ?: "Unknown Venue"
         binding.textSport.text = booking.venue?.sport?.name ?: "Unknown Sport"
         binding.textRating.text = booking.venue?.rating.toString()
