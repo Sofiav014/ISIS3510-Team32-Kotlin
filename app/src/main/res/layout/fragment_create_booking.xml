@@ -121,12 +121,12 @@
                         android:id="@+id/playerCountSpinner"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
-                        android:minHeight="48dp"
                         android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_spinner_touch_area"
+                        android:minHeight="48dp"
                         android:paddingStart="16dp"
                         android:paddingEnd="16dp"
-                        android:textColor="#000"
-                        android:background="@drawable/bg_spinner_touch_area" />
+                        android:textColor="@android:color/black" />
                 </LinearLayout>
 
             </LinearLayout>

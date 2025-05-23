@@ -19,6 +19,7 @@ import androidx.navigation.fragment.navArgs
 import com.example.sporthub.R
 import com.example.sporthub.data.model.Venue
 import com.example.sporthub.databinding.FragmentCreateBookingBinding
+import com.example.sporthub.utils.BookingTimeTracker
 import com.example.sporthub.viewmodel.CreateBookingViewModel
 import com.example.sporthub.viewmodel.SharedUserViewModel
 import java.time.*
@@ -75,6 +76,8 @@ class CreateBookingFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        BookingTimeTracker.startTimer()
+
         binding = FragmentCreateBookingBinding.inflate(inflater, container, false)
         venue1 = args.venue
 
@@ -230,7 +233,13 @@ class CreateBookingFragment : Fragment() {
 
     private fun observeViewModel() {
         viewModel.reservationResult.observe(viewLifecycleOwner) { success ->
-            val msg = if (success) "Reservation created successfully" else "Failed to create reservation"
+            val msg = if (success) {
+
+                BookingTimeTracker.stopTimerAndSave(requireContext())
+
+                "Reservation created successfully"
+
+            } else "Failed to create reservation"
             Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
         }
         viewModel.bookingCreated.observe(viewLifecycleOwner) { created ->
@@ -274,6 +283,10 @@ class CreateBookingFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // In case the user cancels without completing the booking
+        if (viewModel.bookingCreated.value != true) {
+            BookingTimeTracker.stopTimerAndSave(requireContext())
+        }
         handler.removeCallbacks(updateTimeSlotsRunnable)
     }
 }
