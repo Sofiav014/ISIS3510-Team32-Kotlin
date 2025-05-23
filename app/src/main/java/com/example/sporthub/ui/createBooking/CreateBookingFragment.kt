@@ -21,6 +21,7 @@ import com.example.sporthub.data.model.Venue
 import com.example.sporthub.databinding.FragmentCreateBookingBinding
 import com.example.sporthub.utils.BookingTimeTracker
 import com.example.sporthub.viewmodel.CreateBookingViewModel
+import com.example.sporthub.viewmodel.HomeViewModel
 import com.example.sporthub.viewmodel.SharedUserViewModel
 import java.time.*
 import java.time.format.DateTimeFormatter
@@ -31,6 +32,8 @@ class CreateBookingFragment : Fragment() {
     private val viewModel: CreateBookingViewModel by viewModels()
     private lateinit var binding: FragmentCreateBookingBinding
     private val userViewModel: SharedUserViewModel by activityViewModels()
+    private val homeViewModel: HomeViewModel by activityViewModels()
+
 
     private val timeSlots = listOf(
         "07:00 - 08:00", "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00",
@@ -245,6 +248,11 @@ class CreateBookingFragment : Fragment() {
         viewModel.bookingCreated.observe(viewLifecycleOwner) { created ->
             if (created) {
                 findNavController().navigate(R.id.action_navigation_create_to_navigation_home)
+
+                // Update the user data and reload the home view
+                userViewModel.currentUser.value?.let { user ->
+                    homeViewModel.loadHomeData(requireContext(), user)
+                }
             }
         }
         viewModel.isOffline.observe(viewLifecycleOwner) { offline ->

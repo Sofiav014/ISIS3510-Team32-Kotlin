@@ -70,4 +70,11 @@ class CreateBookingViewModel : ViewModel() {
     fun checkConnectivity(context: Context) {
         _isOffline.value = !ConnectivityHelper.isNetworkAvailable(context)
     }
+
+    suspend fun addBookingToUser(userId: String, booking: Booking) {
+        repository.addBookingToUser(userId, booking)
+    }
+
+
+
 }

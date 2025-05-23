@@ -82,6 +82,25 @@ class BookingRepository {
         }
     }
 
+    suspend fun getBookingDetail(id: String): Booking? =
+        bookingsRef
+            .document(id)
+            .get()
+            .await()
+            .toObject(Booking::class.java)
 
+    suspend fun joinBooking(userId: String, booking: Booking) {
+        val bookingDoc = bookingsRef.document(booking.id)
+        val userDoc    = db.collection("users").document(userId)
+
+        withContext(Dispatchers.IO) {
+            db.runBatch { batch ->
+                // 1) add the user ID to the booking.users array
+                batch.update(bookingDoc, "users", FieldValue.arrayUnion(userId))
+                // 2) add the booking ID to the user.bookings array
+                batch.update(userDoc,    "bookings", FieldValue.arrayUnion(booking.id))
+            }.await()
+        }
+    }
 
 }
