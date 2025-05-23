@@ -159,19 +159,26 @@ class ProfileFragment : Fragment() {
         // Save URL to Firebase user document
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         if (userId != null) {
+            Log.d("ProfileFragment", "Updating profile picture with URL: $downloadUrl")
+
             viewModel.updateProfilePicture(userId, downloadUrl)
 
-            // Update UI immediately
+            // Update UI immediately with the new image
             loadProfileImage(downloadUrl)
 
             // Hide the add icon since we now have a profile picture
             addProfilePictureIcon.visibility = View.GONE
 
             Toast.makeText(requireContext(), "Profile picture updated successfully!", Toast.LENGTH_SHORT).show()
+        } else {
+            Log.e("ProfileFragment", "User ID is null, cannot update profile picture")
+            Toast.makeText(requireContext(), "Error: User not found", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun loadProfileImage(imageUrl: String?) {
+        Log.d("ProfileFragment", "Loading profile image: $imageUrl")
+
         if (!imageUrl.isNullOrEmpty()) {
             // Load the profile picture
             Glide.with(this)
@@ -184,10 +191,12 @@ class ProfileFragment : Fragment() {
 
             // Hide the add icon
             addProfilePictureIcon.visibility = View.GONE
+            Log.d("ProfileFragment", "Profile image loaded successfully")
         } else {
             // Show default profile picture and add icon
             profileImage.setImageResource(R.drawable.ic_profile_outline)
             addProfilePictureIcon.visibility = View.VISIBLE
+            Log.d("ProfileFragment", "Showing default profile image")
         }
     }
 
@@ -203,17 +212,22 @@ class ProfileFragment : Fragment() {
         // Get user data from shared view model if available
         sharedUserViewModel.currentUser.observe(viewLifecycleOwner) { user ->
             if (user != null) {
+                Log.d("ProfileFragment", "User data from shared viewmodel: ${user.name}")
                 updateUI(user)
             }
         }
 
         // Otherwise use the profile view model
         viewModel.userData.observe(viewLifecycleOwner) { user ->
-            updateUI(user)
+            if (user != null) {
+                Log.d("ProfileFragment", "User data from profile viewmodel: ${user.name}")
+                updateUI(user)
+            }
         }
 
         // Observe profile picture updates
         viewModel.profilePictureUrl.observe(viewLifecycleOwner) { imageUrl ->
+            Log.d("ProfileFragment", "Profile picture URL updated: $imageUrl")
             loadProfileImage(imageUrl)
         }
 
@@ -342,6 +356,7 @@ class ProfileFragment : Fragment() {
         updateFavoriteSports(user.sportsLiked)
 
         // Load profile picture if available
+        Log.d("ProfileFragment", "Loading profile picture for user: ${user.id}")
         viewModel.loadProfilePicture(user.id)
     }
 
@@ -476,7 +491,12 @@ class ProfileFragment : Fragment() {
             Log.d("ProfileFragment", "User data is null, reloading")
             viewModel.loadUserData()
         } else {
-            Log.d("ProfileFragment", "User data already loaded, skipping reload")
+            Log.d("ProfileFragment", "User data already loaded, checking profile picture")
+            // Always try to load the latest profile picture
+            val userId = FirebaseAuth.getInstance().currentUser?.uid
+            if (userId != null) {
+                viewModel.loadProfilePicture(userId)
+            }
         }
     }
 }

@@ -278,16 +278,31 @@ class ProfilePictureManager(
 
     private suspend fun uploadBitmapToStorage(bitmap: Bitmap, userId: String): String {
         return withContext(Dispatchers.IO) {
+            Log.d(TAG, "Starting upload for user: $userId")
+
             val baos = ByteArrayOutputStream()
             bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos)
             val imageData = baos.toByteArray()
 
-            val imageRef: StorageReference = storageRef.child("users/$userId/profile_picture.jpg")
+            Log.d(TAG, "Image compressed, size: ${imageData.size} bytes")
 
-            val uploadTask = imageRef.putBytes(imageData).await()
-            val downloadUrl = imageRef.downloadUrl.await()
+            // Store directly as userId.jpg (no folder structure)
+            val imageRef: StorageReference = storageRef.child("$userId.jpg")
+            Log.d(TAG, "Upload path: $userId.jpg")
 
-            downloadUrl.toString()
+            try {
+                val uploadTask = imageRef.putBytes(imageData).await()
+                Log.d(TAG, "Upload completed successfully")
+
+                val downloadUrl = imageRef.downloadUrl.await()
+                Log.d(TAG, "Download URL obtained: $downloadUrl")
+
+                downloadUrl.toString()
+            } catch (e: Exception) {
+                Log.e(TAG, "Upload failed: ${e.message}")
+                Log.e(TAG, "Upload error details: ", e)
+                throw e
+            }
         }
     }
 

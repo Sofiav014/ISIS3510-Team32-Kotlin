@@ -99,12 +99,20 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     fun loadProfilePicture(userId: String) {
         viewModelScope.launch {
             try {
-                val userDoc = firestore.collection("users").document(userId).get().await()
-                val profilePictureUrl = userDoc.getString("profile_picture_url")
-                _profilePictureUrl.value = profilePictureUrl
+                withContext(Dispatchers.IO) {
+                    val userDoc = firestore.collection("users").document(userId).get().await()
+                    val profilePictureUrl = userDoc.getString("profile_picture_url")
+
+                    withContext(Dispatchers.Main) {
+                        _profilePictureUrl.value = profilePictureUrl
+                        Log.d("ProfileViewModel", "Profile picture loaded: $profilePictureUrl")
+                    }
+                }
             } catch (e: Exception) {
                 Log.e("ProfileViewModel", "Error loading profile picture: ${e.message}")
-                _profilePictureUrl.value = null
+                withContext(Dispatchers.Main) {
+                    _profilePictureUrl.value = null
+                }
             }
         }
     }
@@ -119,14 +127,15 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                         .await()
                 }
 
-                // Update local state
-                _profilePictureUrl.value = imageUrl
-
-                Log.d("ProfileViewModel", "Profile picture updated successfully")
+                // Update local state immediately
+                withContext(Dispatchers.Main) {
+                    _profilePictureUrl.value = imageUrl
+                    Log.d("ProfileViewModel", "Profile picture updated successfully: $imageUrl")
+                }
             } catch (e: Exception) {
                 Log.e("ProfileViewModel", "Error updating profile picture: ${e.message}")
                 withContext(Dispatchers.Main) {
-                    _errorMessage.value = "Failed to update profile picture"
+                    _errorMessage.value = "Failed to update profile picture: ${e.message}"
                 }
             }
         }
