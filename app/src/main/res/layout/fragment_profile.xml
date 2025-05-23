@@ -29,7 +29,7 @@
                 android:layout_height="wrap_content"
                 android:padding="16dp">
 
-                <!-- Profile Image Container with Add Icon -->
+
                 <FrameLayout
                     android:id="@+id/profileImageContainer"
                     android:layout_width="100dp"
@@ -41,14 +41,19 @@
                         android:id="@+id/profileImage"
                         android:layout_width="100dp"
                         android:layout_height="100dp"
-                        android:background="@drawable/circle_background"
-                        android:padding="4dp"
                         android:src="@drawable/ic_profile_outline"
                         android:scaleType="centerCrop"
                         android:clickable="true"
                         android:focusable="true"
-                        android:foreground="?attr/selectableItemBackgroundBorderless"
-                        app:tint="#60508C" />
+                        android:foreground="?attr/selectableItemBackgroundBorderless" />
+
+                    <!-- Border overlay -->
+                    <View
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
+                        android:background="@drawable/circle_border"
+                        android:clickable="false"
+                        android:focusable="false" />
 
                     <!-- Add Profile Picture Icon -->
                     <ImageView

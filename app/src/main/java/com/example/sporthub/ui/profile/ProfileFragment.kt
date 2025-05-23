@@ -163,11 +163,8 @@ class ProfileFragment : Fragment() {
 
             viewModel.updateProfilePicture(userId, downloadUrl)
 
-            // Update UI immediately with the new image
+            // Update UI immediately with the new image - IMPORTANT: Use the downloadUrl directly
             loadProfileImage(downloadUrl)
-
-            // Hide the add icon since we now have a profile picture
-            addProfilePictureIcon.visibility = View.GONE
 
             Toast.makeText(requireContext(), "Profile picture updated successfully!", Toast.LENGTH_SHORT).show()
         } else {
@@ -180,21 +177,25 @@ class ProfileFragment : Fragment() {
         Log.d("ProfileFragment", "Loading profile image: $imageUrl")
 
         if (!imageUrl.isNullOrEmpty()) {
-            // Load the profile picture
+            // Load the profile picture with proper error handling and circular crop
             Glide.with(this)
                 .load(imageUrl)
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .placeholder(R.drawable.ic_profile_outline)
                 .error(R.drawable.ic_profile_outline)
-                .circleCrop()
+                .circleCrop() // This ensures the image is circular
                 .into(profileImage)
 
             // Hide the add icon
-            addProfilePictureIcon.visibility = View.GONE
+            addProfilePictureIcon.visibility = View.VISIBLE // Keep it visible for editing
             Log.d("ProfileFragment", "Profile image loaded successfully")
         } else {
-            // Show default profile picture and add icon
-            profileImage.setImageResource(R.drawable.ic_profile_outline)
+            // Show default profile picture
+            Glide.with(this)
+                .load(R.drawable.ic_profile_outline)
+                .circleCrop()
+                .into(profileImage)
+
             addProfilePictureIcon.visibility = View.VISIBLE
             Log.d("ProfileFragment", "Showing default profile image")
         }

@@ -286,9 +286,9 @@ class ProfilePictureManager(
 
             Log.d(TAG, "Image compressed, size: ${imageData.size} bytes")
 
-            // Store directly as userId.jpg (no folder structure)
-            val imageRef: StorageReference = storageRef.child("$userId.jpg")
-            Log.d(TAG, "Upload path: $userId.jpg")
+            // Store in users folder with userId as filename
+            val imageRef: StorageReference = storageRef.child("users/$userId.jpg")
+            Log.d(TAG, "Upload path: users/$userId.jpg")
 
             try {
                 val uploadTask = imageRef.putBytes(imageData).await()
@@ -305,7 +305,6 @@ class ProfilePictureManager(
             }
         }
     }
-
     private fun compressBitmap(bitmap: Bitmap): Bitmap {
         val maxDimension = 800
         val scale = if (bitmap.width > bitmap.height) {
