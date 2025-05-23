@@ -11,7 +11,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.Observer
 import androidx.lifecycle.viewModelScope
 import com.example.sporthub.data.model.User
 import com.example.sporthub.data.model.Venue
@@ -19,23 +19,24 @@ import com.example.sporthub.data.repository.UserRepository
 import com.example.sporthub.ui.login.SignInActivity
 import com.example.sporthub.utils.LocalThemeManager
 import com.example.sporthub.utils.ThemeManager
-import com.example.sporthub.utils.ThemeSwitcher
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
-import androidx.core.content.edit
-import androidx.lifecycle.Observer
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
 
     private val userRepository = UserRepository()
     private val themeManager = ThemeManager.getInstance(application)
+    private val firestore = FirebaseFirestore.getInstance()
 
     private val _userData = MutableLiveData<User>()
     val userData: LiveData<User> = _userData
@@ -51,6 +52,9 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
     private val _isDarkMode = MutableLiveData<Boolean>()
     val isDarkMode: LiveData<Boolean> = _isDarkMode
+
+    private val _profilePictureUrl = MutableLiveData<String?>()
+    val profilePictureUrl: LiveData<String?> = _profilePictureUrl
 
     init {
         // Initialize with the current system theme status
@@ -92,6 +96,41 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         userRepository.getUserModel(currentUser.uid).observeForever(observer)
     }
 
+    fun loadProfilePicture(userId: String) {
+        viewModelScope.launch {
+            try {
+                val userDoc = firestore.collection("users").document(userId).get().await()
+                val profilePictureUrl = userDoc.getString("profile_picture_url")
+                _profilePictureUrl.value = profilePictureUrl
+            } catch (e: Exception) {
+                Log.e("ProfileViewModel", "Error loading profile picture: ${e.message}")
+                _profilePictureUrl.value = null
+            }
+        }
+    }
+
+    fun updateProfilePicture(userId: String, imageUrl: String) {
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    firestore.collection("users")
+                        .document(userId)
+                        .update("profile_picture_url", imageUrl)
+                        .await()
+                }
+
+                // Update local state
+                _profilePictureUrl.value = imageUrl
+
+                Log.d("ProfileViewModel", "Profile picture updated successfully")
+            } catch (e: Exception) {
+                Log.e("ProfileViewModel", "Error updating profile picture: ${e.message}")
+                withContext(Dispatchers.Main) {
+                    _errorMessage.value = "Failed to update profile picture"
+                }
+            }
+        }
+    }
 
     fun getCurrentUserId(): String? {
         return userRepository.getCurrentUser()?.uid
@@ -145,7 +184,6 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-
     fun toggleDarkMode() {
         try {
             val appContext = getApplication<Application>()
@@ -183,7 +221,6 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             Log.e("ProfileViewModel", "Error in toggleDarkMode: ${e.message}")
         }
     }
-
 
     fun Context.isThemeChanging(): Boolean {
         return try {

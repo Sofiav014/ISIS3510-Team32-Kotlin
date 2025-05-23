@@ -27,11 +27,14 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.sporthub.R
 import com.example.sporthub.data.model.Sport
 import com.example.sporthub.data.model.User
 import com.example.sporthub.ui.login.SignInActivity
 import com.example.sporthub.utils.ConnectivityHelper
+import com.example.sporthub.utils.ProfilePictureManager
 import com.example.sporthub.viewmodel.SharedUserViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -57,6 +60,8 @@ class ProfileFragment : Fragment() {
     private lateinit var noFavoriteVenuesText: TextView
     private lateinit var settingsButton: Button
     private lateinit var logoutButton: Button
+    private lateinit var profileImage: ImageView
+    private lateinit var addProfilePictureIcon: ImageView
 
     // Theme mode UI elements
     private lateinit var themeIcon: ImageView
@@ -64,6 +69,7 @@ class ProfileFragment : Fragment() {
     private lateinit var themeSwitch: SwitchCompat
 
     private lateinit var favoriteVenueAdapter: FavoriteVenueAdapter
+    private lateinit var profilePictureManager: ProfilePictureManager
 
     // Network callback for syncing when connection is restored
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
@@ -87,6 +93,9 @@ class ProfileFragment : Fragment() {
         // Initialize views
         initViews(view)
 
+        // Initialize ProfilePictureManager
+        initProfilePictureManager()
+
         // Setup RecyclerView
         setupRecyclerView()
 
@@ -95,9 +104,6 @@ class ProfileFragment : Fragment() {
 
         // Setup button listeners
         setupButtons()
-
-        // Initialize theme switch - Important: defer until we observe isDarkMode LiveData
-        // DO NOT call initThemeSwitch() here
 
         // Load data
         viewModel.loadUserData()
@@ -117,11 +123,72 @@ class ProfileFragment : Fragment() {
         noFavoriteVenuesText = view.findViewById(R.id.noFavoriteVenuesText)
         settingsButton = view.findViewById(R.id.buttonSettings)
         logoutButton = view.findViewById(R.id.button_logout)
+        profileImage = view.findViewById(R.id.profileImage)
+        addProfilePictureIcon = view.findViewById(R.id.addProfilePictureIcon)
 
-        // Theme mode UI elements - make sure these IDs match what's in your layout
+        // Theme mode UI elements
         themeIcon = view.findViewById(R.id.themeIcon)
         themeLabel = view.findViewById(R.id.themeLabel)
         themeSwitch = view.findViewById(R.id.themeSwitch)
+    }
+
+    private fun initProfilePictureManager() {
+        profilePictureManager = ProfilePictureManager(
+            fragment = this,
+            onImageSelected = { downloadUrl ->
+                // Update profile picture in Firebase and UI
+                updateProfilePicture(downloadUrl)
+            },
+            onError = { errorMessage ->
+                Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
+            }
+        )
+
+        // Set click listener on profile image
+        profileImage.setOnClickListener {
+            profilePictureManager.showImagePickerDialog()
+        }
+
+        // Set click listener on add icon
+        addProfilePictureIcon.setOnClickListener {
+            profilePictureManager.showImagePickerDialog()
+        }
+    }
+
+    private fun updateProfilePicture(downloadUrl: String) {
+        // Save URL to Firebase user document
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        if (userId != null) {
+            viewModel.updateProfilePicture(userId, downloadUrl)
+
+            // Update UI immediately
+            loadProfileImage(downloadUrl)
+
+            // Hide the add icon since we now have a profile picture
+            addProfilePictureIcon.visibility = View.GONE
+
+            Toast.makeText(requireContext(), "Profile picture updated successfully!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun loadProfileImage(imageUrl: String?) {
+        if (!imageUrl.isNullOrEmpty()) {
+            // Load the profile picture
+            Glide.with(this)
+                .load(imageUrl)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .placeholder(R.drawable.ic_profile_outline)
+                .error(R.drawable.ic_profile_outline)
+                .circleCrop()
+                .into(profileImage)
+
+            // Hide the add icon
+            addProfilePictureIcon.visibility = View.GONE
+        } else {
+            // Show default profile picture and add icon
+            profileImage.setImageResource(R.drawable.ic_profile_outline)
+            addProfilePictureIcon.visibility = View.VISIBLE
+        }
     }
 
     private fun setupRecyclerView() {
@@ -145,6 +212,11 @@ class ProfileFragment : Fragment() {
             updateUI(user)
         }
 
+        // Observe profile picture updates
+        viewModel.profilePictureUrl.observe(viewLifecycleOwner) { imageUrl ->
+            loadProfileImage(imageUrl)
+        }
+
         // Observe favorite venues from Room database instead of Firebase
         favoriteVenuesViewModel.favoriteVenues.observe(viewLifecycleOwner) { venues ->
             favoriteVenueAdapter.submitList(venues)
@@ -166,7 +238,6 @@ class ProfileFragment : Fragment() {
         // Observe dark mode changes
         viewModel.isDarkMode.observe(viewLifecycleOwner) { isDarkMode ->
             Log.d("ProfileFragment", "Theme changed. isDarkMode=$isDarkMode")
-            // This is important - first update UI, THEN initialize the switch
             updateThemeUI(isDarkMode)
 
             // Set the switch state without triggering the listener
@@ -213,18 +284,10 @@ class ProfileFragment : Fragment() {
     }
 
     private fun preloadThemeResources() {
-        // This method preloads essential UI resources for both themes
-        // to reduce rendering time when switching
         try {
-            // Preload important drawables used in both themes
             context?.let { ctx ->
-                // Light theme resources
                 ctx.getDrawable(com.example.sporthub.R.drawable.ic_light_mode)
-
-                // Dark theme resources
                 ctx.getDrawable(com.example.sporthub.R.drawable.ic_dark_mode)
-
-                // Navigation icons
                 ctx.getDrawable(com.example.sporthub.R.drawable.ic_home_outline)
                 ctx.getDrawable(com.example.sporthub.R.drawable.ic_profile_outline)
                 ctx.getDrawable(com.example.sporthub.R.drawable.ic_search_outline)
@@ -237,28 +300,20 @@ class ProfileFragment : Fragment() {
     }
 
     private fun setupThemeSwitch() {
-        // Set initial state
         themeSwitch.isChecked = viewModel.isDarkMode.value ?: false
 
-        // Configure listener for responsive feedback
         themeSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
             if (isChecked == viewModel.isDarkMode.value) return@setOnCheckedChangeListener
 
-            // Disable switch
             buttonView.isEnabled = false
 
-            // Show visual feedback to indicate theme is changing
             val themeChangeText = "Applying ${if(isChecked) "dark" else "light"} theme..."
             val snackbar = Snackbar.make(requireView(), themeChangeText, Snackbar.LENGTH_SHORT)
             snackbar.show()
 
-            // Update UI immediately
             updateThemeUI(isChecked)
-
-            // Apply theme change
             viewModel.toggleDarkMode()
 
-            // Re-enable switch after delay
             Handler(Looper.getMainLooper()).postDelayed({
                 buttonView.isEnabled = true
             }, 1500)
@@ -266,10 +321,8 @@ class ProfileFragment : Fragment() {
     }
 
     private fun updateThemeUI(isDarkMode: Boolean) {
-        // Update theme label
         themeLabel.text = if (isDarkMode) "Dark Mode" else "Light Mode"
 
-        // Ensure we set the correct icon
         try {
             val iconResource = if (isDarkMode) {
                 R.drawable.ic_dark_mode
@@ -278,26 +331,18 @@ class ProfileFragment : Fragment() {
             }
             themeIcon.setImageResource(iconResource)
         } catch (e: Exception) {
-            // Log error but don't crash
             Log.e("ProfileFragment", "Error setting theme icon: ${e.message}")
         }
     }
 
     private fun updateUI(user: User) {
-        // Update profile name
         profileName.text = user.name.ifEmpty { "Current User" }
-
-        // Update gender
         genderValue.text = user.gender.ifEmpty { "Not specified" }
-
-        // Update birth date
         birthDateValue.text = viewModel.formatBirthDate(user.birthDate)
-
-        // Update favorite sports
         updateFavoriteSports(user.sportsLiked)
 
-        // We don't need to update favorite venues here anymore since they're observed from Room
-        // This ensures offline availability
+        // Load profile picture if available
+        viewModel.loadProfilePicture(user.id)
     }
 
     private fun updateFavoriteSports(sports: List<Sport>) {
@@ -323,7 +368,6 @@ class ProfileFragment : Fragment() {
             sportIcon.background = ContextCompat.getDrawable(requireContext(), R.drawable.circle_purple_background)
             sportIcon.setPadding(8, 8, 8, 8)
 
-            // Set the appropriate icon based on sport type
             val sportDrawable: Drawable? = when (sport.name.toLowerCase()) {
                 "basketball" -> ContextCompat.getDrawable(requireContext(), R.drawable.ic_basketball_logo)
                 "football" -> ContextCompat.getDrawable(requireContext(), R.drawable.ic_football_logo)
@@ -338,7 +382,6 @@ class ProfileFragment : Fragment() {
     }
 
     private fun showSettingsDialog() {
-        // Create the options
         val options = arrayOf(
             "Edit Profile Name",
             "Change Gender",
@@ -346,7 +389,6 @@ class ProfileFragment : Fragment() {
             "Update Favorite Sports"
         )
 
-        // Create and show the dialog
         android.app.AlertDialog.Builder(requireContext())
             .setTitle("Settings")
             .setItems(options) { _, which ->
@@ -363,7 +405,7 @@ class ProfileFragment : Fragment() {
 
     private fun <T> startEditActivity(activityClass: Class<T>) {
         val intent = Intent(requireContext(), activityClass)
-        intent.putExtra("EDIT_MODE", true) // Flag to indicate edit mode vs new user registration
+        intent.putExtra("EDIT_MODE", true)
         viewModel.getCurrentUserId()?.let { userId ->
             intent.putExtra("USER_ID", userId)
         }
@@ -391,15 +433,12 @@ class ProfileFragment : Fragment() {
     override fun onStart() {
         super.onStart()
 
-        // Set up network callback to sync when connectivity is restored
         networkCallback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
-                // Sync with remote when connection is restored
                 favoriteVenuesViewModel.syncWithRemote()
             }
         }
 
-        // Register the network callback
         val connectivityManager =
             requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
@@ -414,7 +453,6 @@ class ProfileFragment : Fragment() {
     override fun onStop() {
         super.onStop()
 
-        // Unregister the network callback to prevent leaks
         networkCallback?.let {
             val connectivityManager =
                 requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager

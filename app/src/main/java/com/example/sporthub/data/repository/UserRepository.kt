@@ -203,4 +203,25 @@ class UserRepository {
 
         return liveData
     }
+
+
+    fun updateUserProfilePicture(userId: String, profilePictureUrl: String): Task<Void> {
+        return updateUserField(userId, "profile_picture_url", profilePictureUrl)
+    }
+
+
+    fun getUserProfilePicture(userId: String): Task<String?> {
+        return getUserData(userId).continueWith { task ->
+            if (task.isSuccessful) {
+                val document = task.result
+                if (document != null && document.exists()) {
+                    document.getString("profile_picture_url")
+                } else {
+                    null
+                }
+            } else {
+                null
+            }
+        }
+    }
 }

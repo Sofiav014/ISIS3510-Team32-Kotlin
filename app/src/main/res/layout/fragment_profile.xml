@@ -29,16 +29,45 @@
                 android:layout_height="wrap_content"
                 android:padding="16dp">
 
-                <ImageView
-                    android:id="@+id/profileImage"
+                <!-- Profile Image Container with Add Icon -->
+                <FrameLayout
+                    android:id="@+id/profileImageContainer"
                     android:layout_width="100dp"
                     android:layout_height="100dp"
-                    android:background="@drawable/circle_background"
-                    android:padding="4dp"
-                    android:src="@drawable/ic_profile_outline"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:tint="#60508C" />
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <ImageView
+                        android:id="@+id/profileImage"
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
+                        android:background="@drawable/circle_background"
+                        android:padding="4dp"
+                        android:src="@drawable/ic_profile_outline"
+                        android:scaleType="centerCrop"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
+                        app:tint="#60508C" />
+
+                    <!-- Add Profile Picture Icon -->
+                    <ImageView
+                        android:id="@+id/addProfilePictureIcon"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_gravity="bottom|end"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginBottom="8dp"
+                        android:background="@drawable/circle_add_background"
+                        android:padding="6dp"
+                        android:src="@drawable/ic_add"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
+                        app:tint="@android:color/white"
+                        android:visibility="visible" />
+
+                </FrameLayout>
 
                 <TextView
                     android:id="@+id/profileName"
@@ -50,8 +79,8 @@
                     android:textSize="24sp"
                     android:textStyle="bold"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/profileImage"
-                    app:layout_constraintTop_toTopOf="@id/profileImage" />
+                    app:layout_constraintStart_toEndOf="@id/profileImageContainer"
+                    app:layout_constraintTop_toTopOf="@id/profileImageContainer" />
 
                 <!-- Gender information -->
                 <TextView
@@ -63,7 +92,7 @@
                     android:text="Gender"
                     android:textColor="#666666"
                     android:textSize="14sp"
-                    app:layout_constraintStart_toEndOf="@id/profileImage"
+                    app:layout_constraintStart_toEndOf="@id/profileImageContainer"
                     app:layout_constraintTop_toBottomOf="@id/profileName" />
 
                 <TextView
@@ -88,7 +117,7 @@
                     android:text="Born Date"
                     android:textColor="#666666"
                     android:textSize="14sp"
-                    app:layout_constraintStart_toEndOf="@id/profileImage"
+                    app:layout_constraintStart_toEndOf="@id/profileImageContainer"
                     app:layout_constraintTop_toBottomOf="@id/genderLabel" />
 
                 <TextView
@@ -113,7 +142,7 @@
                     android:textColor="#666666"
                     android:textSize="14sp"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/profileImage" />
+                    app:layout_constraintTop_toBottomOf="@id/profileImageContainer" />
 
                 <!-- Favorite Sports Icons -->
                 <LinearLayout
