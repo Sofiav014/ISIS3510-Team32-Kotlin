@@ -68,7 +68,7 @@ class HomeFragment : Fragment() {
 
         upcomingBookingsAdapter = UpcomingBookingsAdapter(homeViewModel) { booking ->
             val action = HomeFragmentDirections
-                .actionNavigationHomeToBookingDetailFragment(booking, booking.id)
+                .actionNavigationHomeToBookingDetailFragment(bookingId = booking.id)
             println("Selected Booking ID: ${booking.id}")
             findNavController().navigate(action)
         }
@@ -80,7 +80,7 @@ class HomeFragment : Fragment() {
 
         recommendedBookingsAdapter = RecommendedBookingsAdapter(homeViewModel) { booking ->
             val action = HomeFragmentDirections
-                .actionNavigationHomeToBookingDetailFragment(booking, booking.id)
+                .actionNavigationHomeToBookingDetailFragment(bookingId = booking.id)
             println("Selected Booking ID: ${booking.id}")
             findNavController().navigate(action)
         }
