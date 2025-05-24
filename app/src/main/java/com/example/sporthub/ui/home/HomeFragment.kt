@@ -21,6 +21,7 @@ import com.example.sporthub.databinding.FragmentHomeBinding
 import com.example.sporthub.viewmodel.HomeViewModel
 import com.example.sporthub.viewmodel.SharedUserViewModel
 import com.example.sporthub.utils.LoadingTimeTracker
+
 import com.google.android.material.snackbar.Snackbar
 import com.example.sporthub.data.repository.UserRepository
 import com.example.sporthub.viewmodel.CreateBookingViewModel

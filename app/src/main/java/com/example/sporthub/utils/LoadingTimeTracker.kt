@@ -1,24 +1,33 @@
 package com.example.sporthub.utils
 
+import android.content.Context
 import android.util.Log
+import com.example.sporthub.utils.ConnectivityHelper
 import com.google.firebase.firestore.FirebaseFirestore
 
 object LoadingTimeTracker {
     private var startTime: Long = 0
     private val firestore = FirebaseFirestore.getInstance()
+    private val TAG = "LoadingTimeTracker"
 
     fun start() {
         startTime = System.currentTimeMillis()
+        Log.d(TAG, "LoadingTimeTracker started at: $startTime")
     }
 
-    fun stopAndRecord(screenName: String, context: android.content.Context) {
+    fun stopAndRecord(screenName: String, context: Context) {
+        if (startTime == 0L) {
+            Log.w(TAG, "LoadingTimeTracker was not started before calling stopAndRecord")
+            return
+        }
+
         if (!ConnectivityHelper.isNetworkAvailable(context)) {
-            Log.w("LoadTime", "Skipping Firebase update for $screenName due to no connection")
+            Log.w(TAG, "Skipping Firebase update for $screenName due to no connection")
             return
         }
 
         val duration = (System.currentTimeMillis() - startTime) / 1000.0
-        Log.d("LoadTime", "$screenName loaded in $duration ms")
+        Log.d(TAG, "$screenName loaded in $duration seconds")
 
         val docRef = firestore
             .collection("analytics")
@@ -38,9 +47,9 @@ object LoadingTimeTracker {
                     "visit_count" to visitCount + 1
                 )
             ).addOnSuccessListener {
-                Log.d("LoadTime", "Updated average load time for $screenName")
+                Log.d(TAG, "Updated average load time for $screenName")
             }.addOnFailureListener {
-                Log.w("LoadTime", "Failed to update document, trying set() instead")
+                Log.w(TAG, "Failed to update document, trying set() instead")
                 docRef.set(
                     mapOf(
                         "average_time" to duration,
@@ -50,7 +59,10 @@ object LoadingTimeTracker {
             }
 
         }.addOnFailureListener {
-            Log.e("LoadTime", "Error reading load time data", it)
+            Log.e(TAG, "Error reading load time data", it)
         }
+
+        // Reset start time
+        startTime = 0L
     }
 }
