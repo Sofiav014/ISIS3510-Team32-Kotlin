@@ -1,3 +1,6 @@
+// File: app/src/main/java/com/example/sporthub/ui/bookings/BookingsAdapter.kt
+package com.example.sporthub.ui.bookings
+
 import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -5,19 +8,18 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.sporthub.data.model.Booking
-import com.example.sporthub.databinding.ItemMyBookingBinding // <-- CHANGE HERE
+import com.example.sporthub.databinding.ItemMyBookingBinding
 import java.text.SimpleDateFormat
 import java.util.*
 
-class BookingAdapter(private val onBookingClicked: (Booking) -> Unit) :
-    ListAdapter<Booking, BookingAdapter.BookingViewHolder>(BookingDiffCallback()) {
+class BookingsAdapter(private val onBookingClicked: (Booking) -> Unit) :
+    ListAdapter<Booking, BookingsAdapter.BookingViewHolder>(BookingDiffCallback()) {
 
-    // ViewHolder now uses the new ItemMyBookingBinding
-    class BookingViewHolder(private val binding: ItemMyBookingBinding) : // <-- CHANGE HERE
+    // ViewHolder using ItemMyBookingBinding
+    class BookingViewHolder(private val binding: ItemMyBookingBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
         private val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
-        // We no longer need the dateFormatter for the card
 
         fun bind(booking: Booking, onBookingClicked: (Booking) -> Unit) {
             binding.bookingTitle.text = booking.venue?.name ?: "Unknown Venue"
@@ -28,8 +30,6 @@ class BookingAdapter(private val onBookingClicked: (Booking) -> Unit) :
             val endTimeString = booking.endTime?.toDate()?.let { timeFormatter.format(it) } ?: "N/A"
             binding.bookingTime.text = "$startTimeString - $endTimeString"
 
-            // The line that sets bookingDate.text is now gone!
-
             binding.root.setOnClickListener {
                 onBookingClicked(booking)
             }
@@ -37,7 +37,7 @@ class BookingAdapter(private val onBookingClicked: (Booking) -> Unit) :
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookingViewHolder {
-        val binding = ItemMyBookingBinding.inflate(LayoutInflater.from(parent.context), parent, false) // <-- CHANGE HERE
+        val binding = ItemMyBookingBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return BookingViewHolder(binding)
     }
 
@@ -46,7 +46,7 @@ class BookingAdapter(private val onBookingClicked: (Booking) -> Unit) :
     }
 }
 
-// DiffUtil remains the same
+// DiffUtil callback
 class BookingDiffCallback : DiffUtil.ItemCallback<Booking>() {
     override fun areItemsTheSame(oldItem: Booking, newItem: Booking): Boolean {
         return oldItem.id == newItem.id

@@ -48,6 +48,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
         mAuth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
         userRepository = UserRepository()
@@ -81,13 +84,49 @@ class MainActivity : AppCompatActivity() {
                 // Aquí podrías mostrar un mensaje de error amigable
             }
         }
+
     }
 
     private fun finishMainSetup() {
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        setupNavigation()
+        val navHost = supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        navController = navHost.navController
+
+        setSupportActionBar(binding.topAppBar)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
+        setupToolbarTitles()
+
+        binding.navView.setupWithNavController(navController)
+        binding.navView.setOnItemReselectedListener { item ->
+            navController.popBackStack(item.itemId, false)
+        }
+
         setupBackHandling()
+    }
+
+    private fun setupToolbarTitles() {
+        navController.addOnDestinationChangedListener { _, dest, _ ->
+            binding.toolbarTitle.text = when (dest.id) {
+                R.id.findVenuesFragment      -> "Find Venues"
+                R.id.navigation_home         -> "SportHub"
+                R.id.navigation_profile      -> "Profile"
+                R.id.navigation_booking      -> "Bookings"
+                R.id.navigation_create       -> "Create Booking"
+                R.id.venueDetailFragment     -> "Venue Detail"
+                else                         -> "SportHub"
+            }
+            val showBack = dest.id in setOf(
+                R.id.venueDetailFragment,
+                R.id.venueListFragment
+            )
+            binding.topAppBar.navigationIcon = if (showBack) {
+                AppCompatResources.getDrawable(this, R.drawable.ic_arrow_back)
+                    ?.apply { setTint(ContextCompat.getColor(this@MainActivity, R.color.primary)) }
+            } else null
+            binding.topAppBar.setNavigationOnClickListener {
+                if (showBack) onBackPressedDispatcher.onBackPressed()
+            }
+        }
     }
 
     private fun isNetworkAvailable(): Boolean {

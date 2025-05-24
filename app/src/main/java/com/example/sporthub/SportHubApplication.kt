@@ -2,6 +2,8 @@ package com.example.sporthub
 
 import android.app.Application
 import android.util.Log
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.databinding.DataBindingUtil.setContentView
 import com.example.sporthub.data.db.AppDatabase
 import com.example.sporthub.utils.ThemeManager
 
@@ -14,6 +16,7 @@ class SportHubApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        AppCompatDelegate.setCompatVectorFromResourcesEnabled(true)
         // Initialize and apply theme
 
         try {
@@ -38,9 +41,6 @@ class SportHubApplication : Application() {
         }
 
 
-        val themeManager = ThemeManager.getInstance(this)
-        themeManager.applyTheme()
-
-        // Initialize other utilities here if needed
+        ThemeManager.getInstance(this).applyTheme()
     }
 }

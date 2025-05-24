@@ -22,7 +22,9 @@ import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.example.sporthub.R
 
-class HomeViewModel(private val repository: HomeRepository) : ViewModel() {
+class HomeViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
+    // instantiate your repo here
+    private val repository = HomeRepository()
 
     private val _recommendedBookings = MutableLiveData<List<Booking>>()
     val recommendedBookings: LiveData<List<Booking>> = _recommendedBookings

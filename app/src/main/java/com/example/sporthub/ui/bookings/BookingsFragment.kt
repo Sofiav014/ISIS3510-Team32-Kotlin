@@ -1,6 +1,5 @@
 package com.example.sporthub.ui.bookings
 
-import BookingAdapter
 import android.app.DatePickerDialog
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -12,7 +11,7 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.sporthub.databinding.FragmentBookingsBinding
 import com.example.sporthub.viewmodel.BookingsViewModel
-import com.google.android.material.snackbar.Snackbar // Import Snackbar
+import com.google.android.material.snackbar.Snackbar
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -22,15 +21,21 @@ class BookingsFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val bookingsViewModel: BookingsViewModel by viewModels()
-    private lateinit var bookingAdapter: BookingAdapter
+    private lateinit var bookingAdapter: BookingsAdapter
 
     private var noConnectionSnackbar: Snackbar? = null
-
 
     private val dayFormatter = SimpleDateFormat("dd", Locale.getDefault())
     private val dayOfWeekFormatter = SimpleDateFormat("EEE", Locale.getDefault())
     private val monthYearFormatter = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
 
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentBookingsBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -79,7 +84,6 @@ class BookingsFragment : Fragment() {
         }
     }
 
-
     private fun showNoConnectionSnackbar() {
         // Use an indefinite snackbar that stays until dismissed or connection returns
         noConnectionSnackbar = Snackbar.make(binding.root, "No internet connection", Snackbar.LENGTH_INDEFINITE)
@@ -89,23 +93,13 @@ class BookingsFragment : Fragment() {
         noConnectionSnackbar?.show()
     }
 
-
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentBookingsBinding.inflate(inflater, container, false)
-        return binding.root
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 
     private fun setupRecyclerView() {
-        bookingAdapter = BookingAdapter { booking ->
+        bookingAdapter = BookingsAdapter { booking ->
             Toast.makeText(context, "Clicked on ${booking.venue?.name}", Toast.LENGTH_SHORT).show()
         }
         binding.recyclerViewBookings.apply {

@@ -60,10 +60,20 @@ android {
 
 // Define versions in one place
 val coroutinesVersion = "1.7.3"
-val roomVersion = "2.6.1"
+val roomVersion       = "2.6.1"
+val lifecycleVersion  = "2.6.1"
 
 dependencies {
-    // Firebase BoM
+    // Lifecycle
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycleVersion")
+
+    // Saved State
+    implementation("androidx.savedstate:savedstate-ktx:1.2.0")
+
+    // Firebase BoM & Play Services
     implementation(platform("com.google.firebase:firebase-bom:32.3.1"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:$coroutinesVersion")
 
@@ -124,6 +134,4 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-
-
 }

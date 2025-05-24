@@ -9,8 +9,11 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+//import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.sporthub.data.model.Booking
 import com.example.sporthub.data.repository.HomeRepository
@@ -21,6 +24,7 @@ import com.example.sporthub.utils.LoadingTimeTracker
 import com.google.android.material.snackbar.Snackbar
 import com.example.sporthub.data.repository.UserRepository
 import com.example.sporthub.viewmodel.CreateBookingViewModel
+import kotlinx.coroutines.launch
 
 
 class HomeFragment : Fragment() {
@@ -29,7 +33,7 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val userViewModel: SharedUserViewModel by activityViewModels()
-    private val homeViewModel by lazy { HomeViewModel(HomeRepository()) }
+    private val homeViewModel: HomeViewModel by activityViewModels()
     private val createBookingViewModel: CreateBookingViewModel by activityViewModels()
     private val userRepository = UserRepository()
 
@@ -62,7 +66,12 @@ class HomeFragment : Fragment() {
             binding.recyclerPopularity.isNestedScrollingEnabled = false
         }
 
-        upcomingBookingsAdapter = UpcomingBookingsAdapter(homeViewModel)
+        upcomingBookingsAdapter = UpcomingBookingsAdapter(homeViewModel) { booking ->
+            val action = HomeFragmentDirections
+                .actionNavigationHomeToBookingDetailFragment(booking, booking.id)
+            println("Selected Booking ID: ${booking.id}")
+            findNavController().navigate(action)
+        }
         binding.recyclerUpcomingBookings.apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
             adapter = upcomingBookingsAdapter
@@ -70,9 +79,11 @@ class HomeFragment : Fragment() {
         }
 
         recommendedBookingsAdapter = RecommendedBookingsAdapter(homeViewModel) { booking ->
-            joinBooking(booking)
+            val action = HomeFragmentDirections
+                .actionNavigationHomeToBookingDetailFragment(booking, booking.id)
+            println("Selected Booking ID: ${booking.id}")
+            findNavController().navigate(action)
         }
-
         binding.recyclerRecommendedBookings.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = recommendedBookingsAdapter
@@ -140,24 +151,32 @@ class HomeFragment : Fragment() {
         }
 
     }
-
+    /*
     private fun joinBooking(booking: Booking) {
-        userViewModel.currentUser.value?.let { user ->
-            userRepository.joinBooking(user.id, booking).addOnSuccessListener {
-                val updatedBookings = user.bookings.toMutableList().apply { add(booking) }
-                val updatedUser = user.copy(bookings = updatedBookings)
+        // Use the lifecycleScope for running suspend functions in the UI thread
+        lifecycleScope.launch {
+            userViewModel.currentUser.value?.let { user ->
+                try {
+                    // Use addBookingToUser function from UserRepository
+                    createBookingViewModel.addBookingToUser(user.id, booking)
+                    val updatedBookings = user.bookings.toMutableList().apply { add(booking) }
+                    val updatedUser = user.copy(bookings = updatedBookings)
 
-                userViewModel.updateCurrentUser(updatedUser)  // Triggers UI update
+                    // Update the user in the view model
+                    userViewModel.updateCurrentUser(updatedUser)  // Triggers UI update
 
-                // Reload home data to show updated bookings
-                homeViewModel.loadHomeData(requireContext(), updatedUser)
+                    // Reload home data to show updated bookings
+                    homeViewModel.loadHomeData(requireContext(), updatedUser)
 
-                Snackbar.make(binding.root, "You have joined the booking!", Snackbar.LENGTH_SHORT).show()
-            }.addOnFailureListener { e ->
-                Snackbar.make(binding.root, "Failed to join the booking: ${e.message}", Snackbar.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "You have successfully joined a booking", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(requireContext(), "The request to join a booking was unsuccessful", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
+    */
+
 
     private fun refreshUpcomingBookings() {
         // Fetch the updated bookings and update the RecyclerView or UI component that displays bookings
