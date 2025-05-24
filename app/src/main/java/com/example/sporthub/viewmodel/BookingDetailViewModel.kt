@@ -8,6 +8,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import android.content.Context
 import com.example.sporthub.utils.ConnectivityHelper
+import com.example.sporthub.utils.Event
 
 
 class BookingDetailViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
@@ -27,16 +28,16 @@ class BookingDetailViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
         data class Failure(val message: String) : JoinResult()
     }
 
-    private val _joinResult = MutableLiveData<JoinResult>()
-    val joinResult: LiveData<JoinResult> = _joinResult
+    private val _joinResult = MutableLiveData<Event<JoinResult>>()
+    val joinResult: LiveData<Event<JoinResult>> = _joinResult
 
     sealed class CancelResult {
         object Success : CancelResult()
         data class Failure(val message: String) : CancelResult()
     }
 
-    private val _cancelResult = MutableLiveData<CancelResult>()
-    val cancelResult: LiveData<CancelResult> = _cancelResult
+    private val _cancelResult = MutableLiveData<Event<CancelResult>>()
+    val cancelResult: LiveData<Event<CancelResult>> = _cancelResult
 
     init {
         // automatically load if "bookingId" was passed in nav‐args
@@ -69,10 +70,10 @@ class BookingDetailViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
         val current = _booking.value ?: return
         viewModelScope.launch {
             if (repository.joinBooking(userId, current)) {
-                _joinResult.value = JoinResult.Success
+                _joinResult.value = Event(JoinResult.Success)
                 loadBooking(current.id)
             } else {
-                _joinResult.value = JoinResult.Failure("Could not join booking")
+                _joinResult.value = Event(JoinResult.Failure("Could not join booking"))
             }
         }
     }
@@ -88,15 +89,15 @@ class BookingDetailViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
             try {
                 val success = repository.cancelBooking(userId, current)
                 if (success) {
-                    _cancelResult.value = CancelResult.Success
+                    _cancelResult.value = Event(CancelResult.Success)
                     // Reload the booking to get updated participant list
                     loadBooking(current.id)
                 } else {
-                    _cancelResult.value = CancelResult.Failure("Could not cancel booking")
+                    _cancelResult.value = Event(CancelResult.Failure("Could not cancel booking"))
                 }
             } catch (e: Exception) {
                 Log.e("BookingDetailVM", "Error canceling booking: ${e.message}")
-                _cancelResult.value = CancelResult.Failure("Error canceling booking: ${e.message}")
+                _cancelResult.value = Event(CancelResult.Failure("Error canceling booking: ${e.message}"))
             }
         }
     }
