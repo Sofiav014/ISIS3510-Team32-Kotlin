@@ -69,62 +69,73 @@ class BookingDetailFragment : Fragment() {
             }
         }
 
-        viewModel.joinResult.observe(viewLifecycleOwner) { result ->
-            when (result) {
-                is BookingDetailViewModel.JoinResult.Success -> {
+        viewModel.joinResult.observe(viewLifecycleOwner) { event ->
+            event.getContentIfNotHandled()?.let { result ->
+                when (result) {
+                    is BookingDetailViewModel.JoinResult.Success -> {
 
-                    val booking = viewModel.booking.value!!
-                    val user    = userViewModel.currentUser.value!!
-                    lifecycleScope.launch {
+                        val booking = viewModel.booking.value!!
+                        val user = userViewModel.currentUser.value!!
+                        lifecycleScope.launch {
 
-                        createBookingVM.addBookingToUser(user.id, booking)
+                            createBookingVM.addBookingToUser(user.id, booking)
 
 
-                        val updatedUser = user.copy(bookings = user.bookings + booking)
-                        userViewModel.updateCurrentUser(updatedUser)
-                        homeViewModel.loadHomeData(requireContext(), updatedUser)
+                            val updatedUser = user.copy(bookings = user.bookings + booking)
+                            userViewModel.updateCurrentUser(updatedUser)
+                            homeViewModel.loadHomeData(requireContext(), updatedUser)
+                        }
+                        Toast.makeText(
+                            requireContext(),
+                            "You have successfully joined a booking",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
-                    Toast.makeText(requireContext(),
-                        "You have successfully joined a booking",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                is BookingDetailViewModel.JoinResult.Failure -> {
-                    Toast.makeText(requireContext(),
-                        "The request to join a booking was unsuccessful",
-                        Toast.LENGTH_SHORT
-                    ).show()
+
+                    is BookingDetailViewModel.JoinResult.Failure -> {
+                        Toast.makeText(
+                            requireContext(),
+                            "The request to join a booking was unsuccessful",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
         }
-        viewModel.cancelResult.observe(viewLifecycleOwner) { result ->
-            when (result) {
-                is BookingDetailViewModel.CancelResult.Success -> {
-                    val booking = viewModel.booking.value!!
-                    val user = userViewModel.currentUser.value!!
-                    lifecycleScope.launch {
-                        // Remove booking from user
-                        createBookingVM.removeBookingFromUser(user.id, booking)
+            viewModel.cancelResult.observe(viewLifecycleOwner) { event ->
+                event.getContentIfNotHandled()?.let { result ->
+                    when (result) {
+                        is BookingDetailViewModel.CancelResult.Success -> {
+                            val booking = viewModel.booking.value!!
+                            val user = userViewModel.currentUser.value!!
+                            lifecycleScope.launch {
+                                // Remove booking from user
+                                createBookingVM.removeBookingFromUser(user.id, booking)
 
-                        // Update user and reload home data
-                        val updatedUser = user.copy(bookings = user.bookings.filter { it.id != booking.id })
-                        userViewModel.updateCurrentUser(updatedUser)
-                        homeViewModel.loadHomeData(requireContext(), updatedUser)
+                                // Update user and reload home data
+                                val updatedUser =
+                                    user.copy(bookings = user.bookings.filter { it.id != booking.id })
+                                userViewModel.updateCurrentUser(updatedUser)
+                                homeViewModel.loadHomeData(requireContext(), updatedUser)
+                            }
+                            Toast.makeText(
+                                requireContext(),
+                                "Booking canceled successfully",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+
+                        is BookingDetailViewModel.CancelResult.Failure -> {
+                            Toast.makeText(
+                                requireContext(),
+                                "Failed to cancel booking: ${result.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
-                    Toast.makeText(requireContext(),
-                        "Booking canceled successfully",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                is BookingDetailViewModel.CancelResult.Failure -> {
-                    Toast.makeText(requireContext(),
-                        "Failed to cancel booking: ${result.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
                 }
             }
         }
-    }
 
 
 

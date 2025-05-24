@@ -12,8 +12,8 @@
             android:id="@+id/action_navigation_home_to_bookingDetailFragment"
             app:destination="@id/bookingDetailFragment">
             <argument
-                android:name="booking"
-                app:argType="com.example.sporthub.data.model.Booking"
+                android:name="bookingId"
+                app:argType="string"
                 app:nullable="false" />
         </action>
 
@@ -50,8 +50,8 @@
             android:id="@+id/action_venueDetailFragment_to_bookingDetailFragment"
             app:destination="@id/bookingDetailFragment">
             <argument
-                android:name="booking"
-                app:argType="com.example.sporthub.data.model.Booking"
+                android:name="bookingId"
+                app:argType="string"
                 app:nullable="false" />
         </action>
 
