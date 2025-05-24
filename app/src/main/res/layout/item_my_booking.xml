@@ -8,7 +8,7 @@
     android:layout_marginBottom="16dp"
     app:cardCornerRadius="16dp"
     app:cardElevation="4dp"
-    android:backgroundTint="#60508C">
+    app:cardBackgroundColor="?attr/colorPrimary">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -23,7 +23,7 @@
             android:text="Basketball Court - Cafam"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="@android:color/white" />
+            android:textColor="?attr/colorOnPrimary" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -37,22 +37,22 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:drawableLeft="@drawable/location"
-                android:drawableTint="#FBD1A2"
+                android:drawableStart="@drawable/location"
+                android:drawableTint="?attr/colorSecondary"
                 android:drawablePadding="6dp"
                 android:text="Club Campestre Cafam"
-                android:textColor="@android:color/white"
+                android:textColor="?attr/colorOnPrimary"
                 android:textSize="14sp"/>
 
             <TextView
                 android:id="@+id/bookingSpots"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:drawableLeft="@drawable/people"
-                android:drawableTint="#FBD1A2"
+                android:drawableStart="@drawable/people"
+                android:drawableTint="?attr/colorSecondary"
                 android:drawablePadding="6dp"
                 android:text="5 / 6"
-                android:textColor="@android:color/white"
+                android:textColor="?attr/colorOnPrimary"
                 android:textSize="14sp"/>
         </LinearLayout>
 
@@ -67,14 +67,13 @@
                 android:id="@+id/bookingTime"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:drawableLeft="@drawable/clock"
-                android:drawableTint="#FBD1A2"
+                android:drawableStart="@drawable/clock"
+                android:drawableTint="?attr/colorSecondary"
                 android:drawablePadding="6dp"
                 android:text="19:00 - 20:00"
-                android:textColor="@android:color/white"
+                android:textColor="?attr/colorOnPrimary"
                 android:textSize="14sp"/>
 
         </LinearLayout>
-
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
