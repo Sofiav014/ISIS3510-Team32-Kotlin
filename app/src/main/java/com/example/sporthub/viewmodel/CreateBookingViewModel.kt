@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.sporthub.data.model.Booking
 import com.example.sporthub.data.model.Venue
 import com.example.sporthub.data.repository.BookingRepository
@@ -11,6 +12,7 @@ import com.example.sporthub.utils.ConnectivityHelper
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlinx.coroutines.launch
 
 class CreateBookingViewModel : ViewModel() {
 
@@ -24,6 +26,10 @@ class CreateBookingViewModel : ViewModel() {
 
     private val _isOffline = MutableLiveData<Boolean>()
     val isOffline: LiveData<Boolean> get() = _isOffline
+
+    private val _bookingCreatedEvent = MutableLiveData<Unit>()
+    val bookingCreatedEvent: LiveData<Unit> get() = _bookingCreatedEvent
+
 
     fun createReservation(date: String, timeSlot: String, players: Int, userId: String, venue: Venue) {
         val (startStr, endStr) = timeSlot.split(" - ").map { it.trim() }
@@ -41,23 +47,38 @@ class CreateBookingViewModel : ViewModel() {
             venue = venue
         )
 
-        repository.createBooking(
-            booking,
-            onSuccess = {
-                repository.addBookingToUser(userId, booking,
-                    onSuccess = {
-                        _reservationResult.postValue(true)
-                        _bookingCreated.postValue(true)
-                    },
-                    onFailure = { _reservationResult.postValue(false) }
-                )
-            },
-            onFailure = { _reservationResult.postValue(false) }
-        )
+        viewModelScope.launch {
+            try {
+                // Create the booking in the database
+                repository.createBooking(booking)
+
+                // Add the booking to the user
+                repository.addBookingToUser(userId, booking)
+
+                _reservationResult.postValue(true)
+                _bookingCreated.postValue(true)
+
+                _bookingCreatedEvent.postValue(Unit)
+            } catch (e: Exception) {
+                _reservationResult.postValue(false)
+            }
+        }
+
     }
 
     // New function to check connectivity manually
     fun checkConnectivity(context: Context) {
         _isOffline.value = !ConnectivityHelper.isNetworkAvailable(context)
     }
+
+    suspend fun addBookingToUser(userId: String, booking: Booking) {
+        repository.addBookingToUser(userId, booking)
+    }
+
+    suspend fun removeBookingFromUser(userId: String, booking: Booking) {
+        repository.removeBookingFromUser(userId, booking)
+    }
+
+
+
 }

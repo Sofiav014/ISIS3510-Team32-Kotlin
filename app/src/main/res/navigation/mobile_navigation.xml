@@ -6,7 +6,20 @@
     <fragment
         android:id="@+id/navigation_home"
         android:name="com.example.sporthub.ui.home.HomeFragment"
-        android:label="Home" />
+        android:label="Home" >
+
+        <action
+            android:id="@+id/action_navigation_home_to_bookingDetailFragment"
+            app:destination="@id/bookingDetailFragment">
+            <argument
+                android:name="bookingId"
+                app:argType="string"
+                app:nullable="false" />
+        </action>
+
+
+
+    </fragment>
 
     <fragment
         android:id="@+id/findVenuesFragment"
@@ -31,6 +44,15 @@
             android:id="@+id/action_venueDetailFragment_to_navigation_create"
             app:destination="@id/navigation_create">
 
+        </action>
+
+        <action
+            android:id="@+id/action_venueDetailFragment_to_bookingDetailFragment"
+            app:destination="@id/bookingDetailFragment">
+            <argument
+                android:name="bookingId"
+                app:argType="string"
+                app:nullable="false" />
         </action>
 
     </fragment>
@@ -85,5 +107,16 @@
             android:id="@+id/action_selectVenueFragment_to_venue_list"
             app:destination="@id/findVenuesFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/bookingDetailFragment"
+        android:name="com.example.sporthub.ui.bookingDetail.BookingDetailFragment"
+        android:label="Booking Detail">
+
+        <argument
+            android:name="bookingId"
+            app:argType="string" />
+    </fragment>
+
 
 </navigation>

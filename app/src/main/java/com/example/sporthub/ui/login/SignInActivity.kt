@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 import kotlinx.coroutines.tasks.await
-
+import com.example.sporthub.utils.RegistrationTimerManager
 
 
 class SignInActivity : AppCompatActivity() {
@@ -221,8 +221,11 @@ class SignInActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 // Handle any errors during Firestore fetch (e.g., network issues)
+                // In the catch block of checkUserExistsInFirestore, before redirecting to name selection
                 withContext(Dispatchers.Main) {
                     Log.e(TAG, "Error checking user data: ${e.message}")
+                    // Stop timer if registration was in progress and an error occurred
+                    RegistrationTimerManager.stopTimerAndSave()
                     // Show a friendly error message
                     Snackbar.make(rootView, "Failed to fetch your profile. Please try again.", Snackbar.LENGTH_LONG).show()
                     // On failure, treat as a new user (ensure light mode and start profile setup from Name)

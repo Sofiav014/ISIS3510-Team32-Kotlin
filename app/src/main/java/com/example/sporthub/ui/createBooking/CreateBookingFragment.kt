@@ -19,7 +19,9 @@ import androidx.navigation.fragment.navArgs
 import com.example.sporthub.R
 import com.example.sporthub.data.model.Venue
 import com.example.sporthub.databinding.FragmentCreateBookingBinding
+import com.example.sporthub.utils.BookingTimeTracker
 import com.example.sporthub.viewmodel.CreateBookingViewModel
+import com.example.sporthub.viewmodel.HomeViewModel
 import com.example.sporthub.viewmodel.SharedUserViewModel
 import java.time.*
 import java.time.format.DateTimeFormatter
@@ -30,6 +32,8 @@ class CreateBookingFragment : Fragment() {
     private val viewModel: CreateBookingViewModel by viewModels()
     private lateinit var binding: FragmentCreateBookingBinding
     private val userViewModel: SharedUserViewModel by activityViewModels()
+    private val homeViewModel: HomeViewModel by activityViewModels()
+
 
     private val timeSlots = listOf(
         "07:00 - 08:00", "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00",
@@ -75,6 +79,8 @@ class CreateBookingFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        BookingTimeTracker.startTimer()
+
         binding = FragmentCreateBookingBinding.inflate(inflater, container, false)
         venue1 = args.venue
 
@@ -183,7 +189,7 @@ class CreateBookingFragment : Fragment() {
     }
 
     private fun setupPlayerCountSpinner() {
-        val players = (1..6).map { it.toString() }
+        val players = (1..22).map { it.toString() }
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, players)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.playerCountSpinner.adapter = adapter
@@ -230,12 +236,23 @@ class CreateBookingFragment : Fragment() {
 
     private fun observeViewModel() {
         viewModel.reservationResult.observe(viewLifecycleOwner) { success ->
-            val msg = if (success) "Reservation created successfully" else "Failed to create reservation"
+            val msg = if (success) {
+
+                BookingTimeTracker.stopTimerAndSave(requireContext())
+
+                "Reservation created successfully"
+
+            } else "Failed to create reservation"
             Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
         }
         viewModel.bookingCreated.observe(viewLifecycleOwner) { created ->
             if (created) {
                 findNavController().navigate(R.id.action_navigation_create_to_navigation_home)
+
+                // Update the user data and reload the home view
+                userViewModel.currentUser.value?.let { user ->
+                    homeViewModel.loadHomeData(requireContext(), user)
+                }
             }
         }
         viewModel.isOffline.observe(viewLifecycleOwner) { offline ->
@@ -274,6 +291,10 @@ class CreateBookingFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // In case the user cancels without completing the booking
+        if (viewModel.bookingCreated.value != true) {
+            BookingTimeTracker.stopTimerAndSave(requireContext())
+        }
         handler.removeCallbacks(updateTimeSlotsRunnable)
     }
 }

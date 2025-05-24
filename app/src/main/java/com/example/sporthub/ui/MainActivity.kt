@@ -1,11 +1,12 @@
 package com.example.sporthub.ui
 
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.NavigationUI
 import com.example.sporthub.R
 import com.example.sporthub.databinding.ActivityMainBinding
 import com.example.sporthub.data.model.User
@@ -15,33 +16,21 @@ import com.example.sporthub.viewmodel.SharedUserViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.material.navigation.NavigationBarView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import androidx.activity.viewModels
-
-import android.view.View
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import androidx.navigation.findNavController
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.setupActionBarWithNavController
-import androidx.navigation.ui.setupWithNavController
-import com.google.firebase.database.ktx.database
-import com.google.firebase.ktx.Firebase
-import android.widget.Button
+import androidx.navigation.NavController
+import com.example.sporthub.utils.LocalThemeManager
 import android.widget.TextView
+import com.google.android.material.appbar.MaterialToolbar
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
-import com.example.sporthub.ui.bookings.BookingsFragment
-import com.example.sporthub.ui.createBooking.CreateBookingFragment
-import com.example.sporthub.ui.findVenues.FindVenuesFragment
-import com.example.sporthub.ui.profile.ProfileFragment
-import com.example.sporthub.utils.LocalThemeManager
-import com.google.android.material.appbar.MaterialToolbar
 import androidx.activity.OnBackPressedCallback
-import androidx.navigation.NavController
+import androidx.navigation.navOptions
+import androidx.navigation.ui.setupWithNavController
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -51,7 +40,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var db: FirebaseFirestore
     private lateinit var userRepository: UserRepository
     private val sharedUserViewModel: SharedUserViewModel by viewModels()
-    private lateinit var bottomNavigationView: BottomNavigationView
     private lateinit var navController: NavController
 
     var currentUser: User? = null
@@ -61,6 +49,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         mAuth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
@@ -73,44 +64,147 @@ class MainActivity : AppCompatActivity() {
         }
 
         val uid = authUser.uid
-
-        // Apply saved theme preference immediately on startup
         applyUserThemePreference(uid)
 
-        userRepository.getUserModel(uid).observe(this) { user ->
-            if (user != null && (user.id != "")) {
-                currentUser = user
-                Log.d(TAG, "Usuario cargado: ${currentUser?.name}")
-                sharedUserViewModel.setUser(user)
-
-                // Inflar la UI solo si tenemos al usuario
-                binding = ActivityMainBinding.inflate(layoutInflater)
-                setContentView(binding.root)
-
-                setupNavigation()
-
-                // Setup back button handling
-                setupBackHandling()
+        val existingUser = sharedUserViewModel.currentUser.value
+        if (existingUser != null) {
+            currentUser = existingUser
+            finishMainSetup()
+        } else {
+            if (isNetworkAvailable()) {
+                userRepository.getUserModel(uid).observe(this) { user ->
+                    if (user != null && user.id != "") {
+                        currentUser = user
+                        sharedUserViewModel.setUser(user)
+                        finishMainSetup()
+                    } else {
+                        goToSignIn()
+                    }
+                }
             } else {
-                Log.e(TAG, "Usuario no encontrado o error al obtener usuario")
-                goToSignIn()
+                Log.e(TAG, "No network and no cached user – cannot proceed")
+                // Aquí podrías mostrar un mensaje de error amigable
             }
         }
     }
 
-    /**
-     * Setup proper back button handling
-     */
+    private fun finishMainSetup() {
+        val navHost = supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        navController = navHost.navController
+
+        setSupportActionBar(binding.topAppBar)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
+        setupToolbarTitles()
+
+        // Fixed navigation with explicit navOptions DSL:
+        // In MainActivity.kt, replace the setOnItemSelectedListener with this:
+
+        binding.navView.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.navigation_home -> {
+                    val options = navOptions {
+                        popUpTo(navController.graph.startDestinationId) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                    navController.navigate(R.id.navigation_home, null, options)
+                    true
+                }
+                R.id.findVenuesFragment -> {
+                    val options = navOptions {
+                        popUpTo(navController.graph.startDestinationId) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                    navController.navigate(R.id.findVenuesFragment, null, options)
+                    true
+                }
+                R.id.navigation_booking -> {
+                    val options = navOptions {
+                        popUpTo(navController.graph.startDestinationId) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                    navController.navigate(R.id.navigation_booking, null, options)
+                    true
+                }
+                R.id.navigation_profile -> {
+                    val options = navOptions {
+                        popUpTo(navController.graph.startDestinationId) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                    navController.navigate(R.id.navigation_profile, null, options)
+                    true
+                }
+                else -> false
+            }
+        }
+
+
+
+        // Optionally handle reselection to pop back stack
+        binding.navView.setOnItemReselectedListener { item ->
+            navController.popBackStack(item.itemId, false)
+        }
+
+        setupBackHandling()
+    }
+
+    private fun setupToolbarTitles() {
+        navController.addOnDestinationChangedListener { _, dest, _ ->
+            binding.toolbarTitle.text = when (dest.id) {
+                R.id.findVenuesFragment      -> "Find Venues"
+                R.id.navigation_home         -> "SportHub"
+                R.id.navigation_profile      -> "Profile"
+                R.id.navigation_booking      -> "Bookings"
+                R.id.navigation_create       -> "Create Booking"
+                R.id.venueDetailFragment     -> "Venue Detail"
+                R.id.venueListFragment       -> "Venue List"
+                else                         -> "SportHub"
+            }
+            val showBack = dest.id in setOf(
+                R.id.venueDetailFragment,
+                R.id.venueListFragment
+            )
+            binding.topAppBar.navigationIcon = if (showBack) {
+                AppCompatResources.getDrawable(this, R.drawable.ic_arrow_back)
+                    ?.apply { setTint(ContextCompat.getColor(this@MainActivity, android.R.color.white)) }
+            } else null
+            binding.topAppBar.setNavigationOnClickListener {
+                if (showBack) onBackPressedDispatcher.onBackPressed()
+            }
+        }
+    }
+
+    private fun isNetworkAvailable(): Boolean {
+        val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        return cm.activeNetworkInfo?.isConnectedOrConnecting == true
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        val isThemeChanging = getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+            .getBoolean("is_theme_changing", false)
+
+        if (isThemeChanging) {
+            Log.d(TAG, "Resuming during theme transition - skipping operations")
+            return
+        }
+    }
+
     private fun setupBackHandling() {
-        // Add a callback for handling the back button press
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                // Check if we're at the start destination
                 if (navController.currentDestination?.id == navController.graph.startDestinationId) {
-                    // If at home/start destination, minimize the app instead of exiting
                     moveTaskToBack(true)
                 } else {
-                    // If not at the start destination, do normal navigation
                     isEnabled = false
                     onBackPressedDispatcher.onBackPressed()
                     isEnabled = true
@@ -119,44 +213,33 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    /**
-     * Apply the user's saved theme preference
-     */
     private fun applyUserThemePreference(userId: String) {
         try {
-            // Get the user's theme preference
             val isDarkMode = LocalThemeManager.getUserTheme(this, userId)
-
             Log.d(TAG, "User theme preference: isDarkMode=$isDarkMode")
 
-            // Apply the theme based on the preference
             if (isDarkMode != null) {
-                val currentMode = if (AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES) true else false
-
-                // Only apply if different from current to avoid unnecessary recreation
+                val currentMode = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
                 if (isDarkMode != currentMode) {
                     Log.d(TAG, "Applying theme change: isDarkMode=$isDarkMode, current=$currentMode")
-
-                    if (isDarkMode) {
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                    } else {
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                    }
+                    AppCompatDelegate.setDefaultNightMode(
+                        if (isDarkMode) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
+                    )
                 }
             } else {
-                // Default to light mode if no preference set
                 Log.d(TAG, "No theme preference, defaulting to light mode")
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error applying theme preference: ${e.message}")
-            // Default to light mode in case of error
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         }
     }
 
-    // Snippet from MainActivity.kt showing toolbar setup
     private fun setupNavigation() {
+        // IMPORTANT:
+        // Make sure R.string.default_web_client_id exists in your strings.xml
+        // This ID is generated by google-services.json (Firebase config)
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
@@ -164,14 +247,12 @@ class MainActivity : AppCompatActivity() {
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
 
-        // Get NavController from NavHostFragment
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
 
         val toolbar: MaterialToolbar = findViewById(R.id.topAppBar)
         setSupportActionBar(toolbar)
-        // Remove default title to use our custom title TextView
         supportActionBar?.setDisplayShowTitleEnabled(false)
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
@@ -189,38 +270,27 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            // Show or hide the back button manually
             val showBackButton = destination.id == R.id.venueDetailFragment || destination.id == R.id.venueListFragment
             toolbar.navigationIcon = if (showBackButton) {
                 AppCompatResources.getDrawable(this, R.drawable.ic_arrow_back)?.apply {
-                    // Tint the back arrow to match the primary color in light mode
                     setTint(ContextCompat.getColor(this@MainActivity, R.color.primary))
                 }
-            } else {
-                null
-            }
+            } else null
 
-            // Set what the back button does
             toolbar.setNavigationOnClickListener {
                 if (showBackButton) onBackPressedDispatcher.onBackPressed()
             }
         }
 
-        // Set up Bottom Navigation with NavController
         val bottomNavigationView: BottomNavigationView = findViewById(R.id.nav_view)
         bottomNavigationView.setupWithNavController(navController)
     }
 
     fun signOutAndGoToLogin() {
         try {
-            // Save current user ID before signing out
             val userId = mAuth.currentUser?.uid
-
             mAuth.signOut()
             mGoogleSignInClient.signOut().addOnCompleteListener(this) {
-                // Clear theme preference on logout (optional)
-                // userId?.let { LocalThemeManager.clearUserTheme(this, it) }
-
                 goToSignIn()
             }
         } catch (e: Exception) {
@@ -230,7 +300,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun goToSignIn() {
         val intent = Intent(this, SignInActivity::class.java)
-        // Clear the task stack so users can't navigate back
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()

@@ -5,23 +5,31 @@ import android.content.Context
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.Observer
+import androidx.lifecycle.viewModelScope
 import com.example.sporthub.data.model.User
 import com.example.sporthub.data.model.Venue
 import com.example.sporthub.data.repository.UserRepository
 import com.example.sporthub.ui.login.SignInActivity
+import com.example.sporthub.utils.ConnectivityHelper
 import com.example.sporthub.utils.LocalThemeManager
 import com.example.sporthub.utils.ThemeManager
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 
@@ -29,6 +37,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
     private val userRepository = UserRepository()
     private val themeManager = ThemeManager.getInstance(application)
+    private val firestore = FirebaseFirestore.getInstance()
 
     private val _userData = MutableLiveData<User>()
     val userData: LiveData<User> = _userData
@@ -45,27 +54,115 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     private val _isDarkMode = MutableLiveData<Boolean>()
     val isDarkMode: LiveData<Boolean> = _isDarkMode
 
+    private val _profilePictureUrl = MutableLiveData<String?>()
+    val profilePictureUrl: LiveData<String?> = _profilePictureUrl
+
     init {
         // Initialize with the current system theme status
         updateThemeStatus()
     }
 
+    private var currentUserObserver: Observer<User>? = null
+
     fun loadUserData() {
-        _isLoading.value = true
-
         val currentUser = userRepository.getCurrentUser()
-        if (currentUser != null) {
-            userRepository.getUserModel(currentUser.uid).observeForever { user ->
-                _userData.value = user
-                _favoriteVenues.value = user.venuesLiked
-                _isLoading.value = false
-
-                // Update theme status based on current user preference
-                updateThemeStatus()
-            }
-        } else {
+        if (currentUser == null) {
             _errorMessage.value = "User not authenticated"
             _isLoading.value = false
+            return
+        }
+
+        _isLoading.value = true
+        Log.d("ProfileViewModel", "Loading user data for ${currentUser.uid}")
+
+        // Remove any existing observer to avoid duplicates
+        currentUserObserver?.let {
+            userRepository.getUserModel(currentUser.uid).removeObserver(it)
+        }
+
+        val observer = Observer<User> { user ->
+            Log.d("ProfileViewModel", "User data received: ${user.name}")
+            _userData.value = user
+            _favoriteVenues.value = user.venuesLiked
+            _isLoading.value = false
+            updateThemeStatus()
+        }
+
+        currentUserObserver = observer
+        userRepository.getUserModel(currentUser.uid).observeForever(observer)
+    }
+
+    fun loadProfilePicture(userId: String) {
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    // Check connectivity before attempting to load from Firebase
+                    if (!ConnectivityHelper.isNetworkAvailable(getApplication())) {
+                        // Try to load from cache or show default
+                        withContext(Dispatchers.Main) {
+                            Log.d("ProfileViewModel", "No internet connection - cannot load fresh profile picture")
+                            _profilePictureUrl.value = null // Will show default/cached image
+                        }
+                        return@withContext
+                    }
+
+                    val userDoc = firestore.collection("users").document(userId).get().await()
+                    val profilePictureUrl = userDoc.getString("profile_picture_url")
+
+                    withContext(Dispatchers.Main) {
+                        _profilePictureUrl.value = profilePictureUrl
+                        Log.d("ProfileViewModel", "Profile picture loaded: $profilePictureUrl")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ProfileViewModel", "Error loading profile picture: ${e.message}")
+                withContext(Dispatchers.Main) {
+                    // Check if it's a connectivity issue
+                    if (!ConnectivityHelper.isNetworkAvailable(getApplication())) {
+                        Log.d("ProfileViewModel", "Failed to load profile picture due to no internet connection")
+                    } else {
+                        _errorMessage.value = "Failed to load profile picture"
+                    }
+                    _profilePictureUrl.value = null
+                }
+            }
+        }
+    }
+
+    fun updateProfilePicture(userId: String, imageUrl: String) {
+        viewModelScope.launch {
+            try {
+                // Check connectivity before attempting update
+                if (!ConnectivityHelper.isNetworkAvailable(getApplication())) {
+                    withContext(Dispatchers.Main) {
+                        _errorMessage.value = "No internet connection. Cannot update profile picture."
+                    }
+                    return@launch
+                }
+
+                withContext(Dispatchers.IO) {
+                    firestore.collection("users")
+                        .document(userId)
+                        .update("profile_picture_url", imageUrl)
+                        .await()
+                }
+
+                // Update local state immediately
+                withContext(Dispatchers.Main) {
+                    _profilePictureUrl.value = imageUrl
+                    Log.d("ProfileViewModel", "Profile picture updated successfully: $imageUrl")
+                }
+            } catch (e: Exception) {
+                Log.e("ProfileViewModel", "Error updating profile picture: ${e.message}")
+                withContext(Dispatchers.Main) {
+                    // Check if it's a connectivity issue
+                    if (!ConnectivityHelper.isNetworkAvailable(getApplication())) {
+                        _errorMessage.value = "Connection lost during profile picture update. Please try again when you have internet access."
+                    } else {
+                        _errorMessage.value = "Failed to update profile picture: ${e.message}"
+                    }
+                }
+            }
         }
     }
 
@@ -122,36 +219,50 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun toggleDarkMode() {
-        // Save the flag to prevent activities from recreating improperly
-        val editor = getApplication<Application>().getSharedPreferences("theme_prefs", Context.MODE_PRIVATE).edit()
-        editor.putBoolean("is_theme_changing", true)
-        editor.apply()
+        try {
+            val appContext = getApplication<Application>()
+            val prefs = appContext.getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
 
-        // Get current theme status
-        val newDarkModeValue = !isDarkModeActive()
+            // 1. Marcar que el cambio de tema está en curso
+            prefs.edit().putBoolean("is_theme_changing", true).commit()
 
-        // Change the theme
-        if (newDarkModeValue) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            // 2. Determinar el nuevo modo de tema
+            Log.d("ProfileViewModel", "Toggling dark mode. Current: ${isDarkModeActive()}")
+            val newDarkModeValue = !isDarkModeActive()
+            _isDarkMode.value = newDarkModeValue
+
+            // 3. Aplicar el nuevo tema inmediatamente (NO depende de red ni usuario)
+            val mode = if (newDarkModeValue) AppCompatDelegate.MODE_NIGHT_YES
+            else AppCompatDelegate.MODE_NIGHT_NO
+            AppCompatDelegate.setDefaultNightMode(mode)
+
+            // 4. Guardar la preferencia de forma asíncrona, pero NO bloquear el cambio
+            val userId = userRepository.getCurrentUser()?.uid
+            if (userId != null) {
+                // Usamos apply() porque no necesitamos persistencia inmediata
+                appContext.getSharedPreferences("user_theme_prefs", Context.MODE_PRIVATE)
+                    .edit()
+                    .putBoolean("theme_for_user_$userId", newDarkModeValue)
+                    .apply()
+            }
+
+            // 5. Limpiar el flag de transición después de un tiempo suficiente
+            Handler(Looper.getMainLooper()).postDelayed({
+                prefs.edit().putBoolean("is_theme_changing", false).apply()
+            }, 1500) // Aumentado a 1500ms para evitar problemas si el sistema va lento
+
+        } catch (e: Exception) {
+            Log.e("ProfileViewModel", "Error in toggleDarkMode: ${e.message}")
         }
+    }
 
-        // Update our LiveData
-        _isDarkMode.value = newDarkModeValue
-
-        // Save user preference
-        val userId = userRepository.getCurrentUser()?.uid
-        if (userId != null) {
-            LocalThemeManager.saveUserTheme(getApplication(), userId, newDarkModeValue)
+    fun Context.isThemeChanging(): Boolean {
+        return try {
+            getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+                .getBoolean("is_theme_changing", false)
+        } catch (e: Exception) {
+            false
         }
-
-        // Clear the flag after a short delay to ensure it's processed
-        Handler(Looper.getMainLooper()).postDelayed({
-            val editor = getApplication<Application>().getSharedPreferences("theme_prefs", Context.MODE_PRIVATE).edit()
-            editor.putBoolean("is_theme_changing", false)
-            editor.apply()
-        }, 500)
     }
 
     fun signOut() {
@@ -160,4 +271,29 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         userRepository.signOut()
         SignInActivity.preferencesAlreadyChecked = false
     }
+
+    fun refreshUserData() {
+        val currentUser = userRepository.getCurrentUser()
+        if (currentUser != null) {
+            Log.d("ProfileViewModel", "Refreshing user data for ${currentUser.uid}")
+
+            // Clear any cached data
+            userRepository.clearUserCache()
+
+            // Force reload user data
+            loadUserData()
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        currentUserObserver?.let { observer ->
+            val currentUser = userRepository.getCurrentUser()
+            if (currentUser != null) {
+                userRepository.getUserModel(currentUser.uid).removeObserver(observer)
+            }
+        }
+    }
+
+
 }

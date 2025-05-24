@@ -15,7 +15,8 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center_horizontal"
-        android:paddingBottom="50dp">
+        android:paddingBottom="50dp"
+        android:baselineAligned="false">
 
         <!-- Calendario embebido -->
         <androidx.cardview.widget.CardView
@@ -31,7 +32,8 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="16dp"
-                android:background="#F5F0FF">
+                android:background="#F5F0FF"
+                android:baselineAligned="false">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -68,7 +70,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="16dp"
+                android:baselineAligned="false">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -121,12 +124,12 @@
                         android:id="@+id/playerCountSpinner"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
-                        android:minHeight="48dp"
                         android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_spinner_touch_area"
+                        android:minHeight="48dp"
                         android:paddingStart="16dp"
                         android:paddingEnd="16dp"
-                        android:textColor="#000"
-                        android:background="@drawable/bg_spinner_touch_area" />
+                        android:textColor="@android:color/black" />
                 </LinearLayout>
 
             </LinearLayout>

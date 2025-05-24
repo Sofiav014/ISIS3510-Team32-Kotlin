@@ -1,10 +1,12 @@
 package com.example.sporthub.ui.profile.edit
 
+import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
@@ -16,11 +18,10 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.sporthub.R
 import com.example.sporthub.data.repository.UserRepository
 import com.example.sporthub.ui.MainActivity
+import com.example.sporthub.utils.ConnectivityHelper
+import com.example.sporthub.utils.ConnectivityHelperExt
+import com.example.sporthub.utils.RegistrationTimerManager
 import com.example.sporthub.viewmodel.SportSelectionViewModel
-import android.app.DatePickerDialog
-import android.content.Context
-import androidx.appcompat.app.AppCompatDelegate
-import java.util.Calendar
 
 class EditSportsActivity : AppCompatActivity() {
 
@@ -44,34 +45,22 @@ class EditSportsActivity : AppCompatActivity() {
     private lateinit var titleText: TextView
     private lateinit var subtitleText: TextView
     private lateinit var backButton: ImageButton
+    private lateinit var networkMessageText: TextView
+    private lateinit var rootView: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
-
-
         val isThemeChanging = getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
             .getBoolean("is_theme_changing", false)
 
         if (isThemeChanging) {
-
-            setContentView(R.layout.activity_edit_name)
-
+            super.onCreate(savedInstanceState)
+            setContentView(R.layout.activity_edit_sports)
             initViews()
             return
         }
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_sports)
-
-        // Initialize views
-        basketballCard = findViewById(R.id.button_basketball)
-        footballCard = findViewById(R.id.button_football)
-        volleyballCard = findViewById(R.id.button_volleyball)
-        tennisCard = findViewById(R.id.button_tennis)
-        saveButton = findViewById(R.id.button_discover)
-        titleText = findViewById(R.id.textview_title)
-        subtitleText = findViewById(R.id.textview_subtitle)
-        backButton = findViewById(R.id.button_back_sport)
 
         // Get edit mode from intent
         isEditMode = intent.getBooleanExtra("EDIT_MODE", false)
@@ -87,6 +76,9 @@ class EditSportsActivity : AppCompatActivity() {
 
         // Initialize UI components
         initViews()
+
+        // Check connectivity initially
+        checkConnectivity()
 
         // Set up observers
         setupObservers()
@@ -113,7 +105,24 @@ class EditSportsActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        saveButton.isEnabled = true // Enable the Save button again
+        // Check connectivity when resuming
+        checkConnectivity()
+    }
+
+    private fun checkConnectivity() {
+        if (!ConnectivityHelper.isNetworkAvailable(this)) {
+            networkMessageText.visibility = View.VISIBLE
+        } else {
+            networkMessageText.visibility = View.GONE
+        }
+    }
+
     private fun initViews() {
+        rootView = findViewById(R.id.rootViewSports)
+        networkMessageText = findViewById(R.id.networkMessageText)
         basketballCard = findViewById(R.id.button_basketball)
         footballCard = findViewById(R.id.button_football)
         volleyballCard = findViewById(R.id.button_volleyball)
@@ -140,6 +149,14 @@ class EditSportsActivity : AppCompatActivity() {
 
         viewModel.errorEvent.observe(this) { errorMessage ->
             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
+            saveButton.isEnabled = true // Re-enable button on error
+        }
+
+        viewModel.userNotAuthenticatedEvent.observe(this) { notAuthenticated ->
+            if (notAuthenticated) {
+                Toast.makeText(this, "Error: User not authenticated", Toast.LENGTH_SHORT).show()
+                finish()
+            }
         }
     }
 
@@ -229,10 +246,27 @@ class EditSportsActivity : AppCompatActivity() {
     }
 
     private fun saveSportsAndProceed() {
+        // Check connectivity before proceeding
+        if (!ConnectivityHelper.isNetworkAvailable(this)) {
+            ConnectivityHelperExt.checkNetworkAndNotify(this, rootView)
+            return
+        }
+
         // Get list of selected sports keys
         val selectedSportsKeys = selectedSports.filter { it.value }.keys.toList()
 
+        if (selectedSportsKeys.isEmpty()) {
+            Toast.makeText(this, "Please select at least one sport", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        saveButton.isEnabled = false
+
         // Delegate the logic to the ViewModel
+        if (!isEditMode) {
+            // Only stop timer if this is part of initial registration (not profile edit)
+            RegistrationTimerManager.stopTimerAndSave()
+        }
         viewModel.saveSportsPreferences(selectedSportsKeys)
     }
 

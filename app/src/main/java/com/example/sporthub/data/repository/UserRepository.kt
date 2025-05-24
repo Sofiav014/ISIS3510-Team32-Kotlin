@@ -16,10 +16,13 @@ import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import androidx.lifecycle.MutableLiveData
+import com.google.firebase.firestore.FieldValue
 
 class UserRepository {
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
+    private var cachedUserLiveData: MutableLiveData<User>? = null
+
 
     fun getCurrentUser(): FirebaseUser? = auth.currentUser
 
@@ -76,13 +79,60 @@ class UserRepository {
             null
         }
     }
+    fun clearUserCache() {
+        cachedUserLiveData?.let { liveData ->
+            // Remove all observers to force fresh data fetch
+            liveData.removeObserver { }
+        }
+        cachedUserLiveData = null
+        Log.d("UserRepository", "User cache cleared")
+    }
 
-    fun getUserModel(userId:String): LiveData<User>{
-        val liveData = MutableLiveData<User>()
+    fun joinBooking(userId: String, booking: Booking): Task<Void> {
+        val userRef = db.collection("users").document(userId)
+
+        // Use runTransaction to ensure atomicity when updating the user's bookings
+        return db.runTransaction { transaction ->
+            val userSnapshot = transaction.get(userRef)
+
+            // Get the existing list of bookings from the user document
+            val currentBookings = userSnapshot.get("bookings") as? List<Map<String, Any>> ?: emptyList()
+
+            // Add the new booking to the list
+            val updatedBookings = currentBookings.toMutableList().apply {
+                add(mapOf("id" to booking))  // Make sure the required fields are included
+            }
+
+            // Update the bookings in Firestore
+            transaction.update(userRef, "bookings", updatedBookings)
+
+            null
+        }
+    }
+
+
+    fun getUserModel(userId: String): LiveData<User> {
+        // If cache was cleared, create new LiveData
+        if (cachedUserLiveData == null) {
+            val liveData = MutableLiveData<User>()
+            cachedUserLiveData = liveData
+
+            // Force fresh fetch from Firestore
+            fetchUserFromFirestore(userId, liveData)
+
+            return liveData
+        }
+
+        return cachedUserLiveData!!
+    }
+
+    private fun fetchUserFromFirestore(userId: String, liveData: MutableLiveData<User>) {
+        Log.d("UserRepository", "Fetching fresh user data from Firestore for $userId")
 
         db.collection("users").document(userId).get()
             .addOnSuccessListener { snapshot ->
                 if (snapshot.exists()) {
+                    // Your existing user parsing logic here...
                     val sportsListAny = snapshot.get("sports_liked")
 
                     val sportsLiked = if (sportsListAny is List<*>) {
@@ -159,30 +209,38 @@ class UserRepository {
                     )
 
                     liveData.value = currentUser
+                    Log.d("UserRepository", "Fresh user data loaded: ${currentUser.name}")
 
                 } else {
-                    liveData.value = User( // Default user if document doesn't exist
-                        id = "",
-                        name = "",
-                        gender = "",
-                        birthDate = null,
-                        sportsLiked = emptyList(),
-                        bookings = emptyList(),
-                        venuesLiked = emptyList()
-                    )
+                    liveData.value = User("", "", "", null, emptyList(), emptyList(), emptyList())
                 }
             }
-            .addOnFailureListener {
-                liveData.value = User( // Default user on failure
-                    id = "",
-                    name = "",
-                    gender = "",
-                    birthDate = null,
-                    sportsLiked = emptyList(),
-                    bookings = emptyList(),
-                    venuesLiked = emptyList()
-                )
+            .addOnFailureListener { e ->
+                Log.e("UserRepository", "Error fetching user data: ${e.message}")
+                liveData.value = User("", "", "", null, emptyList(), emptyList(), emptyList())
             }
-        return liveData
     }
+
+
+    fun updateUserProfilePicture(userId: String, profilePictureUrl: String): Task<Void> {
+        return updateUserField(userId, "profile_picture_url", profilePictureUrl)
+    }
+
+
+    fun getUserProfilePicture(userId: String): Task<String?> {
+        return getUserData(userId).continueWith { task ->
+            if (task.isSuccessful) {
+                val document = task.result
+                if (document != null && document.exists()) {
+                    document.getString("profile_picture_url")
+                } else {
+                    null
+                }
+            } else {
+                null
+            }
+        }
+    }
+
+    
 }
