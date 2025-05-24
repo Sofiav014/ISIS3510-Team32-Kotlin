@@ -98,6 +98,8 @@ class MainActivity : AppCompatActivity() {
         setupToolbarTitles()
 
         // Fixed navigation with explicit navOptions DSL:
+        // In MainActivity.kt, replace the setOnItemSelectedListener with this:
+
         binding.navView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_home -> {
@@ -108,6 +110,16 @@ class MainActivity : AppCompatActivity() {
                         launchSingleTop = true
                     }
                     navController.navigate(R.id.navigation_home, null, options)
+                    true
+                }
+                R.id.findVenuesFragment -> {
+                    val options = navOptions {
+                        popUpTo(navController.graph.startDestinationId) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                    navController.navigate(R.id.findVenuesFragment, null, options)
                     true
                 }
                 R.id.navigation_booking -> {
@@ -153,6 +165,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.navigation_booking      -> "Bookings"
                 R.id.navigation_create       -> "Create Booking"
                 R.id.venueDetailFragment     -> "Venue Detail"
+                R.id.venueListFragment       -> "Venue List"
                 else                         -> "SportHub"
             }
             val showBack = dest.id in setOf(
@@ -161,7 +174,7 @@ class MainActivity : AppCompatActivity() {
             )
             binding.topAppBar.navigationIcon = if (showBack) {
                 AppCompatResources.getDrawable(this, R.drawable.ic_arrow_back)
-                    ?.apply { setTint(ContextCompat.getColor(this@MainActivity, R.color.primary)) }
+                    ?.apply { setTint(ContextCompat.getColor(this@MainActivity, android.R.color.white)) }
             } else null
             binding.topAppBar.setNavigationOnClickListener {
                 if (showBack) onBackPressedDispatcher.onBackPressed()
