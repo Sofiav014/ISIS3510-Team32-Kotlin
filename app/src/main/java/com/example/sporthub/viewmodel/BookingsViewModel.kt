@@ -1,6 +1,8 @@
 package com.example.sporthub.viewmodel
 
 import android.app.Application
+import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -17,6 +19,15 @@ import java.util.Calendar
 import java.util.Date
 
 class BookingsViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val sharedPreferences: SharedPreferences = application.getSharedPreferences(
+        "bookings_preferences", // Name for your preferences file
+        Context.MODE_PRIVATE
+    )
+    companion object {
+        private const val KEY_LAST_DATE = "key_last_date"
+    }
+
 
     private val db = FirebaseFirestore.getInstance()
     private var bookingsListener: ListenerRegistration? = null
@@ -36,8 +47,18 @@ class BookingsViewModel(application: Application) : AndroidViewModel(application
     private var allUserBookings: List<Booking> = emptyList()
 
     init {
-        _selectedDate.value = Calendar.getInstance().time
-        // This will now check for network first
+        // Read the last saved date directly from SharedPreferences
+        val lastDateMillis = sharedPreferences.getLong(KEY_LAST_DATE, -1L)
+
+        _selectedDate.value = if (lastDateMillis != -1L) {
+            // If a date was saved, use it
+            Date(lastDateMillis)
+        } else {
+            // Otherwise, default to today
+            Calendar.getInstance().time
+        }
+
+        // Now that the date is set, fetch bookings
         listenForUserBookings()
     }
 
@@ -47,6 +68,11 @@ class BookingsViewModel(application: Application) : AndroidViewModel(application
 
     fun setSelectedDate(date: Date) {
         _selectedDate.value = date
+        // Save the new date to SharedPreferences using the classic apply() method
+        sharedPreferences.edit()
+            .putLong(KEY_LAST_DATE, date.time)
+            .apply()
+
         filterBookingsForSelectedDate()
     }
 
