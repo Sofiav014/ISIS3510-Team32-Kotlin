@@ -106,6 +106,7 @@ class VenueListFragment : Fragment() {
         recyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = venueAdapter
+            setHasFixedSize(true)
         }
     }
 

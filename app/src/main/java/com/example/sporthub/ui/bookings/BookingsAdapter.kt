@@ -16,7 +16,7 @@ class BookingsAdapter(private val onBookingClicked: (Booking) -> Unit) :
     ListAdapter<Booking, BookingsAdapter.BookingViewHolder>(BookingDiffCallback()) {
 
     // ViewHolder using ItemMyBookingBinding
-    class BookingViewHolder(private val binding: ItemMyBookingBinding) :
+    class BookingViewHolder(internal val binding: ItemMyBookingBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
         private val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
@@ -41,8 +41,28 @@ class BookingsAdapter(private val onBookingClicked: (Booking) -> Unit) :
         return BookingViewHolder(binding)
     }
 
+    override fun onBindViewHolder(
+        holder: BookingViewHolder,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
+        if (payloads.isEmpty() || payloads[0] != "PAYLOAD_SPOTS_CHANGED") {
+            // If no payload, do a full re-bind as usual
+            super.onBindViewHolder(holder, position, payloads)
+        } else {
+            // If we have our specific payload, only update the spots TextView
+            val booking = getItem(position)
+            holder.updateSpots(booking)
+        }
+    }
     override fun onBindViewHolder(holder: BookingViewHolder, position: Int) {
         holder.bind(getItem(position), onBookingClicked)
+    }
+}
+
+private fun BookingsAdapter.BookingViewHolder.updateSpots(booking: Booking) {
+    fun updateSpots(booking: Booking) {
+        binding.bookingSpots.text = "${booking.users.size} / ${booking.maxUsers}"
     }
 }
 
@@ -55,5 +75,14 @@ class BookingDiffCallback : DiffUtil.ItemCallback<Booking>() {
     @SuppressLint("DiffUtilEquals")
     override fun areContentsTheSame(oldItem: Booking, newItem: Booking): Boolean {
         return oldItem == newItem
+    }
+
+    override fun getChangePayload(oldItem: Booking, newItem: Booking): Any? {
+        // If the number of users changed, that's what we want to update.
+        // You can create a more complex payload object for multiple changes.
+        if (oldItem.users.size != newItem.users.size) {
+            return "PAYLOAD_SPOTS_CHANGED"
+        }
+        return null // Return null to trigger a full re-bind
     }
 }

@@ -29,6 +29,9 @@ class BookingsFragment : Fragment() {
     private val dayOfWeekFormatter = SimpleDateFormat("EEE", Locale.getDefault())
     private val monthYearFormatter = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
 
+    // This property will hold a reference to the inflated view from the stub
+    private var emptyStateView: View? = null
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -53,39 +56,41 @@ class BookingsFragment : Fragment() {
             bookingAdapter.submitList(bookings)
 
             if (bookings.isEmpty()) {
-                // Only show empty state if network IS available
                 if (bookingsViewModel.isNetworkAvailable.value == true) {
                     binding.recyclerViewBookings.visibility = View.GONE
-                    binding.textViewEmptyState.visibility = View.VISIBLE
+
+                    // If the empty state view hasn't been inflated yet, inflate it.
+                    if (emptyStateView == null) {
+                        emptyStateView = binding.viewStubEmptyState.inflate()
+                    }
+                    // Now that we know it's inflated, make it visible.
+                    emptyStateView?.visibility = View.VISIBLE
                 }
             } else {
                 binding.recyclerViewBookings.visibility = View.VISIBLE
-                binding.textViewEmptyState.visibility = View.GONE
+                // If the view has been inflated before, make sure it's hidden.
+                emptyStateView?.visibility = View.GONE
             }
         }
 
         bookingsViewModel.isNetworkAvailable.observe(viewLifecycleOwner) { isAvailable ->
-            // Enable/disable button based on network status
             binding.buttonOpenCalendar.isEnabled = isAvailable
 
             if (isAvailable) {
-                // If network is back, dismiss the snackbar if it's showing
                 noConnectionSnackbar?.dismiss()
             } else {
-                // If no network, hide the list/empty-state and show the snackbar
                 binding.recyclerViewBookings.visibility = View.GONE
-                binding.textViewEmptyState.visibility = View.GONE
+                // Also hide the stub-inflated view if there's no connection
+                emptyStateView?.visibility = View.GONE
                 showNoConnectionSnackbar()
             }
         }
 
         bookingsViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            // You might want to enhance this to show a loading indicator
         }
     }
 
     private fun showNoConnectionSnackbar() {
-        // Use an indefinite snackbar that stays until dismissed or connection returns
         noConnectionSnackbar = Snackbar.make(binding.root, "No internet connection", Snackbar.LENGTH_INDEFINITE)
             .setAction("RETRY") {
                 bookingsViewModel.onRetry()
@@ -105,6 +110,7 @@ class BookingsFragment : Fragment() {
         binding.recyclerViewBookings.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = bookingAdapter
+            setHasFixedSize(true)
         }
     }
 
