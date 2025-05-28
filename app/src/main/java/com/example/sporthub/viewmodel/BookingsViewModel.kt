@@ -4,29 +4,39 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.core.content.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.sporthub.data.model.Booking
 import com.example.sporthub.data.model.Sport
 import com.example.sporthub.data.model.Venue
-import com.example.sporthub.utils.ConnectivityHelper // Import your helper
+import com.example.sporthub.utils.ConnectivityHelper
+import com.example.sporthub.utils.LRUCache // Import your LRUCache
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+import java.util.Locale
 
 class BookingsViewModel(application: Application) : AndroidViewModel(application) {
 
     private val sharedPreferences: SharedPreferences = application.getSharedPreferences(
-        "bookings_preferences", // Name for your preferences file
+        "bookings_preferences",
         Context.MODE_PRIVATE
     )
     companion object {
         private const val KEY_LAST_DATE = "key_last_date"
     }
+
+    // Instantiate the LRUCache to hold daily bookings.
+    private val bookingsCache = LRUCache<String, List<Booking>>(5) // Caches up to 5 days
+    // A formatter to create consistent keys from dates (e.g., "2025-05-28")
+    private val cacheKeyFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    // --- END OF NEW CACHING IMPLEMENTATION ---
 
 
     private val db = FirebaseFirestore.getInstance()
@@ -47,18 +57,9 @@ class BookingsViewModel(application: Application) : AndroidViewModel(application
     private var allUserBookings: List<Booking> = emptyList()
 
     init {
-        // Read the last saved date directly from SharedPreferences
+        // This logic is unchanged
         val lastDateMillis = sharedPreferences.getLong(KEY_LAST_DATE, -1L)
-
-        _selectedDate.value = if (lastDateMillis != -1L) {
-            // If a date was saved, use it
-            Date(lastDateMillis)
-        } else {
-            // Otherwise, default to today
-            Calendar.getInstance().time
-        }
-
-        // Now that the date is set, fetch bookings
+        _selectedDate.value = if (lastDateMillis != -1L) Date(lastDateMillis) else Calendar.getInstance().time
         listenForUserBookings()
     }
 
@@ -66,26 +67,31 @@ class BookingsViewModel(application: Application) : AndroidViewModel(application
         listenForUserBookings()
     }
 
+
     fun setSelectedDate(date: Date) {
         _selectedDate.value = date
-        // Save the new date to SharedPreferences using the classic apply() method
-        sharedPreferences.edit()
-            .putLong(KEY_LAST_DATE, date.time)
-            .apply()
+        sharedPreferences.edit().putLong(KEY_LAST_DATE, date.time).apply()
 
-        filterBookingsForSelectedDate()
+        // Decide what to do based on connectivity
+        if (isNetworkAvailable.value == true) {
+            // If online, filter the master list from Firestore which will also update the cache
+            filterBookingsForSelectedDate()
+        } else {
+            // If offline, try to load the newly selected date directly from the cache
+            loadFromCache()
+        }
     }
 
-    private fun listenForUserBookings() {
 
+    private fun listenForUserBookings() {
         if (!ConnectivityHelper.isNetworkAvailable(getApplication())) {
             _isNetworkAvailable.postValue(false)
-            // Post empty values to clear screen and stop loading indicators
-            _bookingsForSelectedDate.postValue(emptyList())
             _isLoading.postValue(false)
-            return // Stop here if no network
+            // When offline, immediately attempt to load data from the cache
+            loadFromCache()
+            return
         }
-        _isNetworkAvailable.postValue(true) // Network is available
+        _isNetworkAvailable.postValue(true)
 
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         if (userId == null) {
@@ -120,7 +126,6 @@ class BookingsViewModel(application: Application) : AndroidViewModel(application
                                 sport = sport
                             )
                         }
-
                         Booking(
                             id = bookingMap["id"] as? String ?: "",
                             startTime = bookingMap["start_time"] as? Timestamp,
@@ -143,26 +148,50 @@ class BookingsViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    private fun filterBookingsForSelectedDate() {
-        val calendar = Calendar.getInstance()
-        val currentDate = _selectedDate.value ?: return
-        calendar.time = currentDate
 
+    private fun filterBookingsForSelectedDate() {
+        val currentDate = _selectedDate.value ?: return
+        val calendar = Calendar.getInstance().apply { time = currentDate }
         val currentYear = calendar.get(Calendar.YEAR)
         val currentMonth = calendar.get(Calendar.MONTH)
         val currentDay = calendar.get(Calendar.DAY_OF_MONTH)
 
         val filtered = allUserBookings.filter { booking ->
             booking.startTime?.toDate()?.let { bookingDate ->
-                val bookingCal = Calendar.getInstance()
-                bookingCal.time = bookingDate
+                val bookingCal = Calendar.getInstance().apply { time = bookingDate }
                 bookingCal.get(Calendar.YEAR) == currentYear &&
                         bookingCal.get(Calendar.MONTH) == currentMonth &&
                         bookingCal.get(Calendar.DAY_OF_MONTH) == currentDay
             } ?: false
         }
+
+        // Save the filtered list to our cache
+        val cacheKey = cacheKeyFormatter.format(currentDate)
+        bookingsCache[cacheKey] = filtered
+        Log.d("BookingsViewModel", "Saved ${filtered.size} bookings to cache for key: $cacheKey")
+
         _bookingsForSelectedDate.postValue(filtered)
         _isLoading.postValue(false)
+    }
+
+
+    private fun loadFromCache() {
+        val currentDate = _selectedDate.value ?: return
+        val cacheKey = cacheKeyFormatter.format(currentDate)
+
+        // cachedBookings is of type List<Booking>? (nullable)
+        val cachedBookings = bookingsCache[cacheKey]
+
+        // This 'if' check is the key to solving the error
+        if (cachedBookings != null) {
+            // Inside this block, Kotlin knows cachedBookings is NOT null
+            _bookingsForSelectedDate.postValue(cachedBookings) // This is now safe
+            Log.d("BookingsViewModel", "Loaded ${cachedBookings.size} bookings from cache for key: $cacheKey")
+        } else {
+            // If the cache returned null, we post an empty list instead
+            _bookingsForSelectedDate.postValue(emptyList())
+            Log.d("BookingsViewModel", "No bookings found in cache for key: $cacheKey")
+        }
     }
 
     override fun onCleared() {
