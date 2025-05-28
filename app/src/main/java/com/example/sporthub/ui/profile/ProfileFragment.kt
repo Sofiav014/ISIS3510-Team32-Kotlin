@@ -44,6 +44,7 @@ import com.example.sporthub.ui.profile.edit.EditGenderActivity
 import com.example.sporthub.ui.profile.edit.EditBirthDateActivity
 import com.example.sporthub.ui.profile.edit.EditSportsActivity
 import com.example.sporthub.viewmodel.FavoriteVenuesViewModel
+import com.example.sporthub.utils.LoadingTimeTracker
 import com.google.android.material.snackbar.Snackbar
 
 class ProfileFragment : Fragment() {
@@ -78,6 +79,9 @@ class ProfileFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        // Start the loading time tracker
+        LoadingTimeTracker.start()
+
         // Use the updated layout
         return inflater.inflate(R.layout.fragment_profile, container, false)
     }
@@ -291,6 +295,9 @@ class ProfileFragment : Fragment() {
             if (user != null) {
                 Log.d("ProfileFragment", "User data from profile viewmodel: ${user.name}")
                 updateUI(user)
+
+                // Stop the loading time tracker after the UI is updated
+                LoadingTimeTracker.stopAndRecord("Profile View", requireContext())
             }
         }
 
