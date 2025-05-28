@@ -8,15 +8,19 @@ import androidx.core.content.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import com.example.sporthub.data.model.Booking
 import com.example.sporthub.data.model.Sport
 import com.example.sporthub.data.model.Venue
 import com.example.sporthub.utils.ConnectivityHelper
-import com.example.sporthub.utils.LRUCache // Import your LRUCache
+import com.example.sporthub.utils.LRUCache
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -32,12 +36,8 @@ class BookingsViewModel(application: Application) : AndroidViewModel(application
         private const val KEY_LAST_DATE = "key_last_date"
     }
 
-    // Instantiate the LRUCache to hold daily bookings.
-    private val bookingsCache = LRUCache<String, List<Booking>>(5) // Caches up to 5 days
-    // A formatter to create consistent keys from dates (e.g., "2025-05-28")
+    private val bookingsCache = LRUCache<String, List<Booking>>(5)
     private val cacheKeyFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-    // --- END OF NEW CACHING IMPLEMENTATION ---
-
 
     private val db = FirebaseFirestore.getInstance()
     private var bookingsListener: ListenerRegistration? = null
@@ -57,140 +57,131 @@ class BookingsViewModel(application: Application) : AndroidViewModel(application
     private var allUserBookings: List<Booking> = emptyList()
 
     init {
-        // This logic is unchanged
-        val lastDateMillis = sharedPreferences.getLong(KEY_LAST_DATE, -1L)
-        _selectedDate.value = if (lastDateMillis != -1L) Date(lastDateMillis) else Calendar.getInstance().time
-        listenForUserBookings()
+        viewModelScope.launch {
+            // Use IO dispatcher for SharedPreferences read
+            val initialDate = withContext(Dispatchers.IO) {
+                val lastDateMillis = sharedPreferences.getLong(KEY_LAST_DATE, -1L)
+                if (lastDateMillis != -1L) Date(lastDateMillis) else Calendar.getInstance().time
+            }
+            // Update LiveData on the Main thread
+            _selectedDate.value = initialDate
+            listenForUserBookings()
+        }
     }
 
     fun onRetry() {
         listenForUserBookings()
     }
 
-
     fun setSelectedDate(date: Date) {
         _selectedDate.value = date
-        sharedPreferences.edit().putLong(KEY_LAST_DATE, date.time).apply()
+        // Launch a coroutine for the SharedPreferences I/O operation
+        viewModelScope.launch(Dispatchers.IO) {
+            sharedPreferences.edit().putLong(KEY_LAST_DATE, date.time).apply()
+        }
 
-        // Decide what to do based on connectivity
         if (isNetworkAvailable.value == true) {
-            // If online, filter the master list from Firestore which will also update the cache
-            filterBookingsForSelectedDate()
+            viewModelScope.launch { filterBookingsForSelectedDate() }
         } else {
-            // If offline, try to load the newly selected date directly from the cache
-            loadFromCache()
+            viewModelScope.launch { loadFromCache() }
         }
     }
-
 
     private fun listenForUserBookings() {
         if (!ConnectivityHelper.isNetworkAvailable(getApplication())) {
             _isNetworkAvailable.postValue(false)
             _isLoading.postValue(false)
-            // When offline, immediately attempt to load data from the cache
-            loadFromCache()
+            viewModelScope.launch { loadFromCache() }
             return
         }
         _isNetworkAvailable.postValue(true)
-
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         if (userId == null) {
-            Log.e("BookingsViewModel", "User not logged in.")
-            return
+            Log.e("BookingsViewModel", "User not logged in."); return
         }
 
         _isLoading.value = true
         val userDocRef = db.collection("users").document(userId)
 
         bookingsListener = userDocRef.addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                Log.e("BookingsViewModel", "Listen failed.", error)
-                allUserBookings = emptyList()
-                filterBookingsForSelectedDate()
-                return@addSnapshotListener
-            }
+            viewModelScope.launch {
+                if (error != null) {
+                    Log.e("BookingsViewModel", "Listen failed.", error)
+                    allUserBookings = emptyList()
+                    filterBookingsForSelectedDate()
+                    return@launch
+                }
 
-            if (snapshot != null && snapshot.exists()) {
-                val bookingsRaw = snapshot["bookings"] as? List<Map<String, Any>>
-                val bookingsParsed = bookingsRaw?.mapNotNull { bookingMap ->
-                    try {
-                        val venueMap = bookingMap["venue"] as? Map<String, Any>
-                        val venue = venueMap?.let {
-                            val sportMap = it["sport"] as? Map<String, Any>
-                            val sport = sportMap?.let { sp -> Sport(id = sp["id"] as? String ?: "", name = sp["name"] as? String ?: "") }
-                            Venue(
-                                id = it["id"] as? String ?: "",
-                                name = it["name"] as? String ?: "",
-                                locationName = it["location_name"] as? String ?: "",
-                                image = it["image"] as? String ?: "",
-                                sport = sport
-                            )
-                        }
-                        Booking(
-                            id = bookingMap["id"] as? String ?: "",
-                            startTime = bookingMap["start_time"] as? Timestamp,
-                            endTime = bookingMap["end_time"] as? Timestamp,
-                            maxUsers = (bookingMap["max_users"] as? Long)?.toInt() ?: 0,
-                            users = bookingMap["users"] as? List<String> ?: emptyList(),
-                            venue = venue
-                        )
-                    } catch (e: Exception) {
-                        Log.e("BookingsViewModel", "Failed to parse a booking.", e)
-                        null
+                // Use IO dispatcher to move parsing off the main thread
+                val parsedList = withContext(Dispatchers.IO) {
+                    if (snapshot != null && snapshot.exists()) {
+                        val bookingsRaw = snapshot["bookings"] as? List<Map<String, Any>>
+                        bookingsRaw?.mapNotNull { bookingMap ->
+                            try {
+                                val venueMap = bookingMap["venue"] as? Map<String, Any>
+                                val venue = venueMap?.let {
+                                    val sportMap = it["sport"] as? Map<String, Any>
+                                    val sport = sportMap?.let { sp -> Sport(id = sp["id"] as? String ?: "", name = sp["name"] as? String ?: "") }
+                                    Venue(id = it["id"] as? String ?: "", name = it["name"] as? String ?: "", locationName = it["location_name"] as? String ?: "", image = it["image"] as? String ?: "", sport = sport)
+                                }
+                                Booking(id = bookingMap["id"] as? String ?: "", startTime = bookingMap["start_time"] as? Timestamp, endTime = bookingMap["end_time"] as? Timestamp, maxUsers = (bookingMap["max_users"] as? Long)?.toInt() ?: 0, users = bookingMap["users"] as? List<String> ?: emptyList(), venue = venue)
+                            } catch (e: Exception) {
+                                Log.e("BookingsViewModel", "Failed to parse a booking.", e); null
+                            }
+                        } ?: emptyList()
+                    } else {
+                        emptyList()
                     }
-                } ?: emptyList()
-
-                allUserBookings = bookingsParsed
-            } else {
-                allUserBookings = emptyList()
+                }
+                allUserBookings = parsedList
+                filterBookingsForSelectedDate()
             }
-            filterBookingsForSelectedDate()
         }
     }
 
-
-    private fun filterBookingsForSelectedDate() {
+    private suspend fun filterBookingsForSelectedDate() {
         val currentDate = _selectedDate.value ?: return
-        val calendar = Calendar.getInstance().apply { time = currentDate }
-        val currentYear = calendar.get(Calendar.YEAR)
-        val currentMonth = calendar.get(Calendar.MONTH)
-        val currentDay = calendar.get(Calendar.DAY_OF_MONTH)
 
-        val filtered = allUserBookings.filter { booking ->
-            booking.startTime?.toDate()?.let { bookingDate ->
-                val bookingCal = Calendar.getInstance().apply { time = bookingDate }
-                bookingCal.get(Calendar.YEAR) == currentYear &&
-                        bookingCal.get(Calendar.MONTH) == currentMonth &&
-                        bookingCal.get(Calendar.DAY_OF_MONTH) == currentDay
-            } ?: false
+        // Use IO dispatcher to move filtering off the main thread
+        val filtered = withContext(Dispatchers.IO) {
+            val calendar = Calendar.getInstance().apply { time = currentDate }
+            val currentYear = calendar.get(Calendar.YEAR)
+            val currentMonth = calendar.get(Calendar.MONTH)
+            val currentDay = calendar.get(Calendar.DAY_OF_MONTH)
+
+            val filteredList = allUserBookings.filter { booking ->
+                booking.startTime?.toDate()?.let { bookingDate ->
+                    val bookingCal = Calendar.getInstance().apply { time = bookingDate }
+                    bookingCal.get(Calendar.YEAR) == currentYear &&
+                            bookingCal.get(Calendar.MONTH) == currentMonth &&
+                            bookingCal.get(Calendar.DAY_OF_MONTH) == currentDay
+                } ?: false
+            }
+
+            val cacheKey = cacheKeyFormatter.format(currentDate)
+            bookingsCache[cacheKey] = filteredList
+            Log.d("BookingsViewModel", "Saved ${filteredList.size} bookings to cache for key: $cacheKey")
+            filteredList
         }
-
-        // Save the filtered list to our cache
-        val cacheKey = cacheKeyFormatter.format(currentDate)
-        bookingsCache[cacheKey] = filtered
-        Log.d("BookingsViewModel", "Saved ${filtered.size} bookings to cache for key: $cacheKey")
 
         _bookingsForSelectedDate.postValue(filtered)
         _isLoading.postValue(false)
     }
 
+    private suspend fun loadFromCache() {
+        // Use IO dispatcher for consistency in background work
+        val cachedBookings = withContext(Dispatchers.IO) {
+            val currentDate = _selectedDate.value ?: return@withContext null
+            val cacheKey = cacheKeyFormatter.format(currentDate)
+            bookingsCache[cacheKey]
+        }
 
-    private fun loadFromCache() {
-        val currentDate = _selectedDate.value ?: return
-        val cacheKey = cacheKeyFormatter.format(currentDate)
-
-        // cachedBookings is of type List<Booking>? (nullable)
-        val cachedBookings = bookingsCache[cacheKey]
-
-        // This 'if' check is the key to solving the error
         if (cachedBookings != null) {
-            // Inside this block, Kotlin knows cachedBookings is NOT null
-            _bookingsForSelectedDate.postValue(cachedBookings) // This is now safe
-            Log.d("BookingsViewModel", "Loaded ${cachedBookings.size} bookings from cache for key: $cacheKey")
+            _bookingsForSelectedDate.postValue(cachedBookings)
+            Log.d("BookingsViewModel", "Loaded ${cachedBookings.size} bookings from cache")
         } else {
-            // If the cache returned null, we post an empty list instead
             _bookingsForSelectedDate.postValue(emptyList())
-            Log.d("BookingsViewModel", "No bookings found in cache for key: $cacheKey")
+            Log.d("BookingsViewModel", "No bookings found in cache")
         }
     }
 
